@@ -14,7 +14,7 @@ EXAMPLES = ROOT / "examples"
 st.title("AI Building Energy Anomaly & Low-carbon Decision System")
 st.caption("Portfolio prototype · prediction → diagnosis → counterfactual → intervention → carbon scenario")
 
-metrics = json.loads((OUT / "metrics.json").read_text()) if (OUT / "metrics.json").exists() else {}
+metrics = json.loads((OUT / "metrics.json").read_text(encoding="utf-8")) if (OUT / "metrics.json").exists() else json.loads((EXAMPLES / "metrics_2017_public_data.json").read_text(encoding="utf-8"))
 an = pd.read_csv(OUT / "anomaly_buildings.csv") if (OUT / "anomaly_buildings.csv").exists() else pd.DataFrame()
 
 tabs = st.tabs(["Overview", "Building Diagnosis", "Counterfactual", "Intervention", "Carbon"])
@@ -24,7 +24,7 @@ with tabs[0]:
     c1.metric("Buildings", metrics.get("buildings", "—"))
     c2.metric("Test R²", f'{metrics["r2"]:.3f}' if "r2" in metrics else "—")
     c3.metric("WAPE", f'{metrics["wape"] * 100:.1f}%' if "wape" in metrics else "—")
-    c4.metric("Anomaly candidates", int((an.anomaly_days > 0).sum()) if len(an) else "—")
+    demo_cf = pd.read_csv(EXAMPLES / "counterfactual_candidates_demo.csv") if (EXAMPLES / "counterfactual_candidates_demo.csv").exists() else pd.DataFrame()\n    c4.metric("Screening candidates", int((an.anomaly_days > 0).sum()) if len(an) and "anomaly_days" in an.columns else len(demo_cf))\n    if len(an):\n        st.success("Live pipeline artifacts detected.")\n    else:\n        st.info("Demo mode: curated public-data artifacts are displayed. Run the pipeline with your own dataset to populate live outputs.")
     st.markdown("**Raw data → Feature engineering → ML prediction → Robust anomaly detection → Energy fingerprint → Counterfactual → Intervention matching → Carbon scenario → Field validation**")
     st.info("Public-data results are screening evidence. Scenario CO₂e is not measured emissions, and predicted savings require field validation.")
 
@@ -40,7 +40,7 @@ with tabs[1]:
         c.metric("Anomaly share", f"{r.anomaly_share * 100:.1f}%")
         st.write({"building_id": r.building_id, "building_type": r.sub_primaryspaceusage, "area_m2": round(float(r.sqm), 1), "site_id": r.site_id})
     else:
-        st.warning("Run V3 pipeline first.")
+        st.info("Live building-diagnosis output is not bundled in the public demo. Use Counterfactual and Intervention for the curated examples.")
 
 with tabs[2]:
     cf = ADV / "ai_exp45_robust_candidates.csv"
@@ -53,7 +53,7 @@ with tabs[2]:
         st.write(f"Counterfactual candidate records: **{len(d)}** · source: **{source}**")
         cols = [c for c in ["building_id", "building_type", "protected_calibrated_pct", "robust_low_pct", "robust_high_pct", "robust_confidence", "robust_class"] if c in d.columns]
         if cols:
-            st.dataframe(d[cols].head(30), use_container_width=True)
+            st.dataframe(d[cols].head(30), width="stretch")
         st.caption("Candidate effects are screening signals, not measured savings.")
     else:
         st.info("No counterfactual artifact is available.")
