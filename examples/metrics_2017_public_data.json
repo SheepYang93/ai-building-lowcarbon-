@@ -1,0 +1,15 @@
+{
+  "r2": 0.9856813791338301,
+  "mae": 230.518657583244,
+  "wape": 0.05855301102958546,
+  "train_rows": 99882,
+  "test_rows": 36425,
+  "cutoff": "2017-10-25",
+  "rows_after_filter": 196005,
+  "buildings": 537,
+  "date_start": "2017-01-01",
+  "date_end": "2017-12-31",
+  "model": "ExtraTreesRegressor",
+  "train_cap": 100000,
+  "note": "Example run on the local public-data derivative. Re-run with your own data to reproduce; meter units must be independently verified before interpreting energy or carbon quantities."
+}
