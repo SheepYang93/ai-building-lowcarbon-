@@ -353,6 +353,11 @@ with tabs[1]:
             card2.metric("Anomaly level", f'{summary["anomaly_share"] * 100:.1f}% of valid days')
             card3.metric("Trend", f'{summary["trend_pct"]:+.1f}%')
 
+            weekend_ratio_label = (
+                f"{summary['weekend_ratio']:.2f}"
+                if not pd.isna(summary["weekend_ratio"])
+                else "unavailable"
+            )
             st.markdown(
                 f"""
 **Building:** {metadata["building_id"]}
@@ -361,11 +366,7 @@ with tabs[1]:
 
 **Main evidence**
 - {summary["anomaly_days"]} robust anomaly days detected
-- Weekend/weekday median ratio: {
-    f"{summary['weekend_ratio']:.2f}"
-    if not pd.isna(summary["weekend_ratio"])
-    else "unavailable"
-}
+- Weekend/weekday median ratio: {weekend_ratio_label}
 - Screening signal: {summary["potential_pct"]:.1f}%
 
 **Suggested first checks**
