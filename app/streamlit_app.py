@@ -547,6 +547,18 @@ with tabs[7]:
         "2026-03-01,1200,B001,treated,2026-04-01\n"
         "2026-03-01,1180,B002,control,2026-04-01"
     )
+    template = (
+        "date,energy,building_id,group,intervention_date\n"
+        "2026-03-01,1200,B001,treated,2026-04-01\n"
+        "2026-03-01,1180,B002,control,2026-04-01\n"
+    )
+    st.download_button(
+        "Download validation template",
+        data=template,
+        file_name="field_validation_template.csv",
+        mime="text/csv",
+    )
+
     validation_file = st.file_uploader(
         "Validation CSV", type=["csv"], key="validation_upload"
     )
@@ -617,6 +629,17 @@ with tabs[7]:
             )
 
             st.dataframe(summary.reset_index(), width="stretch")
+
+            plot_df = (
+                v.assign(period=np.where(pre, "Pre", "Post"))
+                .groupby(["date", "group"])["energy"]
+                .mean()
+                .reset_index()
+            )
+            pivot = plot_df.pivot(index="date", columns="group", values="energy")
+            st.subheader("Treatment / control energy trend")
+            st.line_chart(pivot)
+
             st.info(
                 "Interpretation: DID compares the treated group's change with the "
                 "control group's change. A negative DID means treated energy fell "
