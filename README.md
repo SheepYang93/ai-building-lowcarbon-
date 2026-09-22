@@ -2,6 +2,9 @@
 
 > **AI for building-energy diagnosis, anomaly detection, counterfactual screening and low-carbon decision support.**
 
+**Live Demo:** https://ai-building-lowcarbon-production-e8b1.up.railway.app  
+**Repository:** https://github.com/SheepYang93/ai-building-lowcarbon-
+
 ## Why this project
 
 Most building-energy analytics stops at prediction. This project closes more of the decision loop:
@@ -31,11 +34,24 @@ The project uses **strict chronological validation** rather than random splittin
 
 Across repeated rolling-window experiments on the public dataset:
 
-- **R² ≈ 0.98**
-- **WAPE ≈ 6–8%**
-- ExtraTrees performed strongly among the tested tree models
+- **ExtraTrees mean R² ≈ 0.985**
+- **ExtraTrees mean WAPE ≈ 6.2%**
+- **3 rolling windows × 3 random seeds** were used for the main model comparison
+- The final model choice is based on repeated out-of-time validation rather than a single favorable split
 
-Exact results depend on window, seed and subgroup. See [EXPERIMENTS.md](EXPERIMENTS.md).
+Exact results vary by window, seed and subgroup. See [EXPERIMENTS.md](EXPERIMENTS.md).
+
+## Demo
+
+The public Streamlit app is designed to show the decision workflow without requiring the raw dataset:
+
+1. building-energy overview
+2. building diagnosis and screening
+3. counterfactual potential
+4. intervention mapping
+5. conditional carbon scenarios
+
+When generated pipeline artifacts are unavailable, the app explicitly labels the displayed evidence as **Demo mode** rather than presenting it as a live retraining result.
 
 ## Data and evidence boundary
 
@@ -66,6 +82,7 @@ Linux/macOS: `bash run_demo.sh`
 ├── app/                 # Streamlit dashboard
 ├── data/                # Data instructions; raw data excluded
 ├── docs/                # Architecture diagram
+├── examples/            # Small public demo artifacts
 ├── scripts/             # Reproducible pipeline entry points
 ├── src/                 # Feature engineering, modeling, anomaly logic
 ├── tests/               # Automated tests
@@ -87,6 +104,8 @@ Linux/macOS: `bash run_demo.sh`
 
 **Explicit uncertainty:** unstable low-baseline cases are separated from candidates that survive robustness checks.
 
+**Reproducibility:** the repository contains the pipeline code, tests, experiment record and small demo artifacts while excluding the large raw dataset.
+
 ## What this project does NOT claim
 
 - No measured campus energy savings.
@@ -94,6 +113,7 @@ Linux/macOS: `bash run_demo.sh`
 - No assumption that every meter reading is verified kWh.
 - Simulated intervention percentages are scenario assumptions, not engineering measurements.
 - Public-data candidates are not automatically real campus buildings.
+- Counterfactual estimates are screening signals and require field validation before being interpreted as realized savings.
 
 ## Field-validation path
 
