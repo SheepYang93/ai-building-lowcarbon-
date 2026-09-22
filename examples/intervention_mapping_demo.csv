@@ -1,0 +1,11 @@
+building_id,building_type,site_id,area,energy_archetype,cause_candidate,best_measure_family,final_priority_v2,intervention_match_strength,action_confidence,annual_meter_reading,addressable_pool_proxy,energy_saving_10%,energy_saving_20%,energy_saving_30%,action_priority
+Fox_education_Jacqueline,College Classroom,Fox,11797.3,persistent high-use,weekend-use candidate + strong seasonal pattern,schedule_control,99.5345,65.0,84.25,228540.43,136589.66,13658.97,27317.93,40976.90,94.9492
+Rat_education_Brett,K-12 School,Rat,10126.4,persistent high-use,strong seasonal pattern,hvac_setpoint,99.7459,60.0,82.0,421117.18,252177.77,30261.33,60522.67,90784.00,94.4221
+Lamb_education_Lucas,Primary/Secondary Classroom,Lamb,1737.0,persistent high-use,strong seasonal pattern,hvac_setpoint,98.6152,60.0,82.0,17828.9426,10509.69,1261.16,2522.33,3783.49,93.6306
+Rat_education_Stuart,K-12 School,Rat,7636.6,persistent high-use,weekend-use candidate + strong seasonal pattern,schedule_control,97.4295,65.0,84.25,384776.5,224115.44,22411.54,44823.09,67234.63,93.4756
+Cockatoo_education_Magdalena,College Classroom,Cockatoo,846.4,persistent high-use,strong seasonal pattern,hvac_setpoint,97.0729,60.0,82.0,91940.9833,52906.39,6348.77,12697.53,19046.30,92.5510
+Fox_education_Rosie,College Classroom,Fox,8445.2,recurrent pattern,weekend-use candidate,occupancy_operation,97.8551,55.0,79.75,1147033.19,670779.64,53662.37,107324.74,160987.11,92.4236
+Rat_education_Jacob,K-12 School,Rat,5310.8,recurrent pattern,weekend-use candidate,occupancy_operation,97.5119,55.0,79.75,417254.21,242544.26,19403.54,38807.08,58210.62,92.1834
+Fox_education_Marcelina,College Classroom,Fox,400.8,persistent high-use,strong seasonal pattern,hvac_setpoint,96.4191,60.0,82.0,36042.98,20445.43,2453.45,4906.90,7360.36,92.0934
+Cockatoo_education_Victoria,College Classroom,Cockatoo,399.3,persistent high-use,weekend-use candidate,schedule_control,94.1323,65.0,84.25,41230.2749,22616.37,2261.64,4523.27,6784.91,91.1676
+Bull_education_Delia,College Laboratory,Bull,28356.2,short event,weekend-use candidate,occupancy_operation,94.1167,65.0,84.25,7460940.0,4223502.88,337880.23,675760.46,1013640.69,91.1567
