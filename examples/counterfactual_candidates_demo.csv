@@ -1,0 +1,11 @@
+building_id,building_type,area,annual_post_actual,protected_calibrated_pct,robust_low_pct,robust_high_pct,robust_confidence,half_width,final_priority_v2,robust_class
+Lamb_education_Willetta,Primary/Secondary Classroom,3528.0,340.044,100.0,95.0,100.0,88.0973,5.0,57.6237,稳健潜力
+Rat_education_Barbara,K-12 School,20903.2,3372.68,99.9620,94.9620,100.0,91.7599,5.0,60.1291,稳健潜力
+Rat_education_Elsie,K-12 School,34978.6,25622.02,92.2345,87.2345,97.2345,94.6954,5.0,55.3160,稳健潜力
+Robin_education_Takako,College Laboratory,1561.0,80488.5,84.4543,79.4543,89.4543,96.3524,5.0,55.3160,稳健潜力
+Lamb_education_Gabrielle,Primary/Secondary Classroom,2572.0,2019.0554,80.4116,75.4116,85.4116,91.0172,5.0,55.3160,稳健潜力
+Rat_education_Colin,K-12 School,7748.1,34162.36,75.9986,70.9986,80.9986,95.1118,5.0,55.3160,稳健潜力
+Rat_education_Patty,K-12 School,15793.5,103346.48,63.7856,58.7856,68.7856,96.7143,5.0,55.3160,稳健潜力
+Rat_education_Milagros,K-12 School,9262.4,153533.59,57.0990,52.0990,62.0990,96.2042,5.0,54.3628,稳健潜力
+Rat_education_Imelda,K-12 School,3669.7,5810.66,56.2340,51.2340,61.2340,92.5474,5.0,59.7451,稳健潜力
+Rat_education_Davis,K-12 School,8092.5,99719.95,53.0461,48.0461,58.0461,96.6626,5.0,55.3160,稳健潜力
