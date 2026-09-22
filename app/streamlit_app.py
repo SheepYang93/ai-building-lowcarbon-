@@ -72,6 +72,14 @@ def load_uploaded_building(uploaded_file):
     if df.empty:
         raise ValueError("No valid rows remain after parsing time and energy.")
 
+    if "building_id" in df.columns:
+        building_count = df["building_id"].dropna().astype(str).nunique()
+        if building_count > 1:
+            raise ValueError(
+                "This demo currently diagnoses one building at a time. "
+                f"The uploaded file contains {building_count} building_id values."
+            )
+
     df["date"] = df["timestamp"].dt.floor("D")
     daily = df.groupby("date", as_index=False)["energy"].sum()
     daily = daily.sort_values("date").reset_index(drop=True)
@@ -280,6 +288,15 @@ with tabs[1]:
         "2026-01-01 00:00,120.5,B001,Classroom,5000\n"
         "2026-01-01 01:00,115.2,B001,Classroom,5000"
     )
+    sample_path = EXAMPLES / "sample_building_energy.csv"
+    if sample_path.exists():
+        st.download_button(
+            "Download sample CSV",
+            data=sample_path.read_text(encoding="utf-8"),
+            file_name="sample_building_energy.csv",
+            mime="text/csv",
+        )
+
     uploaded = st.file_uploader("CSV file", type=["csv"], key="building_upload")
 
     if uploaded is not None:
@@ -317,6 +334,13 @@ with tabs[1]:
             b.metric("Anomaly days", summary["anomaly_days"])
             c.metric("Anomaly share", f'{summary["anomaly_share"] * 100:.1f}%')
             d.metric("Potential signal", f'{summary["potential_pct"]:.1f}%')
+
+            if summary["records"] < 35:
+                st.warning(
+                    "The uploaded period is shorter than 35 days. "
+                    "The 28-day robust baseline will have limited context; "
+                    "use 8–12 weeks for a stronger field validation baseline."
+                )
 
             st.success(
                 "Uploaded-data screening completed. This is a robust baseline diagnostic, "
