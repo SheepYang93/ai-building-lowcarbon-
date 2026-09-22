@@ -5,6 +5,16 @@
 **Live Demo:** https://ai-building-lowcarbon-production-e8b1.up.railway.app  
 **Repository:** https://github.com/SheepYang93/ai-building-lowcarbon-
 
+## 30-second overview
+
+**Input:** daily building-energy data.
+
+**AI workflow:** predict expected energy use → detect anomalies → build an energy fingerprint → screen counterfactual potential → map interventions → generate conditional carbon scenarios → validate with field data.
+
+**Output:** a building diagnosis, intervention hypothesis, potential-saving signal, report, and a treatment/control validation workflow.
+
+The system is designed as a decision-support prototype: model evidence is kept separate from claims that require field measurement.
+
 ## Why this project
 
 Most building-energy analytics stops at prediction. This project closes more of the decision loop:
@@ -43,13 +53,38 @@ Exact results vary by window, seed and subgroup. See [EXPERIMENTS.md](EXPERIMENT
 
 ## Demo
 
-The public Streamlit app is designed to show the decision workflow without requiring the raw dataset:
+The public Streamlit app demonstrates the full decision workflow without requiring the raw dataset:
 
-1. building-energy overview
-2. building diagnosis and screening
-3. counterfactual potential
-4. intervention mapping
-5. conditional carbon scenarios
+1. **Overview** — system scope, evidence boundary and demo status
+2. **Upload & Diagnose** — upload a single-building daily-energy CSV and run robust anomaly screening
+3. **Building Diagnosis** — inspect anomaly share, temporal behavior and energy fingerprint
+4. **Counterfactual** — view potential intervention signals as screening evidence
+5. **Intervention** — map the fingerprint to an intervention family
+6. **Carbon** — explore conditional carbon scenarios
+7. **Report** — generate a downloadable Markdown diagnosis report
+8. **Field Validation** — upload treatment/control data and calculate Difference-in-Differences (DID)
+
+### Demo workflow
+
+```text
+Upload CSV
+   ↓
+Daily aggregation
+   ↓
+Past-only robust anomaly detection
+   ↓
+Energy fingerprint
+   ↓
+Counterfactual screening
+   ↓
+Intervention recommendation
+   ↓
+Download report
+   ↓
+Treatment / Control validation
+   ↓
+DID
+```
 
 When generated pipeline artifacts are unavailable, the app explicitly labels the displayed evidence as **Demo mode** rather than presenting it as a live retraining result.
 
