@@ -346,6 +346,38 @@ with tabs[1]:
                 "Uploaded-data screening completed. This is a robust baseline diagnostic, "
                 "not a retrained version of the public-data ExtraTrees model."
             )
+
+            st.subheader("Building diagnosis card")
+            card1, card2, card3 = st.columns(3)
+            card1.metric("Status", summary["fingerprint"])
+            card2.metric("Anomaly level", f'{summary["anomaly_share"] * 100:.1f}% of valid days')
+            card3.metric("Trend", f'{summary["trend_pct"]:+.1f}%')
+
+            st.markdown(
+                f"""
+**Building:** {metadata["building_id"]}
+
+**Type:** {metadata["building_type"]} · **Area:** {metadata["area_m2"]} m²
+
+**Main evidence**
+- {summary["anomaly_days"]} robust anomaly days detected
+- Weekend/weekday median ratio: {
+    f"{summary['weekend_ratio']:.2f}"
+    if not pd.isna(summary["weekend_ratio"])
+    else "unavailable"
+}
+- Screening signal: {summary["potential_pct"]:.1f}%
+
+**Suggested first checks**
+- {summary["intervention"]}
+- Verify HVAC operating schedule and setpoints
+- Check non-occupancy equipment operation
+- Compare the anomaly dates with occupancy/calendar records
+
+> **Evidence boundary:** this card is a screening result. The potential signal is not measured savings and should be validated with treatment/control, Difference-in-Differences and placebo analysis.
+"""
+            )
+
             st.write({
                 "columns_received": original_columns,
                 "period": f"{summary['start']} → {summary['end']}",
