@@ -242,6 +242,7 @@ tabs = st.tabs([
     "Intervention",
     "Carbon",
     "Report",
+    "Field Validation",
 ])
 
 with tabs[0]:
@@ -531,3 +532,103 @@ with tabs[6]:
             "Upload a building CSV in Upload & Diagnose first. "
             "The system will generate a diagnosis report automatically."
         )
+
+
+with tabs[7]:
+    st.subheader("Field validation: Treatment / Control + DID")
+    st.write(
+        "Upload a validation CSV with one row per building-day. Required columns: "
+        "date, energy, building_id, group, intervention_date. "
+        "Use group=treated for buildings receiving the intervention and group=control "
+        "for comparable buildings without the intervention."
+    )
+    st.code(
+        "date,energy,building_id,group,intervention_date\n"
+        "2026-03-01,1200,B001,treated,2026-04-01\n"
+        "2026-03-01,1180,B002,control,2026-04-01"
+    )
+    validation_file = st.file_uploader(
+        "Validation CSV", type=["csv"], key="validation_upload"
+    )
+
+    if validation_file is not None:
+        try:
+            v = pd.read_csv(validation_file)
+            required = {"date", "energy", "building_id", "group", "intervention_date"}
+            missing = required - set(v.columns)
+            if missing:
+                raise ValueError(
+                    "Missing required columns: " + ", ".join(sorted(missing))
+                )
+
+            v["date"] = pd.to_datetime(v["date"], errors="coerce")
+            v["intervention_date"] = pd.to_datetime(
+                v["intervention_date"], errors="coerce"
+            )
+            v["energy"] = pd.to_numeric(v["energy"], errors="coerce")
+            v["group"] = v["group"].astype(str).str.lower().str.strip()
+            v = v.dropna(
+                subset=["date", "energy", "building_id", "intervention_date"]
+            ).copy()
+            v = v[v["group"].isin(["treated", "control"])].copy()
+
+            if v.empty:
+                raise ValueError("No valid treated/control rows remain.")
+
+            intervention_date = v["intervention_date"].mode().iloc[0]
+            pre = v["date"] < intervention_date
+            post = v["date"] >= intervention_date
+
+            if not pre.any() or not post.any():
+                raise ValueError(
+                    "The dataset needs observations both before and after the intervention date."
+                )
+
+            summary = (
+                v.assign(period=np.where(pre, "pre", "post"))
+                .groupby(["group", "period"])["energy"]
+                .mean()
+                .unstack()
+            )
+
+            if not {"treated", "control"}.issubset(summary.index):
+                raise ValueError("Both treated and control groups are required.")
+
+            treated_change = summary.loc["treated", "post"] - summary.loc["treated", "pre"]
+            control_change = summary.loc["control", "post"] - summary.loc["control", "pre"]
+            did_abs = treated_change - control_change
+
+            treated_pre = summary.loc["treated", "pre"]
+            did_pct = (
+                did_abs / treated_pre * 100
+                if treated_pre != 0
+                else np.nan
+            )
+
+            st.success("Validation analysis completed.")
+            a, b, c = st.columns(3)
+            a.metric("Treated pre → post", f"{treated_change:+.2f}")
+            b.metric("Control pre → post", f"{control_change:+.2f}")
+            c.metric("DID effect", f"{did_abs:+.2f}")
+
+            st.metric(
+                "DID relative to treated baseline",
+                f"{did_pct:+.2f}%" if not pd.isna(did_pct) else "unavailable",
+            )
+
+            st.dataframe(summary.reset_index(), width="stretch")
+            st.info(
+                "Interpretation: DID compares the treated group's change with the "
+                "control group's change. A negative DID means treated energy fell "
+                "more than control energy. This is evidence about the intervention "
+                "under the study design, not proof of causality by itself."
+            )
+
+            st.download_button(
+                "Download validation summary",
+                data=summary.reset_index().to_csv(index=False),
+                file_name="did_validation_summary.csv",
+                mime="text/csv",
+            )
+        except Exception as exc:
+            st.error(f"Validation analysis failed: {exc}")
