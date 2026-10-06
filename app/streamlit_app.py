@@ -252,6 +252,7 @@ st.markdown("""
 .section-title {font-size:1.35rem;font-weight:750;color:#173B36;margin:.35rem 0 .25rem}
 .section-subtitle {color:#617873;margin-bottom:1rem}
 .insight-card {background:#F2F8F6;border-left:4px solid #0F766E;border-radius:12px;padding:1rem 1.1rem;margin:.5rem 0}
+.data-status {background:#F7FAF9;border:1px solid #E2EBE8;border-radius:12px;padding:.8rem 1rem;margin:.7rem 0 1rem;color:#315B53}
 </style>
 <div class="hero">
 <div style="font-size:.78rem;letter-spacing:.13em;font-weight:700;opacity:.82">AI · ENERGY · CARBON INTELLIGENCE</div>
@@ -568,7 +569,8 @@ with tabs[5]:
         st.line_chart(scenario_df[["Cost saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
 with tabs[6]:
-    st.subheader("Generate diagnosis report")
+    st.markdown('<div class="section-title">Diagnostic Report</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">把最近一次上传数据的诊断结果整理成可复用的项目输出。</div>', unsafe_allow_html=True)
     report = st.session_state.get("upload_report")
     if report:
         st.markdown(
@@ -580,6 +582,7 @@ with tabs[6]:
             file_name="building_energy_diagnosis_report.md",
             mime="text/markdown",
         )
+        st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂e 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
         st.text_area("Report preview", report, height=600)
     else:
         st.info(
