@@ -27,9 +27,11 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 
 ![Architecture](docs/architecture.svg)
 
+**Live product:** [Streamlit demo](https://ai-building-lowcarbon-production-e8b1.up.railway.app) · **Code:** [GitHub repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
+
 | Layer | Method | Output |
 |---|---|---|
-| Data | quality checks + education/electricity filtering | analysis-ready daily data |
+| Data | quality checks + energy-unit/data validation | analysis-ready daily data |
 | Prediction | ExtraTrees + lag/rolling features | expected energy use |
 | Anomaly | rolling median + robust MAD | anomaly candidates |
 | Fingerprint | persistence, recurrence, trend, morphology | building behavior type |
@@ -51,9 +53,32 @@ Across repeated rolling-window experiments on the public dataset:
 
 Exact results vary by window, seed and subgroup. See [EXPERIMENTS.md](EXPERIMENTS.md).
 
+## For a recruiter: what to look at first
+
+If you only have one minute, open the **Live Demo** and then inspect these three files:
+
+1. `app/streamlit_app.py` — the productized decision workflow and UI.
+2. `src/` — feature engineering, modeling and diagnostic logic.
+3. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.
+
+The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings.
+
+## Tech stack
+
+| Area | Stack |
+|---|---|
+| Data | Python, pandas, NumPy |
+| ML | scikit-learn, ExtraTrees |
+| Time series | lag/rolling features, chronological validation |
+| Diagnostics | robust median/MAD, anomaly screening, energy fingerprint |
+| Decision support | counterfactual screening, intervention mapping, scenario analysis |
+| Product | Streamlit |
+| Validation | treatment/control, DID, placebo tests |
+| Engineering | Git, tests, reproducible scripts |
+
 ## Demo
 
-The public Streamlit app demonstrates the full decision workflow without requiring the raw dataset:
+The public Streamlit app demonstrates the full decision workflow and can be opened directly without installing the project:
 
 1. **Overview** — system scope, evidence boundary and demo status
 2. **Upload & Diagnose** — upload a single-building daily-energy CSV and run robust anomaly screening
@@ -111,6 +136,24 @@ streamlit run app/streamlit_app.py
 Windows: `run_demo.bat`  
 Linux/macOS: `bash run_demo.sh`
 
+### Minimal demo CSV
+
+A small example is included under `examples/`, so the UI can be understood without downloading the original public dataset. For your own data, the minimum required fields are:
+
+```text
+timestamp, electricity_kwh
+2026-01-01, 1234.5
+2026-01-02, 1188.2
+```
+
+The uploader also accepts common aliases such as `datetime`, `date`, `energy_kwh` and `energy`.
+
+## Engineering and reproducibility
+
+The repository keeps the distinction between **model evidence**, **screening hypotheses** and **field evidence** explicit. This matters because a good energy-AI portfolio should show not only that a model can predict, but also where its conclusions stop being experimentally verified.
+
+The main validation design is chronological: historical lag/rolling features are shifted so future observations do not leak into the feature set. Field-effect claims are reserved for treatment/control data and DID-style validation.
+
 ## Repository structure
 
 ```text
@@ -165,6 +208,10 @@ Linux/macOS: `bash run_demo.sh`
 This is an **AI + environmental engineering portfolio project** demonstrating Python/pandas/scikit-learn, time-series feature engineering, leakage-aware ML evaluation, anomaly detection, counterfactual reasoning, decision-support design, Streamlit productization and reproducibility.
 
 See [RESUME_PROJECT.md](RESUME_PROJECT.md).
+
+## Current demo status
+
+The hosted Streamlit demo is deployed as a single production service on Railway. The repository remains the source of truth for the application code and reproducible local workflow.
 
 ## License
 
