@@ -249,6 +249,9 @@ st.markdown("""
 .badge {display:inline-block;padding:.22rem .58rem;border-radius:999px;background:#E6F4F0;color:#0F766E;font-size:.76rem;font-weight:700}
 .muted {color:#617873;font-size:.9rem}
 .warning-card {background:#FFF9E9;border:1px solid #F0DFAB;border-radius:14px;padding:.85rem 1rem;color:#66501A}
+.section-title {font-size:1.35rem;font-weight:750;color:#173B36;margin:.35rem 0 .25rem}
+.section-subtitle {color:#617873;margin-bottom:1rem}
+.insight-card {background:#F2F8F6;border-left:4px solid #0F766E;border-radius:12px;padding:1rem 1.1rem;margin:.5rem 0}
 </style>
 <div class="hero">
 <div style="font-size:.78rem;letter-spacing:.13em;font-weight:700;opacity:.82">AI · ENERGY · CARBON INTELLIGENCE</div>
@@ -302,10 +305,11 @@ with tabs[0]:
     )
 
 with tabs[1]:
-    st.subheader("Upload a building energy dataset")
-    st.write(
-        "Minimum columns: a time column and an energy column. "
-        "Recommended names: timestamp + electricity_kwh."
+    st.markdown('<div class="section-title">Upload & Diagnose</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">把一份建筑能耗 CSV 快速转化为可解释的诊断结果。</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>Recommended</b> timestamp + electricity_kwh &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
+        unsafe_allow_html=True,
     )
     st.code(
         "timestamp,electricity_kwh,building_id,building_type,area_m2\n"
@@ -371,7 +375,7 @@ with tabs[1]:
                 "not a retrained version of the public-data ExtraTrees model."
             )
 
-            st.subheader("Building diagnosis card")
+            st.markdown('<div class="section-title">Building health</div>', unsafe_allow_html=True)
             card1, card2, card3 = st.columns(3)
             card1.metric("Status", summary["fingerprint"])
             card2.metric("Anomaly level", f'{summary["anomaly_share"] * 100:.1f}% of valid days')
@@ -410,9 +414,13 @@ with tabs[1]:
                 "suggested_intervention": summary["intervention"],
             })
 
-            st.subheader("Daily diagnostic timeline")
-            chart_df = diagnosed.set_index("date")[["energy", "baseline_28d"]]
-            st.line_chart(chart_df)
+            st.markdown('<div class="section-title">Energy fingerprint</div>', unsafe_allow_html=True)
+            fp1, fp2 = st.columns(2)
+            with fp1:
+                st.line_chart(diagnosed.set_index("date")[["energy", "baseline_28d"]])
+            with fp2:
+                weekly = diagnosed.set_index("date")["energy"].resample("W").sum()
+                st.bar_chart(weekly)
 
             anomaly_view = diagnosed[diagnosed["anomaly"]].copy()
             if len(anomaly_view):
@@ -430,30 +438,42 @@ with tabs[1]:
             st.error(f"Upload or diagnosis failed: {exc}")
 
 with tabs[2]:
+    st.markdown('<div class="section-title">Building Diagnosis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">从异常频率、优先级和建筑类型快速定位值得进一步检查的对象。</div>', unsafe_allow_html=True)
     if len(an):
         q = an.copy()
-        q["label"] = (
-            q.building_id.astype(str)
-            + " · "
-            + q.sub_primaryspaceusage.astype(str)
-        )
-        label = st.selectbox("Building", q.label.head(200).tolist())
+        q["label"] = q.building_id.astype(str) + " · " + q.sub_primaryspaceusage.astype(str)
+        label = st.selectbox("Select building", q.label.head(200).tolist())
         r = q[q.label.eq(label)].iloc[0]
-        a, b, c = st.columns(3)
+        a, b, c, d = st.columns(4)
         a.metric("Priority", f"{r.priority_score:.1f}")
         b.metric("Anomaly days", int(r.anomaly_days))
         c.metric("Anomaly share", f"{r.anomaly_share * 100:.1f}%")
-        st.write({
-            "building_id": r.building_id,
-            "building_type": r.sub_primaryspaceusage,
-            "area_m2": round(float(r.sqm), 1),
-            "site_id": r.site_id,
-        })
-    else:
-        st.info(
-            "Live building-diagnosis output is not bundled in the public demo. "
-            "Use Upload & Diagnose for your own building data."
+        d.metric("Area", f"{float(r.sqm):,.0f} m²")
+        st.markdown(
+            f'<div class="insight-card"><b>Diagnosis summary</b><br>{r.sub_primaryspaceusage} building · priority {float(r.priority_score):.1f} · {int(r.anomaly_days)} anomaly days. Recommended next step: inspect operating schedule, HVAC settings and equipment status.</div>',
+            unsafe_allow_html=True,
         )
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**Building profile**")
+            st.dataframe(pd.DataFrame([{
+                "Building ID": r.building_id,
+                "Type": r.sub_primaryspaceusage,
+                "Area (m²)": round(float(r.sqm), 1),
+                "Site": r.site_id,
+            }]), width="stretch", hide_index=True)
+        with right:
+            st.markdown("**Priority interpretation**")
+            priority = float(r.priority_score)
+            if priority >= 75:
+                st.warning("High priority · recommend operational review first.")
+            elif priority >= 50:
+                st.info("Medium priority · monitor and compare with operating schedule.")
+            else:
+                st.success("Lower priority · keep under routine monitoring.")
+    else:
+        st.info("Live building-diagnosis output is not bundled in the public demo. Use Upload & Diagnose for your own building data.")
 
 with tabs[3]:
     cf = ADV / "ai_exp45_robust_candidates.csv"
@@ -533,6 +553,19 @@ with tabs[5]:
         b.metric("Estimated cost saving", f'¥{result["estimated_cost_saving"]:,.0f}')
         c.metric("Avoided CO₂e", f'{result["avoided_co2e_t"]:,.1f} t')
         st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify tariff, meter unit, emission factor and reduction assumption before real decisions. These are not measured savings.</div>', unsafe_allow_html=True)
+
+        scenario_rows = []
+        for pct in range(0, 51, 5):
+            sr = scenario(annual, pct / 100, tariff, factor)
+            scenario_rows.append({
+                "Reduction": pct,
+                "Cost saving (¥)": sr["estimated_cost_saving"],
+                "Avoided CO₂e (t)": sr["avoided_co2e_t"],
+            })
+        scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
+        st.markdown('<div class="section-title">Scenario sensitivity</div>', unsafe_allow_html=True)
+        st.caption("同一能耗基线下，不同假设节能率对应的成本与碳减排情景。")
+        st.line_chart(scenario_df[["Cost saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
 with tabs[6]:
     st.subheader("Generate diagnosis report")
