@@ -273,6 +273,9 @@ tabs = st.tabs([
 ])
 
 with tabs[0]:
+    st.markdown('<div class="section-title">Portfolio Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">AI 驱动的建筑能源异常诊断与低碳决策支持 Demo。</div>', unsafe_allow_html=True)
+
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Buildings", metrics.get("buildings", "—"))
     c2.metric("Test R²", f'{metrics["r2"]:.3f}' if "r2" in metrics else "—")
@@ -287,22 +290,63 @@ with tabs[0]:
     )
     c4.metric("Screening candidates", candidate_count)
 
-    if len(an):
-        st.success("Live pipeline artifacts detected.")
-    else:
-        st.info(
-            "Demo mode: curated public-data artifacts are displayed. "
-            "Upload a building CSV in Upload & Diagnose to run the screening workflow."
+    st.markdown("### What this system does")
+    left, right = st.columns([1.25, 1])
+    with left:
+        st.markdown(
+            '''
+<div class="insight-card">
+<b>From energy data to operational decisions</b><br>
+系统不是只做“能耗预测”，而是把预测、异常识别、反事实筛选、干预建议和碳情景连接起来。
+</div>
+''',
+            unsafe_allow_html=True,
         )
-
-    st.markdown(
-        "**Raw data → Feature engineering → ML prediction → Robust anomaly detection → "
-        "Energy fingerprint → Counterfactual → Intervention matching → Carbon scenario → "
-        "Field validation**"
+        st.markdown(
+            '''
+<span class="chip">01 · Predict</span>
+<span class="chip">02 · Detect anomalies</span>
+<span class="chip">03 · Build fingerprint</span>
+<span class="chip">04 · Counterfactual</span>
+<span class="chip">05 · Intervention</span>
+<span class="chip">06 · Carbon scenario</span>
+''',
+            unsafe_allow_html=True,
+        )
+    with right:
+        st.markdown("**Decision chain**")
+        st.markdown(
+            '''
+**Energy data**  
+↓  
+**AI / robust statistical diagnosis**  
+↓  
+**Operational cause candidates**  
+↓  
+**Intervention screening**  
+↓  
+**Cost & CO₂e scenario**  
+↓  
+**Field validation**
+''')
+    st.markdown("### Evidence at a glance")
+    e1, e2, e3 = st.columns(3)
+    e1.markdown(
+        '<div class="insight-card"><b>Model evidence</b><br>Public-data prediction and strict time-series validation.</div>',
+        unsafe_allow_html=True,
     )
+    e2.markdown(
+        '<div class="insight-card"><b>Decision evidence</b><br>Robust anomaly detection, energy fingerprints and intervention mapping.</div>',
+        unsafe_allow_html=True,
+    )
+    e3.markdown(
+        '<div class="insight-card"><b>Validation design</b><br>Treatment / control, DID and placebo testing workflow.</div>',
+        unsafe_allow_html=True,
+    )
+
     st.info(
-        "Public-data results are screening evidence. Scenario CO₂e is not measured "
-        "emissions, and predicted savings require field validation."
+        "Demo boundary: public-data model results and uploaded-data screening are shown separately. "
+        "Scenario CO₂e is conditional, not measured emissions reduction."
     )
 
 with tabs[1]:
