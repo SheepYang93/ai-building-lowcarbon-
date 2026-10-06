@@ -5,7 +5,14 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="AI Building Low-carbon Decision System", layout="wide")
+try:
+    from app.economics import scenario
+    from app.emission_factors import EMISSION_FACTORS
+except ImportError:
+    from economics import scenario
+    from emission_factors import EMISSION_FACTORS
+
+st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
