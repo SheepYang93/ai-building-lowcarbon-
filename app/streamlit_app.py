@@ -521,6 +521,9 @@ with tabs[2]:
         st.info("Live building-diagnosis output is not bundled in the public demo. Use Upload & Diagnose for your own building data.")
 
 with tabs[3]:
+    st.markdown('<div class="section-title">Counterfactual Screening</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">估计“如果维持正常历史行为”，当前能耗可能处于什么范围。</div>', unsafe_allow_html=True)
+
     cf = ADV / "ai_exp45_robust_candidates.csv"
     source = "pipeline output"
     if not cf.exists():
@@ -529,27 +532,43 @@ with tabs[3]:
 
     if cf.exists():
         data = pd.read_csv(cf)
-        st.write(
-            f"Counterfactual candidate records: **{len(data)}** · source: **{source}**"
+        st.markdown(
+            f'<div class="data-status"><b>{len(data)}</b> candidate records &nbsp; · &nbsp; source: <b>{source}</b></div>',
+            unsafe_allow_html=True,
         )
-        cols = [
-            c for c in [
-                "building_id",
-                "building_type",
-                "protected_calibrated_pct",
-                "robust_low_pct",
-                "robust_high_pct",
-                "robust_confidence",
-                "robust_class",
-            ] if c in data.columns
-        ]
+        cols = [c for c in [
+            "building_id", "building_type", "protected_calibrated_pct",
+            "robust_low_pct", "robust_high_pct", "robust_confidence", "robust_class"
+        ] if c in data.columns]
+
+        if len(data):
+            row = data.iloc[0]
+            k1, k2, k3 = st.columns(3)
+            if "protected_calibrated_pct" in data:
+                k1.metric("Median screening effect", f'{data["protected_calibrated_pct"].median():.1f}%')
+            if "robust_confidence" in data:
+                k2.metric("Median confidence", f'{data["robust_confidence"].median():.2f}')
+            if "robust_class" in data:
+                k3.metric("Candidate class", str(row["robust_class"]))
+
+            st.markdown(
+                '<div class="insight-card"><b>How to read this</b><br>'
+                'Counterfactual screening estimates a plausible comparison point from historical behavior. '
+                'It helps prioritize buildings for investigation; it does not establish realized savings.</div>',
+                unsafe_allow_html=True,
+            )
+
         if cols:
-            st.dataframe(data[cols].head(30), width="stretch")
+            st.markdown("**Candidate details**")
+            st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
         st.caption("Candidate effects are screening signals, not measured savings.")
     else:
         st.info("No counterfactual artifact is available.")
 
 with tabs[4]:
+    st.markdown('<div class="section-title">Intervention Mapping</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">把异常模式映射到下一步应该检查的设备、运行策略和管理动作。</div>', unsafe_allow_html=True)
+
     f = ADV / "ai_exp35_intervention_reduction_mapping.csv"
     source = "pipeline output"
     if not f.exists():
@@ -558,25 +577,47 @@ with tabs[4]:
 
     if f.exists():
         data = pd.read_csv(f)
-        st.write(f"Intervention mappings: **{len(data)}** · source: **{source}**")
-        cols = [
-            c for c in [
-                "building_id",
-                "building_type",
-                "energy_archetype",
-                "cause_candidate",
-                "best_measure_family",
-                "action_confidence",
-                "annual_meter_reading",
-                "energy_saving_20%",
-                "action_priority",
-            ] if c in data.columns
-        ]
-        if cols:
-            st.dataframe(data[cols].head(30), width="stretch")
-        st.caption(
-            "10/20/30% values are scenario assumptions, not measured engineering savings."
+        st.markdown(
+            f'<div class="data-status"><b>{len(data)}</b> intervention mappings &nbsp; · &nbsp; source: <b>{source}</b></div>',
+            unsafe_allow_html=True,
         )
+        cols = [c for c in [
+            "building_id", "building_type", "energy_archetype", "cause_candidate",
+            "best_measure_family", "action_confidence", "annual_meter_reading",
+            "energy_saving_20%", "action_priority"
+        ] if c in data.columns]
+
+        if len(data):
+            priority_col = "action_priority" if "action_priority" in data.columns else None
+            confidence_col = "action_confidence" if "action_confidence" in data.columns else None
+            k1, k2, k3 = st.columns(3)
+            if priority_col:
+                k1.metric("Top priority", str(data[priority_col].iloc[0]))
+            if confidence_col:
+                k2.metric("Top confidence", f'{float(data[confidence_col].iloc[0]):.2f}')
+            if "energy_saving_20%" in data.columns:
+                k3.metric("Scenario @20%", f'{data["energy_saving_20%"].median():.1f}%')
+
+            st.markdown("**Recommended action map**")
+            for _, row in data.head(5).iterrows():
+                building = row.get("building_id", "Building")
+                cause = row.get("cause_candidate", "Operational anomaly")
+                measure = row.get("best_measure_family", "Further investigation")
+                priority = row.get("action_priority", "—")
+                confidence = row.get("action_confidence", "—")
+                st.markdown(
+                    f'<div class="insight-card"><b>{building}</b> · priority <b>{priority}</b><br>'
+                    f'<b>Possible cause:</b> {cause}<br>'
+                    f'<b>Recommended measure:</b> {measure}<br>'
+                    f'<span class="muted">Action confidence: {confidence}</span></div>',
+                    unsafe_allow_html=True,
+                )
+
+        if cols:
+            with st.expander("View structured intervention data"):
+                st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
+
+        st.caption("10/20/30% values are scenario assumptions, not measured engineering savings.")
     else:
         st.info("No intervention mapping artifact is available.")
 
