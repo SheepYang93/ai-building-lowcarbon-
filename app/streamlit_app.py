@@ -236,10 +236,26 @@ metrics = load_metrics()
 anomaly_path = OUT / "anomaly_buildings.csv"
 an = pd.read_csv(anomaly_path) if anomaly_path.exists() else pd.DataFrame()
 
-st.title("AI Building Energy Anomaly & Low-carbon Decision System")
-st.caption(
-    "Portfolio prototype · prediction → diagnosis → counterfactual → intervention → carbon scenario"
-)
+st.markdown("""
+<style>
+.block-container {max-width:1500px; padding-top:2rem;}
+[data-testid="stMetric"] {background:#fff;border:1px solid #E2EBE8;border-radius:16px;padding:12px 16px;box-shadow:0 3px 16px rgba(23,59,54,.05)}
+[data-testid="stMetricLabel"] {color:#617873}
+[data-testid="stMetricValue"] {color:#173B36}
+.hero {padding:2.2rem 2.4rem;border-radius:24px;margin-bottom:1.3rem;background:linear-gradient(135deg,#0F766E,#155E75);color:#fff}
+.hero h1 {font-size:2.4rem;margin:0 0 .45rem;color:#fff}
+.hero p {font-size:1.05rem;margin:0;color:#E7FFFA}
+.card {background:#fff;border:1px solid #E2EBE8;border-radius:18px;padding:1.1rem 1.2rem;min-height:125px}
+.badge {display:inline-block;padding:.22rem .58rem;border-radius:999px;background:#E6F4F0;color:#0F766E;font-size:.76rem;font-weight:700}
+.muted {color:#617873;font-size:.9rem}
+.warning-card {background:#FFF9E9;border:1px solid #F0DFAB;border-radius:14px;padding:.85rem 1rem;color:#66501A}
+</style>
+<div class="hero">
+<div style="font-size:.78rem;letter-spacing:.13em;font-weight:700;opacity:.82">AI · ENERGY · CARBON INTELLIGENCE</div>
+<h1>Building Energy & Low-carbon Intelligence</h1>
+<p>从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。</p>
+</div>
+""", unsafe_allow_html=True)
 
 tabs = st.tabs([
     "Overview",
