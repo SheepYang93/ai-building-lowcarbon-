@@ -516,25 +516,23 @@ with tabs[4]:
         st.info("No intervention mapping artifact is available.")
 
 with tabs[5]:
-    annual = st.number_input(
-        "Annual energy reading",
-        min_value=0.0,
-        max_value=1e9,
-        value=1000000.0,
-        step=10000.0,
-    )
-    reduction = st.slider("Assumed reduction (%)", 0, 50, 20) / 100
-    ef = st.number_input(
-        "Emission factor (kgCO₂e/kWh)",
-        min_value=0.0,
-        max_value=2.0,
-        value=0.5777,
-        step=0.01,
-    )
-    st.metric("Scenario CO₂e", f"{annual * reduction * ef / 1000:,.1f} t")
-    st.warning(
-        "Conditional scenario only: verify the meter unit and emission factor first."
-    )
+    st.subheader("Energy · Cost · Carbon scenario")
+    st.caption("Transparent scenario calculator. Values are estimates, not measured savings.")
+    left, right = st.columns([1.0, 1.45])
+    with left:
+        annual = st.number_input("Annual energy (kWh)", min_value=0.0, max_value=1e9, value=1000000.0, step=10000.0)
+        reduction = st.slider("Assumed reduction", 0, 50, 20) / 100
+        tariff = st.number_input("Electricity tariff (¥/kWh)", min_value=0.0, max_value=10.0, value=0.80, step=0.05)
+        factor_key = st.selectbox("Emission factor", list(EMISSION_FACTORS))
+        factor = EMISSION_FACTORS[factor_key]["value"]
+        st.caption(f"Source: {EMISSION_FACTORS[factor_key]['source']}")
+    with right:
+        result = scenario(annual, reduction, tariff, factor)
+        a, b, c = st.columns(3)
+        a.metric("Avoided energy", f'{result["avoided_energy_kwh"]:,.0f} kWh')
+        b.metric("Estimated cost saving", f'¥{result["estimated_cost_saving"]:,.0f}')
+        c.metric("Avoided CO₂e", f'{result["avoided_co2e_t"]:,.1f} t')
+        st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify tariff, meter unit, emission factor and reduction assumption before real decisions. These are not measured savings.</div>', unsafe_allow_html=True)
 
 with tabs[6]:
     st.subheader("Generate diagnosis report")
