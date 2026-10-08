@@ -11,7 +11,7 @@
 - Conditional carbon scenario calculator
 - Streamlit dashboard
 - GitHub-facing documentation
-- Basic automated tests
+- Basic automated tests covering economics and robust uploaded-data diagnostics
 
 ## Not claimed
 - No measured campus energy savings
