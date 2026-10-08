@@ -479,8 +479,8 @@ with tabs[2]:
         st.info("Live building-diagnosis output is not bundled in the public demo. Use Upload & Diagnose for your own building data.")
 
 with tabs[3]:
-    st.markdown('<div class="section-title">Counterfactual Screening</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">估计“如果维持正常历史行为”，当前能耗可能处于什么范围。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Expected-use / Counterfactual Screening</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">用历史正常行为构建 expected-use baseline，筛选值得进一步验证的潜在节能空间。</div>', unsafe_allow_html=True)
 
     cf = ADV / "ai_exp45_robust_candidates.csv"
     source = "pipeline output"
@@ -511,7 +511,7 @@ with tabs[3]:
 
             st.markdown(
                 '<div class="insight-card"><b>How to read this</b><br>'
-                'Counterfactual screening estimates a plausible comparison point from historical behavior. '
+                'Expected-use / counterfactual screening estimates a plausible comparison point from historical behavior. '
                 'It helps prioritize buildings for investigation; it does not establish realized savings.</div>',
                 unsafe_allow_html=True,
             )
@@ -580,8 +580,8 @@ with tabs[4]:
         st.info("No intervention mapping artifact is available.")
 
 with tabs[5]:
-    st.subheader("Energy · Cost · Carbon scenario")
-    st.caption("Transparent scenario calculator. Values are estimates, not measured savings.")
+    st.markdown('<div class="section-title">Energy · Cost · Carbon scenario</div>', unsafe_allow_html=True)
+    st.caption("Location-based Scope 2 screening scenario. Values are estimates, not measured savings.")
     left, right = st.columns([1.0, 1.45])
     with left:
         annual = st.number_input("Annual energy (kWh)", min_value=0.0, max_value=1e9, value=1000000.0, step=10000.0)
@@ -589,21 +589,21 @@ with tabs[5]:
         tariff = st.number_input("Electricity tariff (¥/kWh)", min_value=0.0, max_value=10.0, value=0.80, step=0.05)
         factor_key = st.selectbox("Emission factor", list(EMISSION_FACTORS))
         factor = EMISSION_FACTORS[factor_key]["value"]
-        st.caption(f"Source: {EMISSION_FACTORS[factor_key]['source']}")
+        st.caption(f"Source: {EMISSION_FACTORS[factor_key]['source']} · {EMISSION_FACTORS[factor_key]['unit']}")
     with right:
         result = scenario(annual, reduction, tariff, factor)
         a, b, c = st.columns(3)
         a.metric("Avoided energy", f'{result["avoided_energy_kwh"]:,.0f} kWh')
-        b.metric("Estimated cost saving", f'¥{result["estimated_cost_saving"]:,.0f}')
+        b.metric("Estimated energy-charge saving", f'¥{result["estimated_energy_charge_saving"]:,.0f}')
         c.metric("Avoided CO₂e", f'{result["avoided_co2e_t"]:,.1f} t')
-        st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify tariff, meter unit, emission factor and reduction assumption before real decisions. These are not measured savings.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify meter units, reporting boundary, electricity tariff and emission-factor year/geography before real decisions. Cost output is a simplified energy-charge estimate; CO₂ is a location-based Scope 2 screening result, not a measured reduction.</div>', unsafe_allow_html=True)
 
         scenario_rows = []
         for pct in range(0, 51, 5):
             sr = scenario(annual, pct / 100, tariff, factor)
             scenario_rows.append({
                 "Reduction": pct,
-                "Cost saving (¥)": sr["estimated_cost_saving"],
+                "Energy-charge saving (¥)": sr["estimated_energy_charge_saving"],
                 "Avoided CO₂e (t)": sr["avoided_co2e_t"],
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
