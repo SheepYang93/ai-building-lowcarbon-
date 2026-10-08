@@ -10,7 +10,7 @@ def diagnose_uploaded_data(daily):
     d = daily.copy()
     d["weekday"] = d["date"].dt.dayofweek < 5
     d["baseline_28d"] = d["energy"].shift(1).rolling(CONFIG.baseline_window, min_periods=CONFIG.baseline_min_periods).median()
-    d["mad_28d"] = d["energy"].shift(1).rolling(28, min_periods=7).apply(
+    d["mad_28d"] = d["energy"].shift(1).rolling(CONFIG.mad_window, min_periods=CONFIG.mad_min_periods).apply(
         lambda x: np.median(np.abs(x - np.median(x))), raw=True
     )
     scale = (1.4826 * d["mad_28d"]).clip(lower=1e-9)
@@ -18,7 +18,7 @@ def diagnose_uploaded_data(daily):
     d["ratio_to_baseline"] = d["energy"] / d["baseline_28d"].replace(0, np.nan)
     d["anomaly"] = (
         d["baseline_28d"].notna()
-        & ((d["robust_z"] >= CONFIG.robust_z_threshold) | (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold))
+        & ((d["robust_z"] >= CONFIG.robust_z_threshold) & (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold))
     )
 
     valid = d[d["baseline_28d"].notna()].copy()
