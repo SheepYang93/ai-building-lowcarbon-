@@ -8,9 +8,11 @@ import streamlit as st
 try:
     from app.economics import scenario
     from app.emission_factors import EMISSION_FACTORS
+    from app.validation import did_effect, pretrend_check
 except ImportError:
     from economics import scenario
     from emission_factors import EMISSION_FACTORS
+    from validation import did_effect, pretrend_check
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
 
@@ -609,7 +611,7 @@ with tabs[5]:
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
         st.markdown('<div class="section-title">Scenario sensitivity</div>', unsafe_allow_html=True)
         st.caption("同一能耗基线下，不同假设节能率对应的成本与碳减排情景。")
-        st.line_chart(scenario_df[["Cost saving (¥)", "Avoided CO₂e (t)"]], height=300)
+        st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
 with tabs[6]:
     st.markdown('<div class="section-title">Diagnostic Report</div>', unsafe_allow_html=True)
@@ -701,26 +703,12 @@ with tabs[7]:
                     "The dataset needs observations both before and after the intervention date."
                 )
 
-            summary = (
-                v.assign(period=np.where(pre, "pre", "post"))
-                .groupby(["group", "period"])["energy"]
-                .mean()
-                .unstack()
-            )
-
-            if not {"treated", "control"}.issubset(summary.index):
-                raise ValueError("Both treated and control groups are required.")
-
-            treated_change = summary.loc["treated", "post"] - summary.loc["treated", "pre"]
-            control_change = summary.loc["control", "post"] - summary.loc["control", "pre"]
-            did_abs = treated_change - control_change
-
-            treated_pre = summary.loc["treated", "pre"]
-            did_pct = (
-                did_abs / treated_pre * 100
-                if treated_pre != 0
-                else np.nan
-            )
+            result = did_effect(v, intervention_date)
+            summary = result["summary"]
+            treated_change = result["treated_change"]
+            control_change = result["control_change"]
+            did_abs = result["did_abs"]
+            did_pct = result["did_pct"]
 
             st.success("Validation analysis completed.")
             a, b, c = st.columns(3)
@@ -744,6 +732,17 @@ with tabs[7]:
             pivot = plot_df.pivot(index="date", columns="group", values="energy")
             st.subheader("Treatment / control energy trend")
             st.line_chart(pivot)
+
+            trend = pretrend_check(v, intervention_date)
+            st.markdown("**Pre-trend diagnostic**")
+            if trend["status"] == "diagnostic":
+                t1, t2, t3 = st.columns(3)
+                t1.metric("Treated pre-slope", f'{trend["treated_slope"]:+.4f}/day')
+                t2.metric("Control pre-slope", f'{trend["control_slope"]:+.4f}/day')
+                t3.metric("Slope gap", f'{trend["slope_gap"]:+.4f}/day')
+                st.caption("This is a simple diagnostic of pre-period slopes, not a formal parallel-trends test.")
+            else:
+                st.info("Not enough pre-period observations to compute a slope diagnostic.")
 
             st.warning(
                 "Interpretation boundary: DID compares the treated group's change with "
