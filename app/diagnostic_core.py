@@ -3,11 +3,13 @@
 import numpy as np
 import pandas as pd
 
+from app.config import CONFIG, evidence_level
+
 
 def diagnose_uploaded_data(daily):
     d = daily.copy()
     d["weekday"] = d["date"].dt.dayofweek < 5
-    d["baseline_28d"] = d["energy"].shift(1).rolling(28, min_periods=7).median()
+    d["baseline_28d"] = d["energy"].shift(1).rolling(CONFIG.baseline_window, min_periods=CONFIG.baseline_min_periods).median()
     d["mad_28d"] = d["energy"].shift(1).rolling(28, min_periods=7).apply(
         lambda x: np.median(np.abs(x - np.median(x))), raw=True
     )
@@ -16,7 +18,7 @@ def diagnose_uploaded_data(daily):
     d["ratio_to_baseline"] = d["energy"] / d["baseline_28d"].replace(0, np.nan)
     d["anomaly"] = (
         d["baseline_28d"].notna()
-        & ((d["robust_z"] >= 3.0) | (d["ratio_to_baseline"] >= 1.25))
+        & ((d["robust_z"] >= CONFIG.robust_z_threshold) | (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold))
     )
 
     valid = d[d["baseline_28d"].notna()].copy()
@@ -70,5 +72,6 @@ def diagnose_uploaded_data(daily):
         "trend_pct": trend_pct,
         "fingerprint": fingerprint,
         "intervention": intervention,
+        "evidence_level": evidence_level(100.0 if len(d) >= 84 else 75.0 if len(d) >= 56 else 55.0),
     }
 
