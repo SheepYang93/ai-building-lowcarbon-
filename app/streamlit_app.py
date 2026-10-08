@@ -350,9 +350,9 @@ with tabs[0]:
 
 with tabs[1]:
     st.markdown('<div class="section-title">Upload & Diagnose</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">把一份建筑能耗 CSV 快速转化为可解释的诊断结果。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">把一份建筑能耗 CSV 转化为 AI expected-use + robust baseline 双证据诊断；字段不足时自动回退。</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>Recommended</b> timestamp + electricity_kwh &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
+        '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>AI-ready</b> building_id + area_m2 + outdoor_temperature + ≥60 days &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
         unsafe_allow_html=True,
     )
     st.code(
