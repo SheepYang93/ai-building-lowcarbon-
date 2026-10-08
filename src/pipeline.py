@@ -39,7 +39,7 @@ def train_model(d,f,cap=100000,seed=42):
     tr=d[d.date<cutoff]; te=d[d.date>=cutoff]; tr_fit=deterministic_sample(tr,cap)
     model=ExtraTreesRegressor(n_estimators=160,random_state=seed,n_jobs=-1,min_samples_leaf=2,max_features=.9)
     model.fit(tr_fit[f],tr_fit.meter_reading); pred=model.predict(te[f]); y=te.meter_reading.to_numpy()
-    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/np.abs(y).sum()),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date())}
+    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/np.abs(y).sum()),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d)}
 
 def anomaly_table(df):
     x=df[["building_id","date","meter_reading","sub_primaryspaceusage","sqm","site_id"]].copy(); g=x.groupby("building_id")["meter_reading"]
