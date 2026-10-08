@@ -215,3 +215,11 @@ The hosted Streamlit demo is deployed as a single production service on Railway.
 ## License
 
 MIT
+
+
+### Evidence-strengthening features
+- Simple forecasting baselines (yesterday, 7-day seasonal, 28-day median) are retained for model comparison.
+- Uploaded sub-daily data preserves raw cadence and can receive same-slot anomaly screening before daily decision aggregation.
+- Expected-use screening exposes a residual-based expected range rather than a point estimate alone.
+- Field validation includes DID, pre-trend slope diagnostics, placebo falsification and clustered bootstrap intervals.
+- Data quality is mapped to an evidence level; low-quality uploads are not treated as strong decision evidence.
