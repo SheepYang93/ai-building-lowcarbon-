@@ -92,7 +92,10 @@ def load_uploaded_building(uploaded_file):
             )
 
     df["date"] = df["timestamp"].dt.floor("D")
-    daily = df.groupby("date", as_index=False)["energy"].sum()
+    agg = {"energy": "sum"}
+    if "outdoor_temperature" in df.columns:
+        agg["outdoor_temperature"] = "mean"
+    daily = df.groupby("date", as_index=False).agg(agg)
     daily = daily.sort_values("date").reset_index(drop=True)
 
     for optional in ["building_id", "building_type", "area_m2"]:
