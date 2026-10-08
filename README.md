@@ -35,10 +35,10 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 | Prediction | ExtraTrees + lag/rolling features | expected energy use |
 | Anomaly | rolling median + robust MAD | anomaly candidates |
 | Fingerprint | persistence, recurrence, trend, morphology | building behavior type |
-| Counterfactual | calibrated expected-use model | potential intervention signal |
+| Expected-use baseline | historical past-only baseline / screening | potential intervention signal |
 | Intervention | fingerprint-to-action mapping | intervention family |
-| Carbon | parameterized emission-factor scenario | conditional CO₂e |
-| Validation | treatment/control + DID + placebo | field evidence |
+| Carbon | versioned electricity emission factor + accounting boundary | conditional Scope 2 CO₂e |
+| Validation | treatment/control + DID; placebo/pre-trend as next checks | field evidence |
 
 ## Model design
 
@@ -86,7 +86,7 @@ The public Streamlit app demonstrates the full decision workflow and can be open
 5. **Intervention** — map the fingerprint to an intervention family
 6. **Carbon** — explore conditional carbon scenarios
 7. **Report** — generate a downloadable Markdown diagnosis report
-8. **Field Validation** — upload treatment/control data and calculate a basic Difference-in-Differences (DID) estimate
+8. **Field Validation** — upload treatment/control data and calculate a basic Difference-in-Differences (DID) estimate; automated pre-trend/placebo testing is not yet part of the UI
 
 ### Demo workflow
 
@@ -120,7 +120,7 @@ The pipeline is designed for a BDG2-derived daily building-energy dataset. Raw d
 
 The derivative dataset's exact `meter_reading` unit lineage must be verified before treating readings as kWh.
 
-> **CO₂e values produced by this project are conditional scenarios until the energy unit and emission factor are independently verified.**
+> **CO₂e values are conditional Scope 2 screening scenarios until meter units, reporting boundary, factor year/geography and any green-electricity treatment are independently verified.**
 
 ## Quick start
 
@@ -177,7 +177,7 @@ The main validation design is chronological: historical lag/rolling features are
 
 **Robust anomaly detection:** rolling baselines and robust dispersion reduce sensitivity to isolated extremes.
 
-**Causal humility:** prediction is not causal effect. Counterfactual results are screening signals, not proof of savings.
+**Causal humility:** prediction is not causal effect. The expected-use baseline is a screening comparison, not a proven causal counterfactual; realized savings require field validation.
 
 **Explicit uncertainty:** unstable low-baseline cases are separated from candidates that survive robustness checks.
 
