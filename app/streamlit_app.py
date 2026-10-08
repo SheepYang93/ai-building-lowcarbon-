@@ -8,11 +8,11 @@ import streamlit as st
 try:
     from app.economics import scenario
     from app.emission_factors import EMISSION_FACTORS
-    from app.validation import did_effect, pretrend_check
+    from app.validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
 except ImportError:
     from economics import scenario
     from emission_factors import EMISSION_FACTORS
-    from validation import did_effect, pretrend_check
+    from validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
 
@@ -104,8 +104,10 @@ def load_uploaded_building(uploaded_file):
 
 try:
     from app.diagnostic_core import diagnose_uploaded_data
+    from app.config import evidence_level
 except ImportError:
     from diagnostic_core import diagnose_uploaded_data
+    from config import evidence_level
 
 
 
@@ -795,8 +797,15 @@ with tabs[5]:
     st.markdown('<div class="section-title">Energy · Cost · Carbon scenario</div>', unsafe_allow_html=True)
     st.caption("Location-based Scope 2 screening scenario. Values are estimates, not measured savings.")
     left, right = st.columns([1.0, 1.45])
+    upload_daily = st.session_state.get("upload_daily")
+    upload_summary = st.session_state.get("upload_summary")
+    if upload_daily is not None:
+        inferred_annual = float(upload_daily["energy"].sum())
+        st.markdown('<div class="data-status"><b>Live building baseline</b> · annualized from uploaded records; verify meter unit before using as kWh.</div>', unsafe_allow_html=True)
+    else:
+        inferred_annual = 1000000.0
     with left:
-        annual = st.number_input("Annual energy (kWh)", min_value=0.0, max_value=1e9, value=1000000.0, step=10000.0)
+        annual = st.number_input("Annual energy baseline", min_value=0.0, max_value=1e12, value=inferred_annual, step=max(inferred_annual*0.01,1.0))
         reduction = st.slider("Assumed reduction", 0, 50, 20) / 100
         tariff = st.number_input("Electricity tariff (¥/kWh)", min_value=0.0, max_value=10.0, value=0.80, step=0.05)
         factor_key = st.selectbox("Emission factor", list(EMISSION_FACTORS))
@@ -850,7 +859,7 @@ with tabs[7]:
     st.markdown('<div class="section-title">Field Validation</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">用 Treatment / Control + DID 把模型筛选结果推进到现场证据。</div>', unsafe_allow_html=True)
     st.markdown('<div class="data-status"><b>Evidence path</b> Baseline → intervention → treatment/control → DID → placebo / pre-trend checks</div>', unsafe_allow_html=True)
-    st.caption("This is a basic DID calculator for study-design screening; it does not yet run automated pre-trend or placebo tests.")
+    st.caption("Preliminary field-validation prototype: DID + pre-trend slope diagnostic + placebo falsification check + clustered bootstrap interval. These checks do not prove causality.")
     st.write(
         "Upload a validation CSV with one row per building-day. Required columns: "
         "date, energy, building_id, group, intervention_date. "
