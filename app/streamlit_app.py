@@ -567,41 +567,98 @@ with tabs[1]:
 
 with tabs[2]:
     st.markdown('<div class="section-title">Building Diagnosis</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">从异常频率、优先级和建筑类型快速定位值得进一步检查的对象。</div>', unsafe_allow_html=True)
-    if len(an):
+    st.markdown('<div class="section-subtitle">单建筑诊断：把数据质量、AI expected-use、异常证据与行动建议放进同一张诊断卡。</div>', unsafe_allow_html=True)
+
+    upload_daily = st.session_state.get("upload_daily")
+    upload_summary = st.session_state.get("upload_summary")
+    upload_meta = st.session_state.get("upload_metadata", {})
+    upload_ai = st.session_state.get("upload_ai")
+
+    if upload_daily is not None and upload_summary is not None:
+        s = upload_summary
+        quality_score, _ = score_upload_quality(upload_daily)
+        ai_data = upload_ai["data"] if upload_ai is not None else None
+
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("Data quality", f"{quality_score:.0f}/100")
+        k2.metric("Anomaly days", int(s["anomaly_days"]))
+        k3.metric("Anomaly share", f'{s["anomaly_share"] * 100:.1f}%')
+        k4.metric("Trend", f'{s["trend_pct"]:+.1f}%')
+
+        if ai_data is not None:
+            gap = float(ai_data["relative_gap"].mean() * 100)
+            ai_anoms = int(ai_data["ai_anomaly"].sum())
+            st.markdown(
+                f'<div class="insight-card"><b>AI diagnosis</b><br>'
+                f'Expected-use screening is available for this upload. '
+                f'{ai_anoms} holdout observations are flagged by the residual MAD screen; '
+                f'the mean actual-vs-expected gap is {gap:+.1f}%. '
+                f'This is screening evidence, not a verified fault or savings estimate.</div>',
+                unsafe_allow_html=True,
+            )
+            plot = ai_data.set_index("date")[["meter_reading", "predicted_energy"]].rename(
+                columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
+            )
+            st.markdown("**Actual vs expected**")
+            st.line_chart(plot)
+            residual_plot = ai_data.set_index("date")[["residual_robust_z"]].rename(
+                columns={"residual_robust_z": "Residual robust Z"}
+            )
+            st.markdown("**Residual anomaly evidence**")
+            st.line_chart(residual_plot)
+        else:
+            st.info("AI expected-use screening is not available for this upload; the robust past-only baseline remains the evidence source.")
+
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**Energy fingerprint**")
+            st.markdown(
+                f'**{s["fingerprint"]}**  \\n'
+                f'Weekend / weekday ratio: {s["weekend_ratio"]:.2f}  ·  '
+                f'Recent-vs-early median trend: {s["trend_pct"]:+.1f}%'
+            )
+        with right:
+            st.markdown("**Recommended first action**")
+            st.markdown(f'**{s["intervention"]}**')
+            st.caption("Action is a screening recommendation. Confirm schedules, HVAC status and equipment operation before intervention.")
+
+        st.markdown("**Building profile**")
+        st.dataframe(pd.DataFrame([{
+            "Building ID": upload_meta.get("building_id", "not provided"),
+            "Type": upload_meta.get("building_type", "not provided"),
+            "Area (m²)": upload_meta.get("area_m2", "not provided"),
+            "Period": f'{s["start"]} → {s["end"]}',
+            "Daily records": s["records"],
+        }]), width="stretch", hide_index=True)
+
+        with st.expander("Evidence boundary"):
+            st.write(
+                "AI expected-use is retrained on the uploaded history when sufficient fields exist. "
+                "Residual MAD and robust-baseline flags are screening signals. "
+                "Neither establishes causal savings; field validation is required for realized impact."
+            )
+    elif len(an):
         q = an.copy()
         q["label"] = q.building_id.astype(str) + " · " + q.sub_primaryspaceusage.astype(str)
         label = st.selectbox("Select building", q.label.head(200).tolist())
         r = q[q.label.eq(label)].iloc[0]
-        a, b, c, d = st.columns(4)
-        a.metric("Priority", f"{r.priority_score:.1f}")
-        b.metric("Anomaly days", int(r.anomaly_days))
-        c.metric("Anomaly share", f"{r.anomaly_share * 100:.1f}%")
-        d.metric("Area", f"{float(r.sqm):,.0f} m²")
+        a1, b1, c1, d1 = st.columns(4)
+        a1.metric("Priority", f"{r.priority_score:.1f}")
+        b1.metric("Anomaly days", int(r.anomaly_days))
+        c1.metric("Anomaly share", f"{r.anomaly_share * 100:.1f}%")
+        d1.metric("Area", f"{float(r.sqm):,.0f} m²")
         st.markdown(
-            f'<div class="insight-card"><b>Diagnosis summary</b><br>{r.sub_primaryspaceusage} building · priority {float(r.priority_score):.1f} · {int(r.anomaly_days)} anomaly days. Recommended next step: inspect operating schedule, HVAC settings and equipment status.</div>',
+            f'<div class="insight-card"><b>Portfolio screening</b><br>{r.sub_primaryspaceusage} building · priority {float(r.priority_score):.1f}. This public-data view is a screening artifact; use Upload & Diagnose for building-level AI evidence.</div>',
             unsafe_allow_html=True,
         )
-        left, right = st.columns(2)
-        with left:
-            st.markdown("**Building profile**")
-            st.dataframe(pd.DataFrame([{
-                "Building ID": r.building_id,
-                "Type": r.sub_primaryspaceusage,
-                "Area (m²)": round(float(r.sqm), 1),
-                "Site": r.site_id,
-            }]), width="stretch", hide_index=True)
-        with right:
-            st.markdown("**Priority interpretation**")
-            priority = float(r.priority_score)
-            if priority >= 75:
-                st.warning("High priority · recommend operational review first.")
-            elif priority >= 50:
-                st.info("Medium priority · monitor and compare with operating schedule.")
-            else:
-                st.success("Lower priority · keep under routine monitoring.")
+        st.dataframe(pd.DataFrame([{
+            "Building ID": r.building_id,
+            "Type": r.sub_primaryspaceusage,
+            "Area (m²)": round(float(r.sqm), 1),
+            "Site": r.site_id,
+        }]), width="stretch", hide_index=True)
     else:
-        st.info("Live building-diagnosis output is not bundled in the public demo. Use Upload & Diagnose for your own building data.")
+        st.info("Upload a single-building CSV to generate a live building diagnosis.")
 
 with tabs[3]:
     st.markdown('<div class="section-title">Expected-use / Counterfactual Screening</div>', unsafe_allow_html=True)
