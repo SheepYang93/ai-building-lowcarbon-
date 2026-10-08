@@ -678,6 +678,7 @@ with tabs[6]:
 
 with tabs[7]:
     st.subheader("Field validation: Treatment / Control + DID")
+    st.caption("This is a basic DID calculator for study-design screening; it does not yet run automated pre-trend or placebo tests.")
     st.write(
         "Upload a validation CSV with one row per building-day. Required columns: "
         "date, energy, building_id, group, intervention_date. "
@@ -782,11 +783,12 @@ with tabs[7]:
             st.subheader("Treatment / control energy trend")
             st.line_chart(pivot)
 
-            st.info(
-                "Interpretation: DID compares the treated group's change with the "
-                "control group's change. A negative DID means treated energy fell "
-                "more than control energy. This is evidence about the intervention "
-                "under the study design, not proof of causality by itself."
+            st.warning(
+                "Interpretation boundary: DID compares the treated group's change with "
+                "the control group's change. A negative DID means treated energy fell "
+                "more than control energy. This calculator does not automatically test "
+                "parallel pre-trends, placebo dates, weather confounding or statistical "
+                "significance, so the result should be treated as preliminary evidence."
             )
 
             st.download_button(
