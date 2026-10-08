@@ -142,7 +142,19 @@ def run_uploaded_ai_screening(daily):
         out["predicted_energy"] = pred
         out["residual"] = out["meter_reading"] - out["predicted_energy"]
         out["relative_gap"] = out["residual"] / out["predicted_energy"].abs().clip(lower=1e-9)
-        out["ai_anomaly"] = (out["relative_gap"] >= 0.20).astype(int)
+        out["residual_baseline"] = out["residual"].shift(1).rolling(14, min_periods=7).median()
+        out["residual_mad"] = out["residual"].shift(1).rolling(14, min_periods=7).apply(
+            lambda x: np.median(np.abs(x - np.median(x))), raw=True
+        )
+        scale = (1.4826 * out["residual_mad"]).clip(lower=1e-9)
+        out["residual_robust_z"] = (out["residual"] - out["residual_baseline"]) / scale
+        out["ai_anomaly"] = (
+            out["residual_baseline"].notna()
+            & (out["residual_robust_z"] >= 3.0)
+        ).astype(int)
+        out["anomaly_confidence"] = np.clip(
+            (out["residual_robust_z"] - 2.0) / 3.0, 0.0, 1.0
+        )
         return {"data": out, "metrics": metrics_ai, "cutoff": cutoff, "model": model}, None
     except Exception as exc:
         return None, f"AI screening unavailable: {exc}"
@@ -426,6 +438,9 @@ with tabs[1]:
                 ai1.metric("AI test R²", f"{ai_result['metrics']['r2']:.3f}")
                 ai2.metric("AI test WAPE", f"{ai_result['metrics']['wape'] * 100:.1f}%")
                 ai3.metric("AI anomaly days", int(ai_result["data"]["ai_anomaly"].sum()))
+                anomaly_score = ai_result["data"]["anomaly_confidence"].mean()
+                st.metric("Mean anomaly confidence", f"{anomaly_score * 100:.0f}%")
+                st.caption("Anomaly score uses a past-only 14-day residual median/MAD. It is a screening score, not a probability of fault or verified savings.")
                 ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
                     columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
                 )
