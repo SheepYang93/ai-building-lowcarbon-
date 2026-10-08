@@ -49,5 +49,23 @@ def anomaly_table(df):
     q["anomaly_share"]=q.anomaly_days/q.days.clip(lower=1); q["priority_score"]=(.55*q.mean_stable_dev.rank(pct=True)+.45*q.anomaly_share.rank(pct=True))*100
     return q.sort_values("priority_score",ascending=False)
 
-def carbon_scenario(df,reduction=.20,ef=.5777):
-    a=df.groupby("building_id").meter_reading.sum().rename("annual_reading").reset_index(); a["scenario_reduction"]=a.annual_reading*reduction; a["scenario_co2e_t_if_kwh"]=a.scenario_reduction*ef/1000; a["unit_warning"]="Scenario only; verify meter_reading unit before interpreting as kWh."; return a
+def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location-based electricity factor"):
+    """Create a conditional Scope 2 screening scenario.
+
+    The input meter_reading is deliberately not renamed to kWh. The caller
+    must independently verify meter units before interpreting the result as
+    physical electricity consumption.
+    """
+    a = (
+        df.groupby("building_id")["meter_reading"]
+        .sum()
+        .rename("annual_meter_reading")
+        .reset_index()
+    )
+    a["scenario_reduction"] = a["annual_meter_reading"] * float(reduction)
+    a["scenario_co2_t_if_kwh"] = a["scenario_reduction"] * float(ef) / 1000
+    a["emission_factor_kgco2_per_kwh"] = float(ef)
+    a["emission_factor_label"] = ef_label
+    a["accounting_boundary"] = "Scope 2 · location-based screening"
+    a["unit_warning"] = "Scenario only; verify meter_reading unit before interpreting as kWh."
+    return a
