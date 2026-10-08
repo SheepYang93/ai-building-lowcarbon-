@@ -6,19 +6,48 @@ import pandas as pd
 from app.config import CONFIG, evidence_level
 
 
+def _robust_mad(values):
+    """Return MAD while ignoring the leading NaN introduced by shift(1)."""
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+    if values.size == 0:
+        return np.nan
+    center = np.median(values)
+    return float(np.median(np.abs(values - center)))
+
+
 def diagnose_uploaded_data(daily):
     d = daily.copy()
     d["weekday"] = d["date"].dt.dayofweek < 5
-    d["baseline_28d"] = d["energy"].shift(1).rolling(CONFIG.baseline_window, min_periods=CONFIG.baseline_min_periods).median()
-    d["mad_28d"] = d["energy"].shift(1).rolling(CONFIG.mad_window, min_periods=CONFIG.mad_min_periods).apply(
-        lambda x: np.median(np.abs(x - np.median(x))), raw=True
+    d["baseline_28d"] = d["energy"].shift(1).rolling(
+        CONFIG.baseline_window,
+        min_periods=CONFIG.baseline_min_periods,
+    ).median()
+    d["mad_28d"] = d["energy"].shift(1).rolling(
+        CONFIG.mad_window,
+        min_periods=CONFIG.mad_min_periods,
+    ).apply(_robust_mad, raw=True)
+
+    # A zero MAD means the recent history is flat. In that case a sufficiently
+    # large relative jump is itself strong evidence of an operational anomaly.
+    scale = 1.4826 * d["mad_28d"]
+    d["robust_z"] = np.where(
+        scale > 1e-9,
+        (d["energy"] - d["baseline_28d"]) / scale,
+        np.where(
+            (d["baseline_28d"] > 0)
+            & (d["energy"] > d["baseline_28d"]),
+            np.inf,
+            0.0,
+        ),
     )
-    scale = (1.4826 * d["mad_28d"]).clip(lower=1e-9)
-    d["robust_z"] = (d["energy"] - d["baseline_28d"]) / scale
     d["ratio_to_baseline"] = d["energy"] / d["baseline_28d"].replace(0, np.nan)
     d["anomaly"] = (
         d["baseline_28d"].notna()
-        & ((d["robust_z"] >= CONFIG.robust_z_threshold) & (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold))
+        & (
+            (d["robust_z"] >= CONFIG.robust_z_threshold)
+            & (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold)
+        )
     )
 
     valid = d[d["baseline_28d"].notna()].copy()
@@ -72,6 +101,7 @@ def diagnose_uploaded_data(daily):
         "trend_pct": trend_pct,
         "fingerprint": fingerprint,
         "intervention": intervention,
-        "evidence_level": evidence_level(100.0 if len(d) >= 84 else 75.0 if len(d) >= 56 else 55.0),
+        "evidence_level": evidence_level(
+            100.0 if len(d) >= 84 else 75.0 if len(d) >= 56 else 55.0
+        ),
     }
-
