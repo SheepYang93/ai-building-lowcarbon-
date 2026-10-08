@@ -108,6 +108,42 @@ except ImportError:
     from diagnostic_core import diagnose_uploaded_data
 
 
+
+
+def run_uploaded_ai_screening(daily):
+    """Train a small chronological ExtraTrees model when upload fields are sufficient."""
+    required = {"building_id", "area_m2", "outdoor_temperature"}
+    if not required.issubset(daily.columns) or len(daily) < 60:
+        return None, "AI prediction requires building_id, area_m2, outdoor_temperature and at least 60 daily records."
+    try:
+        from src.pipeline import features, train_model
+        d = daily.copy().rename(columns={
+            "area_m2": "sqm",
+            "outdoor_temperature": "airTemperature",
+            "energy": "meter_reading",
+        })
+        d["meter"] = "electricity"
+        d["sub_primaryspaceusage"] = d.get("building_type", "Uploaded building")
+        d["site_id"] = "uploaded"
+        d["date"] = pd.to_datetime(d["date"])
+        d["sqm"] = pd.to_numeric(d["sqm"], errors="coerce")
+        d["airTemperature"] = pd.to_numeric(d["airTemperature"], errors="coerce")
+        d["meter_reading"] = pd.to_numeric(d["meter_reading"], errors="coerce")
+        d = d.dropna(subset=["building_id", "date", "sqm", "airTemperature", "meter_reading"])
+        d = d[d["sqm"] > 0].sort_values(["building_id", "date"])
+        if len(d) < 60 or d["date"].nunique() < 60:
+            return None, "Not enough valid daily observations for chronological AI screening."
+        featured, feature_cols = features(d)
+        model, _, test, pred, cutoff, metrics_ai = train_model(featured, feature_cols, cap=50000)
+        out = test[["building_id", "date", "meter_reading"]].copy()
+        out["predicted_energy"] = pred
+        out["residual"] = out["meter_reading"] - out["predicted_energy"]
+        out["relative_gap"] = out["residual"] / out["predicted_energy"].abs().clip(lower=1e-9)
+        out["ai_anomaly"] = (out["relative_gap"] >= 0.20).astype(int)
+        return {"data": out, "metrics": metrics_ai, "cutoff": cutoff, "model": model}, None
+    except Exception as exc:
+        return None, f"AI screening unavailable: {exc}"
+
 def build_report(summary, d, metadata):
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
     peak = peak.sort_values("robust_z", ascending=False).head(10)
@@ -375,10 +411,26 @@ with tabs[1]:
                     "use 8–12 weeks for a stronger field validation baseline."
                 )
 
-            st.success(
-                "Uploaded-data screening completed. This is a robust baseline diagnostic, "
-                "not a retrained version of the public-data ExtraTrees model."
-            )
+            ai_result, ai_message = run_uploaded_ai_screening(daily)
+            if ai_result is not None:
+                st.session_state["upload_ai"] = ai_result
+                st.success(
+                    f"AI screening available: chronological ExtraTrees trained on the uploaded history "
+                    f"and evaluated on the holdout period (R²={ai_result['metrics']['r2']:.3f}, "
+                    f"WAPE={ai_result['metrics']['wape'] * 100:.1f}%)."
+                )
+                ai1, ai2, ai3 = st.columns(3)
+                ai1.metric("AI test R²", f"{ai_result['metrics']['r2']:.3f}")
+                ai2.metric("AI test WAPE", f"{ai_result['metrics']['wape'] * 100:.1f}%")
+                ai3.metric("AI anomaly days", int(ai_result["data"]["ai_anomaly"].sum()))
+                ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
+                    columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
+                )
+                st.markdown("**Actual vs expected energy**")
+                st.line_chart(ai_plot)
+                st.caption("Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model.")
+            else:
+                st.info(ai_message + " The robust past-only baseline remains available.")
 
             st.markdown('<div class="section-title">Building health</div>', unsafe_allow_html=True)
             card1, card2, card3 = st.columns(3)
