@@ -662,48 +662,60 @@ with tabs[2]:
 
 with tabs[3]:
     st.markdown('<div class="section-title">Expected-use / Counterfactual Screening</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">用历史正常行为构建 expected-use baseline，筛选值得进一步验证的潜在节能空间。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">先判断“哪里值得查”，再把筛选结果传给干预与碳情景模块。</div>', unsafe_allow_html=True)
 
-    cf = ADV / "ai_exp45_robust_candidates.csv"
-    source = "pipeline output"
-    if not cf.exists():
-        cf = EXAMPLES / "counterfactual_candidates_demo.csv"
-        source = "curated public-data example"
-
-    if cf.exists():
-        data = pd.read_csv(cf)
+    upload_ai = st.session_state.get("upload_ai")
+    upload_summary = st.session_state.get("upload_summary")
+    if upload_ai is not None:
+        d = upload_ai["data"].copy()
+        candidate_days = d[d["ai_anomaly"].eq(1)].copy()
+        median_gap = float(d["relative_gap"].median() * 100)
+        st.markdown('<div class="data-status"><b>Live upload screening</b> · retrained chronological model · holdout evidence</div>', unsafe_allow_html=True)
+        k1, k2, k3 = st.columns(3)
+        k1.metric("AI anomaly days", int(d["ai_anomaly"].sum()))
+        k2.metric("Median actual-vs-expected gap", f"{median_gap:+.1f}%")
+        k3.metric("Mean confidence", f'{d["anomaly_confidence"].mean() * 100:.0f}%')
         st.markdown(
-            f'<div class="data-status"><b>{len(data)}</b> candidate records &nbsp; · &nbsp; source: <b>{source}</b></div>',
+            '<div class="insight-card"><b>Decision meaning</b><br>'
+            'This view identifies periods where observed use is unusually above the model expected-use level. '
+            'It is a prioritization signal, not a causal counterfactual or verified savings estimate.</div>',
             unsafe_allow_html=True,
         )
-        cols = [c for c in [
-            "building_id", "building_type", "protected_calibrated_pct",
-            "robust_low_pct", "robust_high_pct", "robust_confidence", "robust_class"
-        ] if c in data.columns]
-
-        if len(data):
-            row = data.iloc[0]
-            k1, k2, k3 = st.columns(3)
-            if "protected_calibrated_pct" in data:
-                k1.metric("Median screening effect", f'{data["protected_calibrated_pct"].median():.1f}%')
-            if "robust_confidence" in data:
-                k2.metric("Median confidence", f'{data["robust_confidence"].median():.2f}')
-            if "robust_class" in data:
-                k3.metric("Candidate class", str(row["robust_class"]))
-
+        if len(candidate_days):
+            show = candidate_days[["date", "meter_reading", "predicted_energy", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
+            show["relative_gap"] *= 100
+            st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(20), width="stretch", hide_index=True)
+        st.caption("Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action.")
+    else:
+        cf = ADV / "ai_exp45_robust_candidates.csv"
+        source = "pipeline output"
+        if not cf.exists():
+            cf = EXAMPLES / "counterfactual_candidates_demo.csv"
+            source = "curated public-data example"
+        if cf.exists():
+            data = pd.read_csv(cf)
             st.markdown(
-                '<div class="insight-card"><b>How to read this</b><br>'
-                'Expected-use / counterfactual screening estimates a plausible comparison point from historical behavior. '
-                'It helps prioritize buildings for investigation; it does not establish realized savings.</div>',
+                f'<div class="data-status"><b>{len(data)}</b> candidate records &nbsp; · &nbsp; source: <b>{source}</b></div>',
                 unsafe_allow_html=True,
             )
-
-        if cols:
-            st.markdown("**Candidate details**")
-            st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
-        st.caption("Candidate effects are screening signals, not measured savings.")
-    else:
-        st.info("No counterfactual artifact is available.")
+            cols = [c for c in [
+                "building_id", "building_type", "protected_calibrated_pct",
+                "robust_low_pct", "robust_high_pct", "robust_confidence", "robust_class"
+            ] if c in data.columns]
+            if len(data):
+                k1, k2, k3 = st.columns(3)
+                if "protected_calibrated_pct" in data:
+                    k1.metric("Median screening effect", f'{data["protected_calibrated_pct"].median():.1f}%')
+                if "robust_confidence" in data:
+                    k2.metric("Median confidence", f'{data["robust_confidence"].median():.2f}')
+                if "robust_class" in data:
+                    k3.metric("Candidate class", str(data["robust_class"].iloc[0]))
+            st.markdown('<div class="insight-card"><b>Public-data screening</b><br>Use this artifact for portfolio prioritization. Realized savings require field validation.</div>', unsafe_allow_html=True)
+            if cols:
+                st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
+            st.caption("Candidate effects are screening signals, not measured savings.")
+        else:
+            st.info("No counterfactual artifact is available.")
 
 with tabs[4]:
     st.markdown('<div class="section-title">Intervention Mapping</div>', unsafe_allow_html=True)
