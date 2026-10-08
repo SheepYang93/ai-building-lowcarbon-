@@ -129,6 +129,9 @@ def run_uploaded_ai_screening(daily):
         d["sqm"] = pd.to_numeric(d["sqm"], errors="coerce")
         d["airTemperature"] = pd.to_numeric(d["airTemperature"], errors="coerce")
         d["meter_reading"] = pd.to_numeric(d["meter_reading"], errors="coerce")
+        for weather_col in ["cloudCoverage", "dewTemperature", "windSpeed"]:
+            if weather_col not in d.columns:
+                d[weather_col] = 0.0
         d = d.dropna(subset=["building_id", "date", "sqm", "airTemperature", "meter_reading"])
         d = d[d["sqm"] > 0].sort_values(["building_id", "date"])
         if len(d) < 60 or d["date"].nunique() < 60:
