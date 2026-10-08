@@ -100,7 +100,11 @@ def load_uploaded_building(uploaded_file):
     return daily, original_columns
 
 
-from app.diagnostic_core import diagnose_uploaded_data
+try:
+    from app.diagnostic_core import diagnose_uploaded_data
+except ImportError:
+    from diagnostic_core import diagnose_uploaded_data
+
 
 def build_report(summary, d, metadata):
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
