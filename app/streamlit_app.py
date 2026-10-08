@@ -501,6 +501,8 @@ with tabs[1]:
                 )
 
             quality_score, quality_checks = score_upload_quality(daily)
+            summary["data_quality_score"] = quality_score
+            summary["evidence_level"] = evidence_level(quality_score)
             intraday = run_intraday_screening(raw_uploaded)
             if intraday is not None:
                 st.session_state["upload_intraday"] = intraday
