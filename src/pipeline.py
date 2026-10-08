@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
+from app.config import CONFIG
+
 REQUIRED=["building_id","meter","date","meter_reading","sub_primaryspaceusage","sqm"]
 
 def load_filter(path):
@@ -44,7 +46,7 @@ def anomaly_table(df):
     x["baseline28"]=g.transform(lambda s:s.shift(1).rolling(28,min_periods=14).median()); x["residual"]=x.meter_reading-x.baseline28
     x["mad56"]=x.groupby("building_id")["residual"].transform(lambda s:s.shift(1).rolling(56,min_periods=14).apply(lambda v:np.median(np.abs(v-np.median(v))),raw=True))
     x["scale"]=(1.4826*x.mad56).clip(lower=1e-9); x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9); x["robust_z"]=x.residual/x.scale
-    x["is_anomaly"]=((x.stable_dev>=.20)&(x.robust_z>=2)).astype(int)
+    x["is_anomaly"]=((x.stable_dev>=CONFIG.relative_gap_threshold)&(x.robust_z>=2)).astype(int)
     q=x.groupby("building_id").agg(sub_primaryspaceusage=("sub_primaryspaceusage","first"),sqm=("sqm","first"),site_id=("site_id","first"),days=("date","nunique"),anomaly_days=("is_anomaly","sum"),mean_stable_dev=("stable_dev",lambda s:float(s.replace([np.inf,-np.inf],np.nan).dropna().clip(lower=0).mean()))).reset_index()
     q["anomaly_share"]=q.anomaly_days/q.days.clip(lower=1); q["priority_score"]=(.55*q.mean_stable_dev.rank(pct=True)+.45*q.anomaly_share.rank(pct=True))*100
     return q.sort_values("priority_score",ascending=False)
@@ -69,3 +71,23 @@ def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location
     a["accounting_boundary"] = "Scope 2 · location-based screening"
     a["unit_warning"] = "Scenario only; verify meter_reading unit before interpreting as kWh."
     return a
+
+
+def baseline_metrics(d, target="meter_reading"):
+    """Compare simple past-only baselines on the same chronological holdout."""
+    d=d.copy().sort_values(["building_id","date"])
+    dates=np.sort(d.date.dropna().unique())
+    if len(dates)<10: return {}
+    cutoff=pd.Timestamp(dates[int(len(dates)*.8)])
+    g=d.groupby("building_id")[target]
+    d["naive_1"]=g.shift(1)
+    d["seasonal_7"]=g.shift(7)
+    d["median_28"]=g.shift(1).rolling(28,min_periods=7).median()
+    te=d[d.date>=cutoff]
+    out={}; y=te[target].to_numpy()
+    for name in ["naive_1","seasonal_7","median_28"]:
+        p=te[name].to_numpy(); ok=np.isfinite(p)&np.isfinite(y)
+        if ok.sum():
+            out[name]={"mae":float(mean_absolute_error(y[ok],p[ok])),
+                       "wape":float(np.abs(y[ok]-p[ok]).sum()/max(np.abs(y[ok]).sum(),1e-9))}
+    return out
