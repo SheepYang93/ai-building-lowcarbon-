@@ -60,7 +60,7 @@ If you only have one minute, open the **Live Demo** and then inspect these three
 2. `src/` — feature engineering, modeling and diagnostic logic.
 3. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.
 
-The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings.
+The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings. The UI separates model evidence, screening signals and field-validation evidence.
 
 ## Tech stack
 
@@ -73,13 +73,13 @@ The project is intentionally presented as a **decision-support prototype**, not 
 | Decision support | counterfactual screening, intervention mapping, scenario analysis |
 | Product | Streamlit |
 | Validation | treatment/control, DID, placebo tests |
-| Engineering | Git, tests, reproducible scripts |
+| Engineering | Git, pytest, reproducible scripts |
 
 ## Demo
 
 The public Streamlit app demonstrates the full decision workflow and can be opened directly without installing the project:
 
-1. **Overview** — system scope, evidence boundary and demo status
+1. **Overview** — system scope, polished product dashboard and evidence boundary
 2. **Upload & Diagnose** — upload a single-building daily-energy CSV and run robust anomaly screening
 3. **Building Diagnosis** — inspect anomaly share, temporal behavior and energy fingerprint
 4. **Counterfactual** — view potential intervention signals as screening evidence
