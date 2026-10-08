@@ -100,74 +100,7 @@ def load_uploaded_building(uploaded_file):
     return daily, original_columns
 
 
-def diagnose_uploaded_data(daily):
-    d = daily.copy()
-    d["weekday"] = d["date"].dt.dayofweek < 5
-    d["baseline_28d"] = d["energy"].shift(1).rolling(28, min_periods=7).median()
-    d["mad_28d"] = d["energy"].shift(1).rolling(28, min_periods=7).apply(
-        lambda x: np.median(np.abs(x - np.median(x))), raw=True
-    )
-    scale = (1.4826 * d["mad_28d"]).clip(lower=1e-9)
-    d["robust_z"] = (d["energy"] - d["baseline_28d"]) / scale
-    d["ratio_to_baseline"] = d["energy"] / d["baseline_28d"].replace(0, np.nan)
-    d["anomaly"] = (
-        d["baseline_28d"].notna()
-        & ((d["robust_z"] >= 3.0) | (d["ratio_to_baseline"] >= 1.25))
-    )
-
-    valid = d[d["baseline_28d"].notna()].copy()
-    anomaly_days = int(valid["anomaly"].sum())
-    anomaly_share = float(valid["anomaly"].mean()) if len(valid) else 0.0
-    total_energy = float(d["energy"].sum())
-    baseline_energy = float(d["baseline_28d"].fillna(d["energy"]).sum())
-    potential_pct = (
-        max(0.0, (total_energy - baseline_energy) / total_energy * 100)
-        if total_energy > 0
-        else 0.0
-    )
-
-    weekday = d.loc[d["weekday"], "energy"].median()
-    weekend = d.loc[~d["weekday"], "energy"].median()
-    weekend_ratio = weekend / weekday if weekday and not pd.isna(weekday) else np.nan
-
-    recent = d.tail(min(28, len(d)))
-    early = d.head(min(28, len(d)))
-    trend_pct = (
-        (recent["energy"].median() / early["energy"].median() - 1) * 100
-        if early["energy"].median() > 0
-        else 0.0
-    )
-
-    if anomaly_days == 0:
-        fingerprint = "stable / no robust anomaly"
-        intervention = "normal monitoring"
-    elif trend_pct >= 15:
-        fingerprint = "gradual operational drift"
-        intervention = "maintenance + HVAC inspection"
-    elif anomaly_share >= 0.20:
-        fingerprint = "persistent high-use"
-        intervention = "HVAC + schedule control"
-    elif weekend_ratio >= 0.75:
-        fingerprint = "recurrent / schedule-related"
-        intervention = "schedule + occupancy control"
-    else:
-        fingerprint = "intermittent operational anomaly"
-        intervention = "schedule + equipment check"
-
-    return d, {
-        "records": len(d),
-        "start": d["date"].min().date().isoformat(),
-        "end": d["date"].max().date().isoformat(),
-        "total_energy": total_energy,
-        "anomaly_days": anomaly_days,
-        "anomaly_share": anomaly_share,
-        "potential_pct": potential_pct,
-        "weekend_ratio": weekend_ratio,
-        "trend_pct": trend_pct,
-        "fingerprint": fingerprint,
-        "intervention": intervention,
-    }
-
+from app.diagnostic_core import diagnose_uploaded_data
 
 def build_report(summary, d, metadata):
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
@@ -253,11 +186,27 @@ st.markdown("""
 .section-subtitle {color:#617873;margin-bottom:1rem}
 .insight-card {background:#F2F8F6;border-left:4px solid #0F766E;border-radius:12px;padding:1rem 1.1rem;margin:.5rem 0}
 .data-status {background:#F7FAF9;border:1px solid #E2EBE8;border-radius:12px;padding:.8rem 1rem;margin:.7rem 0 1rem;color:#315B53}
+.chip {display:inline-block;margin:.28rem .35rem .1rem 0;padding:.42rem .68rem;border:1px solid #D8E8E4;border-radius:999px;background:#fff;color:#315B53;font-size:.82rem;font-weight:650}
+.hero-grid {display:grid;grid-template-columns:1.5fr .8fr;gap:1rem;align-items:end}
+.hero-kicker {font-size:.72rem;letter-spacing:.14em;font-weight:800;opacity:.82}
+.hero-side {background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:1rem 1.1rem}
+.hero-side .small {font-size:.76rem;opacity:.78}
+.hero-side .big {font-size:1.45rem;font-weight:800;margin-top:.15rem}
+.section-rule {height:1px;background:#E5EFEC;margin:1.2rem 0}
 </style>
 <div class="hero">
-<div style="font-size:.78rem;letter-spacing:.13em;font-weight:700;opacity:.82">AI · ENERGY · CARBON INTELLIGENCE</div>
-<h1>Building Energy & Low-carbon Intelligence</h1>
-<p>从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。</p>
+<div class="hero-grid">
+  <div>
+    <div class="hero-kicker">AI · ENERGY · CARBON INTELLIGENCE</div>
+    <h1>Building Energy & Low-carbon Intelligence</h1>
+    <p>从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。</p>
+  </div>
+  <div class="hero-side">
+    <div class="small">DECISION SUPPORT PROTOTYPE</div>
+    <div class="big">Data → Diagnosis → Action</div>
+    <div class="small">Model evidence ≠ measured savings</div>
+  </div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -274,6 +223,7 @@ tabs = st.tabs([
 
 with tabs[0]:
     st.markdown('<div class="section-title">Portfolio Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">AI 驱动的建筑能源异常诊断与低碳决策支持 Demo。</div>', unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
@@ -677,7 +627,9 @@ with tabs[6]:
 
 
 with tabs[7]:
-    st.subheader("Field validation: Treatment / Control + DID")
+    st.markdown('<div class="section-title">Field Validation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">用 Treatment / Control + DID 把模型筛选结果推进到现场证据。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="data-status"><b>Evidence path</b> Baseline → intervention → treatment/control → DID → placebo / pre-trend checks</div>', unsafe_allow_html=True)
     st.caption("This is a basic DID calculator for study-design screening; it does not yet run automated pre-trend or placebo tests.")
     st.write(
         "Upload a validation CSV with one row per building-day. Required columns: "
