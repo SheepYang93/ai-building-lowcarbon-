@@ -34,7 +34,7 @@ pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values(
 
 an=anomaly_table(df)
 an.to_csv(out/"anomaly_buildings.csv",index=False)
-carbon_scenario(df).to_csv(out/"carbon_scenarios.csv",index=False)
+carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location-based electricity factor").to_csv(out/"carbon_scenarios.csv",index=False)
 
 sample=te.sample(min(5000,len(te)),random_state=42)
 pos=te.index.get_indexer(sample.index)
