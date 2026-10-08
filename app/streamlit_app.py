@@ -509,9 +509,10 @@ with tabs[1]:
                 st.info(f'Sub-daily data detected: median cadence {intraday["cadence_minutes"]:.0f} minutes; {intraday["anomaly_count"]} same-slot anomaly observations flagged.')
             else:
                 st.session_state.pop("upload_intraday", None)
-            q1, q2 = st.columns([1, 3])
+            q1, q2, q3 = st.columns(3)
             q1.metric("Data quality", f"{quality_score:.0f}/100")
-            q2.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
+            q2.metric("Evidence level", summary["evidence_level"])
+            q3.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
             
             ai_result, ai_message = run_uploaded_ai_screening(daily)
             if ai_result is not None:
