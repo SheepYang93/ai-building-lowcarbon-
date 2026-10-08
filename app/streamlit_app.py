@@ -719,59 +719,77 @@ with tabs[3]:
 
 with tabs[4]:
     st.markdown('<div class="section-title">Intervention Mapping</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">把异常模式映射到下一步应该检查的设备、运行策略和管理动作。</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">把诊断指纹转换成可执行的检查顺序；上传数据优先，公共 artifact 作为备用。</div>', unsafe_allow_html=True)
 
-    f = ADV / "ai_exp35_intervention_reduction_mapping.csv"
-    source = "pipeline output"
-    if not f.exists():
-        f = EXAMPLES / "intervention_mapping_demo.csv"
-        source = "curated public-data example"
+    upload_summary = st.session_state.get("upload_summary")
+    upload_ai = st.session_state.get("upload_ai")
 
-    if f.exists():
-        data = pd.read_csv(f)
+    if upload_summary is not None:
+        s = upload_summary
+        fp = str(s.get("fingerprint", "unknown"))
+        action = str(s.get("intervention", "further investigation"))
+        mapping = {
+            "gradual operational drift": ("运行时段 / HVAC 控制漂移", "检查 HVAC 设定、运行时段、控制策略与设备状态", "medium"),
+            "persistent high-use": ("持续高负荷运行", "优先检查 HVAC、占用时段、设定温度与非必要运行", "high"),
+            "recurrent / schedule-related": ("时段或占用相关异常", "核对课表/办公时段、启停策略与非工作时段负荷", "medium"),
+            "intermittent operational anomaly": ("间歇性运行异常", "对照异常日期检查设备启停、特殊活动与运维记录", "medium"),
+            "stable / no robust anomaly": ("暂无明显异常", "保持常规监测，避免在证据不足时过早干预", "low"),
+        }
+        cause, measure, priority = mapping.get(fp, ("运营异常候选", action, "medium"))
+        confidence = (
+            float(upload_ai["data"]["anomaly_confidence"].mean())
+            if upload_ai is not None else 0.0
+        )
+        st.markdown('<div class="data-status"><b>Live building evidence</b> · intervention hypothesis generated from uploaded diagnosis</div>', unsafe_allow_html=True)
+        k1, k2, k3 = st.columns(3)
+        k1.metric("Priority", priority.upper())
+        k2.metric("Action confidence", f"{confidence * 100:.0f}%")
+        k3.metric("Fingerprint", fp)
         st.markdown(
-            f'<div class="data-status"><b>{len(data)}</b> intervention mappings &nbsp; · &nbsp; source: <b>{source}</b></div>',
+            f'<div class="insight-card"><b>Recommended first action</b><br>'
+            f'<b>Possible cause:</b> {cause}<br>'
+            f'<b>Check first:</b> {measure}<br>'
+            f'<span class="muted">Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.</span></div>',
             unsafe_allow_html=True,
         )
-        cols = [c for c in [
-            "building_id", "building_type", "energy_archetype", "cause_candidate",
-            "best_measure_family", "action_confidence", "annual_meter_reading",
-            "energy_saving_20%", "action_priority"
-        ] if c in data.columns]
-
-        if len(data):
-            priority_col = "action_priority" if "action_priority" in data.columns else None
-            confidence_col = "action_confidence" if "action_confidence" in data.columns else None
-            k1, k2, k3 = st.columns(3)
-            if priority_col:
-                k1.metric("Top priority", str(data[priority_col].iloc[0]))
-            if confidence_col:
-                k2.metric("Top confidence", f'{float(data[confidence_col].iloc[0]):.2f}')
-            if "energy_saving_20%" in data.columns:
-                k3.metric("Scenario @20%", f'{data["energy_saving_20%"].median():.1f}%')
-
-            st.markdown("**Recommended action map**")
-            for _, row in data.head(5).iterrows():
-                building = row.get("building_id", "Building")
-                cause = row.get("cause_candidate", "Operational anomaly")
-                measure = row.get("best_measure_family", "Further investigation")
-                priority = row.get("action_priority", "—")
-                confidence = row.get("action_confidence", "—")
-                st.markdown(
-                    f'<div class="insight-card"><b>{building}</b> · priority <b>{priority}</b><br>'
-                    f'<b>Possible cause:</b> {cause}<br>'
-                    f'<b>Recommended measure:</b> {measure}<br>'
-                    f'<span class="muted">Action confidence: {confidence}</span></div>',
-                    unsafe_allow_html=True,
-                )
-
-        if cols:
-            with st.expander("View structured intervention data"):
-                st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
-
-        st.caption("10/20/30% values are scenario assumptions, not measured engineering savings.")
+        if upload_ai is not None:
+            anomaly_days = upload_ai["data"][upload_ai["data"]["ai_anomaly"].eq(1)]
+            if len(anomaly_days):
+                st.markdown("**Highest-priority anomaly periods**")
+                show = anomaly_days[["date", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
+                show["relative_gap"] *= 100
+                st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(10), width="stretch", hide_index=True)
+        st.caption("Recommended measures are screening actions. Confirm operating records, weather, controls and equipment status before implementation.")
     else:
-        st.info("No intervention mapping artifact is available.")
+        f = ADV / "ai_exp35_intervention_reduction_mapping.csv"
+        source = "pipeline output"
+        if not f.exists():
+            f = EXAMPLES / "intervention_mapping_demo.csv"
+            source = "curated public-data example"
+        if f.exists():
+            data = pd.read_csv(f)
+            st.markdown(
+                f'<div class="data-status"><b>{len(data)}</b> intervention mappings &nbsp; · &nbsp; source: <b>{source}</b>',
+                unsafe_allow_html=True,
+            )
+            cols = [c for c in [
+                "building_id", "building_type", "energy_archetype", "cause_candidate",
+                "best_measure_family", "action_confidence", "annual_meter_reading",
+                "energy_saving_20%", "action_priority"
+            ] if c in data.columns]
+            if len(data):
+                k1, k2, k3 = st.columns(3)
+                if "action_priority" in data:
+                    k1.metric("Top priority", str(data["action_priority"].iloc[0]))
+                if "action_confidence" in data:
+                    k2.metric("Top confidence", f'{float(data["action_confidence"].iloc[0]):.2f}')
+                if "energy_saving_20%" in data:
+                    k3.metric("Scenario @20%", f'{data["energy_saving_20%"].median():.1f}%')
+            if cols:
+                st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
+            st.caption("Public-data intervention mappings are screening artifacts; scenario savings are not measured engineering results.")
+        else:
+            st.info("No intervention mapping artifact is available.")
 
 with tabs[5]:
     st.markdown('<div class="section-title">Energy · Cost · Carbon scenario</div>', unsafe_allow_html=True)
