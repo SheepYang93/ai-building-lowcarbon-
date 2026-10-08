@@ -197,6 +197,10 @@ st.markdown("""
 .hero-side .small {font-size:.76rem;opacity:.78}
 .hero-side .big {font-size:1.45rem;font-weight:800;margin-top:.15rem}
 .section-rule {height:1px;background:#E5EFEC;margin:1.2rem 0}
+[data-baseweb="tab-list"] {gap:.3rem;background:#F7FAF9;border:1px solid #E2EBE8;border-radius:14px;padding:.3rem}
+[data-baseweb="tab"] {border-radius:10px;font-weight:650;color:#55706A}
+[data-testid="stDataFrame"] {border:1px solid #E2EBE8;border-radius:14px;overflow:hidden}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}.hero{padding:1.5rem}.hero h1{font-size:1.9rem}}
 </style>
 <div class="hero">
 <div class="hero-grid">
