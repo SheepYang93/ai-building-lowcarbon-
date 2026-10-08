@@ -9,10 +9,12 @@ try:
     from app.economics import scenario
     from app.emission_factors import EMISSION_FACTORS
     from app.validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
+    from app.prediction_range import add_range
 except ImportError:
     from economics import scenario
     from emission_factors import EMISSION_FACTORS
     from validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
+    from prediction_range import add_range
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
 
@@ -183,6 +185,7 @@ def run_uploaded_ai_screening(daily):
         ]
         out = test[["building_id", "date", "meter_reading"]].copy()
         out["predicted_energy"] = pred
+        out, range_radius = add_range(out, out["meter_reading"], out["predicted_energy"], level=0.90)
         out["residual"] = out["meter_reading"] - out["predicted_energy"]
         out["relative_gap"] = out["residual"] / out["predicted_energy"].abs().clip(lower=1e-9)
         out["residual_baseline"] = out["residual"].shift(1).rolling(14, min_periods=7).median()
