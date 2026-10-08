@@ -104,7 +104,7 @@ def load_uploaded_building(uploaded_file):
             if len(non_null):
                 daily[optional] = non_null.iloc[0]
 
-    return daily, original_columns
+    return daily, original_columns, df
 
 
 try:
@@ -139,6 +139,30 @@ def score_upload_quality(daily):
         + 0.10 * checks["temperature_available"]
     ), 1)
     return score, checks
+
+
+def run_intraday_screening(raw):
+    """Screen sub-daily data against past same-slot behavior."""
+    x = raw[["timestamp", "energy"]].dropna().sort_values("timestamp").copy()
+    if len(x) < 24:
+        return None
+    deltas = x["timestamp"].diff().dt.total_seconds().div(60).dropna()
+    cadence = float(deltas.median()) if len(deltas) else float("nan")
+    if not np.isfinite(cadence) or cadence >= 1440:
+        return None
+    x["slot"] = x["timestamp"].dt.dayofweek * 24 + x["timestamp"].dt.hour
+    g = x.groupby("slot")["energy"]
+    x["expected_slot"] = g.transform(lambda z: z.shift(1).expanding(min_periods=5).median())
+    x["residual"] = x["energy"] - x["expected_slot"]
+    x["slot_mad"] = x.groupby("slot")["residual"].transform(
+        lambda z: z.shift(1).expanding(min_periods=5).apply(
+            lambda v: np.median(np.abs(v - np.median(v))), raw=True
+        )
+    )
+    scale = (1.4826 * x["slot_mad"]).clip(lower=1e-9)
+    x["robust_z"] = x["residual"] / scale
+    x["anomaly"] = x["expected_slot"].notna() & (x["robust_z"] >= 3.0)
+    return {"data": x, "cadence_minutes": cadence, "anomaly_count": int(x["anomaly"].sum())}
 
 
 def run_uploaded_ai_screening(daily):
@@ -434,7 +458,7 @@ with tabs[1]:
 
     if uploaded is not None:
         try:
-            daily, original_columns = load_uploaded_building(uploaded)
+            daily, original_columns, raw_uploaded = load_uploaded_building(uploaded)
             diagnosed, summary = diagnose_uploaded_data(daily)
 
             metadata = {
@@ -455,6 +479,7 @@ with tabs[1]:
                 ),
             }
 
+            st.session_state["upload_raw"] = raw_uploaded
             st.session_state["upload_daily"] = diagnosed
             st.session_state["upload_summary"] = summary
             st.session_state["upload_metadata"] = metadata
@@ -476,6 +501,12 @@ with tabs[1]:
                 )
 
             quality_score, quality_checks = score_upload_quality(daily)
+            intraday = run_intraday_screening(raw_uploaded)
+            if intraday is not None:
+                st.session_state["upload_intraday"] = intraday
+                st.info(f'Sub-daily data detected: median cadence {intraday["cadence_minutes"]:.0f} minutes; {intraday["anomaly_count"]} same-slot anomaly observations flagged.')
+            else:
+                st.session_state.pop("upload_intraday", None)
             q1, q2 = st.columns([1, 3])
             q1.metric("Data quality", f"{quality_score:.0f}/100")
             q2.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
