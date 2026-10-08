@@ -687,6 +687,8 @@ with tabs[7]:
                 raise ValueError("No valid treated/control rows remain.")
 
             intervention_date = v["intervention_date"].mode().iloc[0]
+            if v["intervention_date"].nunique() > 1:
+                st.warning("Multiple intervention dates detected; using the most frequent date for this screening run.")
             pre = v["date"] < intervention_date
             post = v["date"] >= intervention_date
 
