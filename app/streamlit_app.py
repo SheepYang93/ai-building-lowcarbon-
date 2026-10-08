@@ -682,7 +682,7 @@ with tabs[3]:
         k1, k2, k3 = st.columns(3)
         k1.metric("AI anomaly days", int(d["ai_anomaly"].sum()))
         k2.metric("Median actual-vs-expected gap", f"{median_gap:+.1f}%")
-        k3.metric("Mean confidence", f'{d["anomaly_confidence"].mean() * 100:.0f}%')
+        k3.metric("Mean anomaly score", f'{d["anomaly_confidence"].mean() * 100:.0f}%')
         st.markdown(
             '<div class="insight-card"><b>Decision meaning</b><br>'
             'This view identifies periods where observed use is unusually above the model expected-use level. '
@@ -690,7 +690,7 @@ with tabs[3]:
             unsafe_allow_html=True,
         )
         if len(candidate_days):
-            show = candidate_days[["date", "meter_reading", "predicted_energy", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
+            show = candidate_days[["date", "meter_reading", "predicted_energy", "expected_low", "expected_high", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
             show["relative_gap"] *= 100
             st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(20), width="stretch", hide_index=True)
         st.caption("Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action.")
