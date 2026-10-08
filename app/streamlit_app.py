@@ -110,6 +110,30 @@ except ImportError:
 
 
 
+def score_upload_quality(daily):
+    """Return a transparent 0-100 data-quality score for the uploaded building series."""
+    checks = {}
+    checks["timestamp_valid"] = float(daily["date"].notna().mean())
+    checks["energy_valid"] = float(daily["energy"].notna().mean())
+    checks["energy_nonnegative"] = float((daily["energy"] >= 0).mean())
+    checks["no_duplicate_dates"] = float((~daily["date"].duplicated()).mean())
+    span_days = (daily["date"].max() - daily["date"].min()).days + 1
+    coverage = min(len(daily) / max(span_days, 1), 1.0)
+    checks["temporal_coverage"] = coverage
+    checks["temperature_available"] = float(
+        daily["outdoor_temperature"].notna().mean()
+    ) if "outdoor_temperature" in daily.columns else 0.0
+    score = round(100 * (
+        0.20 * checks["timestamp_valid"]
+        + 0.25 * checks["energy_valid"]
+        + 0.15 * checks["energy_nonnegative"]
+        + 0.15 * checks["no_duplicate_dates"]
+        + 0.15 * checks["temporal_coverage"]
+        + 0.10 * checks["temperature_available"]
+    ), 1)
+    return score, checks
+
+
 def run_uploaded_ai_screening(daily):
     """Train a small chronological ExtraTrees model when upload fields are sufficient."""
     required = {"building_id", "area_m2", "outdoor_temperature"}
@@ -426,6 +450,11 @@ with tabs[1]:
                     "use 8–12 weeks for a stronger field validation baseline."
                 )
 
+            quality_score, quality_checks = score_upload_quality(daily)
+            q1, q2 = st.columns([1, 3])
+            q1.metric("Data quality", f"{quality_score:.0f}/100")
+            q2.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
+            
             ai_result, ai_message = run_uploaded_ai_screening(daily)
             if ai_result is not None:
                 st.session_state["upload_ai"] = ai_result
