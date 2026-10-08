@@ -153,15 +153,32 @@ def run_uploaded_ai_screening(daily):
         d["sqm"] = pd.to_numeric(d["sqm"], errors="coerce")
         d["airTemperature"] = pd.to_numeric(d["airTemperature"], errors="coerce")
         d["meter_reading"] = pd.to_numeric(d["meter_reading"], errors="coerce")
+        weather_candidates = ["airTemperature", "cloudCoverage", "dewTemperature", "windSpeed"]
         for weather_col in ["cloudCoverage", "dewTemperature", "windSpeed"]:
             if weather_col not in d.columns:
-                d[weather_col] = 0.0
+                d[weather_col] = np.nan
         d = d.dropna(subset=["building_id", "date", "sqm", "airTemperature", "meter_reading"])
         d = d[d["sqm"] > 0].sort_values(["building_id", "date"])
         if len(d) < 60 or d["date"].nunique() < 60:
             return None, "Not enough valid daily observations for chronological AI screening."
         featured, feature_cols = features(d)
+        weather_completeness = {
+            col: float(featured[col].notna().mean()) if col in featured else 0.0
+            for col in weather_candidates
+        }
+        # Keep only weather variables with meaningful coverage; never replace missing
+        # weather with synthetic zeros that could be mistaken for real observations.
+        feature_cols = [
+            col for col in feature_cols
+            if col not in {"cloudCoverage", "dewTemperature", "windSpeed"}
+            or weather_completeness.get(col, 0.0) >= 0.80
+        ]
         model, _, test, pred, cutoff, metrics_ai = train_model(featured, feature_cols, cap=50000)
+        metrics_ai["weather_completeness"] = weather_completeness
+        metrics_ai["weather_features_used"] = [
+            col for col in ["airTemperature", "cloudCoverage", "dewTemperature", "windSpeed"]
+            if col in feature_cols
+        ]
         out = test[["building_id", "date", "meter_reading"]].copy()
         out["predicted_energy"] = pred
         out["residual"] = out["meter_reading"] - out["predicted_energy"]
@@ -475,6 +492,13 @@ with tabs[1]:
                 )
                 st.markdown("**Actual vs expected energy**")
                 st.line_chart(ai_plot)
+                weather_used = ai_result["metrics"].get("weather_features_used", [])
+                weather_cov = ai_result["metrics"].get("weather_completeness", {})
+                st.caption(
+                    "Weather readiness: "
+                    + ", ".join(f"{k} {weather_cov.get(k, 0) * 100:.0f}%" for k in weather_cov)
+                    + ". Features below 80% coverage are excluded rather than filled with synthetic zeros."
+                )
                 st.caption("Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model.")
             else:
                 st.info(ai_message + " The robust past-only baseline remains available.")
