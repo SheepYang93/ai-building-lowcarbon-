@@ -23,3 +23,9 @@ Electricity consumption × a versioned electricity CO₂ emission factor produce
 
 ## Layer 8 — Validation
 The final evidence standard is field data with treatment/control groups, before/after measurements, DID and AI counterfactual comparison.
+
+## Resolution strategy
+- Raw 15/30/60-minute-or-similar records are preserved during upload when available.
+- Sub-daily uploads receive a same-slot historical anomaly screen before daily aggregation.
+- Daily aggregation remains the building-level decision layer for expected-use, intervention and carbon scenarios.
+- This dual-resolution design avoids claiming that daily aggregation can explain every intraday HVAC or off-hours event.
