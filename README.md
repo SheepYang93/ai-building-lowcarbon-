@@ -46,12 +46,11 @@ The project uses **strict chronological validation** rather than random splittin
 
 Across repeated rolling-window experiments on the public dataset:
 
-- **ExtraTrees mean R² ≈ 0.985**
-- **ExtraTrees mean WAPE ≈ 6.2%**
-- **3 rolling windows × 3 random seeds** were used for the main model comparison
-- The final model choice is based on repeated out-of-time validation rather than a single favorable split
+- **Example run:** R² ≈ 0.986, WAPE ≈ 5.9% on the included public-data derivative artifact
+- The repository also records rolling-window robustness checks and subgroup sensitivity analysis
+- Exact results vary by time window, seed, subgroup and data filtering; the included metric is an example artifact rather than a universal benchmark
 
-Exact results vary by window, seed and subgroup. See [EXPERIMENTS.md](EXPERIMENTS.md).
+See [EXPERIMENTS.md](EXPERIMENTS.md) for the evidence boundary and limitations.
 
 ## For a recruiter: what to look at first
 
@@ -87,7 +86,7 @@ The public Streamlit app demonstrates the full decision workflow and can be open
 5. **Intervention** — map the fingerprint to an intervention family
 6. **Carbon** — explore conditional carbon scenarios
 7. **Report** — generate a downloadable Markdown diagnosis report
-8. **Field Validation** — upload treatment/control data and calculate Difference-in-Differences (DID)
+8. **Field Validation** — upload treatment/control data and calculate a basic Difference-in-Differences (DID) estimate
 
 ### Demo workflow
 
