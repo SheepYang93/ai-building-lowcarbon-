@@ -82,7 +82,7 @@ def baseline_metrics(d, target="meter_reading"):
     g=d.groupby("building_id")[target]
     d["naive_1"]=g.shift(1)
     d["seasonal_7"]=g.shift(7)
-    d["median_28"]=g.shift(1).rolling(28,min_periods=7).median()
+    d["median_28"]=g.transform(lambda s:s.shift(1).rolling(28,min_periods=7).median())
     te=d[d.date>=cutoff]
     out={}; y=te[target].to_numpy()
     for name in ["naive_1","seasonal_7","median_28"]:
