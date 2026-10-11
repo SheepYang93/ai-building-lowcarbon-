@@ -526,10 +526,10 @@ with tabs[1]:
             )
 
             a, b, c, d = st.columns(4)
-            a.metric("Daily records", summary["records"])
-            b.metric("Anomaly days", summary["anomaly_days"])
-            c.metric("Anomaly share", f'{summary["anomaly_share"] * 100:.1f}%')
-            d.metric("Potential signal", f'{summary["potential_pct"]:.1f}%')
+            a.metric(tr("日记录数", "Daily records"), summary["records"])
+            b.metric(tr("异常天数", "Anomaly days"), summary["anomaly_days"])
+            c.metric(tr("异常占比", "Anomaly share"), f'{summary["anomaly_share"] * 100:.1f}%')
+            d.metric(tr("潜在异常信号", "Potential signal"), f'{summary["potential_pct"]:.1f}%')
 
             if summary["records"] < 35:
                 st.warning(
@@ -548,8 +548,8 @@ with tabs[1]:
             else:
                 st.session_state.pop("upload_intraday", None)
             q1, q2, q3 = st.columns(3)
-            q1.metric("Data quality", f"{quality_score:.0f}/100")
-            q2.metric("Evidence level", summary["evidence_level"])
+            q1.metric(tr("数据质量", "Data quality"), f"{quality_score:.0f}/100")
+            q2.metric(tr("证据等级", "Evidence level"), summary["evidence_level"])
             q3.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
             
             ai_result, ai_message = run_uploaded_ai_screening(daily)
@@ -561,11 +561,11 @@ with tabs[1]:
                     f"WAPE={ai_result['metrics']['wape'] * 100:.1f}%)."
                 )
                 ai1, ai2, ai3 = st.columns(3)
-                ai1.metric("AI test R²", f"{ai_result['metrics']['r2']:.3f}")
-                ai2.metric("AI test WAPE", f"{ai_result['metrics']['wape'] * 100:.1f}%")
-                ai3.metric("AI anomaly days", int(ai_result["data"]["ai_anomaly"].sum()))
+                ai1.metric(tr("AI 测试 R²", "AI test R²"), f"{ai_result['metrics']['r2']:.3f}")
+                ai2.metric(tr("AI 测试 WAPE", "AI test WAPE"), f"{ai_result['metrics']['wape'] * 100:.1f}%")
+                ai3.metric(tr("AI 检测异常天数", "AI anomaly days"), int(ai_result["data"]["ai_anomaly"].sum()))
                 anomaly_score = ai_result["data"]["anomaly_confidence"].mean()
-                st.metric("Mean anomaly confidence", f"{anomaly_score * 100:.0f}%")
+                st.metric(tr("平均异常评分", "Mean anomaly score"), f"{anomaly_score * 100:.0f}%")
                 st.caption("Anomaly score uses a past-only 14-day residual median/MAD. It is a screening score, not a probability of fault or verified savings.")
                 ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
                     columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
@@ -679,30 +679,30 @@ with tabs[2]:
             plot = ai_data.set_index("date")[["meter_reading", "predicted_energy"]].rename(
                 columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
             )
-            st.markdown("**Actual vs expected**")
+            st.markdown("**" + tr("实际能耗与预期能耗", "Actual vs expected") + "**")
             st.line_chart(plot)
             residual_plot = ai_data.set_index("date")[["residual_robust_z"]].rename(
                 columns={"residual_robust_z": "Residual robust Z"}
             )
-            st.markdown("**Residual anomaly evidence**")
+            st.markdown("**" + tr("残差异常证据", "Residual anomaly evidence") + "**")
             st.line_chart(residual_plot)
         else:
             st.info("AI expected-use screening is not available for this upload; the robust past-only baseline remains the evidence source.")
 
         left, right = st.columns(2)
         with left:
-            st.markdown("**Energy fingerprint**")
+            st.markdown("**" + tr("能耗特征", "Energy fingerprint") + "**")
             st.markdown(
                 f'**{s["fingerprint"]}**  \\n'
                 f'Weekend / weekday ratio: {s["weekend_ratio"]:.2f}  ·  '
                 f'Recent-vs-early median trend: {s["trend_pct"]:+.1f}%'
             )
         with right:
-            st.markdown("**Recommended first action**")
+            st.markdown("**" + tr("优先建议措施", "Recommended first action") + "**")
             st.markdown(f'**{s["intervention"]}**')
             st.caption("Action is a screening recommendation. Confirm schedules, HVAC status and equipment operation before intervention.")
 
-        st.markdown("**Building profile**")
+        st.markdown("**" + tr("建筑档案", "Building profile") + "**")
         st.dataframe(pd.DataFrame([{
             "Building ID": upload_meta.get("building_id", "not provided"),
             "Type": upload_meta.get("building_type", "not provided"),
@@ -720,7 +720,7 @@ with tabs[2]:
     elif len(an):
         q = an.copy()
         q["label"] = q.building_id.astype(str) + " · " + q.sub_primaryspaceusage.astype(str)
-        label = st.selectbox("Select building", q.label.head(200).tolist())
+        label = st.selectbox(tr("选择建筑", "Select building"), q.label.head(200).tolist())
         r = q[q.label.eq(label)].iloc[0]
         a1, b1, c1, d1 = st.columns(4)
         a1.metric("Priority", f"{r.priority_score:.1f}")
@@ -883,18 +883,18 @@ with tabs[5]:
     else:
         inferred_annual = 1000000.0
     with left:
-        annual = st.number_input("Annual energy baseline", min_value=0.0, max_value=1e12, value=inferred_annual, step=max(inferred_annual*0.01,1.0))
-        reduction = st.slider("Assumed reduction", 0, 50, 20) / 100
-        tariff = st.number_input("Electricity tariff (¥/kWh)", min_value=0.0, max_value=10.0, value=0.80, step=0.05)
-        factor_key = st.selectbox("Emission factor", list(EMISSION_FACTORS))
+        annual = st.number_input(tr("年度能耗基线", "Annual energy baseline"), min_value=0.0, max_value=1e12, value=inferred_annual, step=max(inferred_annual*0.01,1.0))
+        reduction = st.slider(tr("假设节能率", "Assumed reduction"), 0, 50, 20) / 100
+        tariff = st.number_input(tr("电价（¥/kWh）", "Electricity tariff (¥/kWh)"), min_value=0.0, max_value=10.0, value=0.80, step=0.05)
+        factor_key = st.selectbox(tr("排放因子", "Emission factor"), list(EMISSION_FACTORS))
         factor = EMISSION_FACTORS[factor_key]["value"]
         st.caption(f"Source: {EMISSION_FACTORS[factor_key]['source']} · {EMISSION_FACTORS[factor_key]['unit']}")
     with right:
         result = scenario(annual, reduction, tariff, factor)
         a, b, c = st.columns(3)
-        a.metric("Avoided energy", f'{result["avoided_energy_kwh"]:,.0f} kWh')
-        b.metric("Estimated energy-charge saving", f'¥{result["estimated_energy_charge_saving"]:,.0f}')
-        c.metric("Avoided CO₂e", f'{result["avoided_co2e_t"]:,.1f} t')
+        a.metric(tr("预计节约能耗", "Avoided energy"), f'{result["avoided_energy_kwh"]:,.0f} kWh')
+        b.metric(tr("预计电费节省", "Estimated energy-charge saving"), f'¥{result["estimated_energy_charge_saving"]:,.0f}')
+        c.metric(tr("预计减排 CO₂e", "Avoided CO₂e"), f'{result["avoided_co2e_t"]:,.1f} t')
         st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify meter units, reporting boundary, electricity tariff and emission-factor year/geography before real decisions. Cost output is a simplified energy-charge estimate; CO₂ is a location-based Scope 2 screening result, not a measured reduction.</div>', unsafe_allow_html=True)
 
         scenario_rows = []
@@ -919,13 +919,13 @@ with tabs[6]:
             "The report below was generated from the most recent uploaded dataset."
         )
         st.download_button(
-            "Download Markdown report",
+            tr("下载 Markdown 诊断报告", "Download Markdown report"),
             data=report,
             file_name="building_energy_diagnosis_report.md",
             mime="text/markdown",
         )
         st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂e 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
-        st.text_area("Report preview", report, height=600)
+        st.text_area(tr("报告预览", "Report preview"), report, height=600)
     else:
         st.info(
             "Upload a building CSV in Upload & Diagnose first. "
@@ -955,14 +955,14 @@ with tabs[7]:
         "2026-03-01,1180,B002,control,2026-04-01\n"
     )
     st.download_button(
-        "Download validation template",
+        tr("下载现场验证模板", "Download validation template"),
         data=template,
         file_name="field_validation_template.csv",
         mime="text/csv",
     )
 
     validation_file = st.file_uploader(
-        "Validation CSV", type=["csv"], key="validation_upload"
+        tr("上传现场验证 CSV", "Validation CSV"), type=["csv"], key="validation_upload"
     )
 
     if validation_file is not None:
@@ -1007,14 +1007,14 @@ with tabs[7]:
             did_abs = result["did_abs"]
             did_pct = result["did_pct"]
 
-            st.success("Validation analysis completed.")
+            st.success(tr("验证分析已完成。", "Validation analysis completed."))
             a, b, c = st.columns(3)
-            a.metric("Treated pre → post", f"{treated_change:+.2f}")
-            b.metric("Control pre → post", f"{control_change:+.2f}")
-            c.metric("DID effect", f"{did_abs:+.2f}")
+            a.metric(tr("干预组：前期 → 后期", "Treated pre → post"), f"{treated_change:+.2f}")
+            b.metric(tr("对照组：前期 → 后期", "Control pre → post"), f"{control_change:+.2f}")
+            c.metric(tr("DID 效应", "DID effect"), f"{did_abs:+.2f}")
 
             st.metric(
-                "DID relative to treated baseline",
+                tr("相对干预组基线的 DID", "DID relative to treated baseline"),
                 f"{did_pct:+.2f}%" if not pd.isna(did_pct) else "unavailable",
             )
 
@@ -1027,11 +1027,11 @@ with tabs[7]:
                 .reset_index()
             )
             pivot = plot_df.pivot(index="date", columns="group", values="energy")
-            st.subheader("Treatment / control energy trend")
+            st.subheader(tr("干预组与对照组能耗趋势", "Treatment / control energy trend"))
             st.line_chart(pivot)
 
             trend = pretrend_check(v, intervention_date)
-            st.markdown("**Pre-trend diagnostic**")
+            st.markdown("**" + tr("干预前趋势诊断", "Pre-trend diagnostic") + "**")
             if trend["status"] == "diagnostic":
                 t1, t2, t3 = st.columns(3)
                 t1.metric("Treated pre-slope", f'{trend["treated_slope"]:+.4f}/day')
@@ -1050,7 +1050,7 @@ with tabs[7]:
             )
 
             st.download_button(
-                "Download validation summary",
+                tr("下载验证结果摘要", "Download validation summary"),
                 data=summary.reset_index().to_csv(index=False),
                 file_name="did_validation_summary.csv",
                 mime="text/csv",
