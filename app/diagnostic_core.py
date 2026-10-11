@@ -3,7 +3,10 @@
 import numpy as np
 import pandas as pd
 
-from app.config import CONFIG, evidence_level
+try:
+    from app.config import CONFIG, evidence_level
+except ImportError:
+    from config import CONFIG, evidence_level
 
 
 def _robust_mad(values):
