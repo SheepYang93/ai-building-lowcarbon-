@@ -566,7 +566,7 @@ with tabs[1]:
                 ai3.metric(tr("AI 检测异常天数", "AI anomaly days"), int(ai_result["data"]["ai_anomaly"].sum()))
                 anomaly_score = ai_result["data"]["anomaly_confidence"].mean()
                 st.metric(tr("平均异常评分", "Mean anomaly score"), f"{anomaly_score * 100:.0f}%")
-                st.caption("Anomaly score uses a past-only 14-day residual median/MAD. It is a screening score, not a probability of fault or verified savings.")
+                st.caption(tr("异常评分基于仅使用历史数据的 14 天残差中位数/MAD。它仅用于筛查，不代表故障概率或已验证节能量。", "Anomaly score uses a past-only 14-day residual median/MAD. It is a screening score, not a probability of fault or verified savings."))
                 ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
                     columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
                 )
@@ -579,7 +579,7 @@ with tabs[1]:
                     + ", ".join(f"{k} {weather_cov.get(k, 0) * 100:.0f}%" for k in weather_cov)
                     + ". Features below 80% coverage are excluded rather than filled with synthetic zeros."
                 )
-                st.caption("Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model.")
+                st.caption(tr("上传数据的 AI 筛查会基于本次历史数据重新训练，不是公开数据基准模型。", "Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model."))
             else:
                 st.info(ai_message + " The robust past-only baseline remains available.")
 
@@ -640,7 +640,7 @@ with tabs[1]:
                     width="stretch",
                 )
             else:
-                st.info("No robust anomaly dates were detected in the uploaded period.")
+                st.info(tr("上传时段内未检测到稳健统计意义上的异常日期。", "No robust anomaly dates were detected in the uploaded period."))
 
         except Exception as exc:
             st.error(f"Upload or diagnosis failed: {exc}")
@@ -738,7 +738,7 @@ with tabs[2]:
             "Site": r.site_id,
         }]), width="stretch", hide_index=True)
     else:
-        st.info("Upload a single-building CSV to generate a live building diagnosis.")
+        st.info(tr("请上传单栋建筑的 CSV 文件以生成实时诊断。", "Upload a single-building CSV to generate a live building diagnosis."))
 
 with tabs[3]:
     st.markdown(f'<div class="section-title">{tr("预期能耗与反事实筛查", "Expected-use / Counterfactual Screening")}</div>', unsafe_allow_html=True)
@@ -793,7 +793,7 @@ with tabs[3]:
             st.markdown('<div class="insight-card"><b>Public-data screening</b><br>Use this artifact for portfolio prioritization. Realized savings require field validation.</div>', unsafe_allow_html=True)
             if cols:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
-            st.caption("Candidate effects are screening signals, not measured savings.")
+            st.caption(tr("候选效果仅为筛查信号，并非实测节能量。", "Candidate effects are screening signals, not measured savings."))
         else:
             st.info("No counterfactual artifact is available.")
 
@@ -839,7 +839,7 @@ with tabs[4]:
                 show = anomaly_days[["date", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
                 show["relative_gap"] *= 100
                 st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(10), width="stretch", hide_index=True)
-        st.caption("Recommended measures are screening actions. Confirm operating records, weather, controls and equipment status before implementation.")
+        st.caption(tr("建议措施仅供初筛。实施前请核实运行记录、天气、控制策略和设备状态。", "Recommended measures are screening actions. Confirm operating records, weather, controls and equipment status before implementation."))
     else:
         f = ADV / "ai_exp35_intervention_reduction_mapping.csv"
         source = "pipeline output"
@@ -873,7 +873,7 @@ with tabs[4]:
 
 with tabs[5]:
     st.markdown(f'<div class="section-title">{tr("能源、成本与碳排放情景", "Energy · Cost · Carbon scenario")}</div>', unsafe_allow_html=True)
-    st.caption("Location-based Scope 2 screening scenario. Values are estimates, not measured savings.")
+    st.caption(tr("基于地理位置法的 Scope 2 初筛情景。数值为估算值，不是实测节能或减排。", "Location-based Scope 2 screening scenario. Values are estimates, not measured savings."))
     left, right = st.columns([1.0, 1.45])
     upload_daily = st.session_state.get("upload_daily")
     upload_summary = st.session_state.get("upload_summary")
@@ -906,7 +906,7 @@ with tabs[5]:
                 "Avoided CO₂e (t)": sr["avoided_co2e_t"],
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
-        st.markdown('<div class="section-title">Scenario sensitivity</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">{tr("情景敏感性分析", "Scenario sensitivity")}</div>', unsafe_allow_html=True)
         st.caption("同一能耗基线下，不同假设节能率对应的成本与碳减排情景。")
         st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
@@ -991,7 +991,7 @@ with tabs[7]:
 
             intervention_date = v["intervention_date"].mode().iloc[0]
             if v["intervention_date"].nunique() > 1:
-                st.warning("Multiple intervention dates detected; using the most frequent date for this screening run.")
+                st.warning(tr("检测到多个干预日期；本次初筛使用出现频率最高的日期。", "Multiple intervention dates detected; using the most frequent date for this screening run."))
             pre = v["date"] < intervention_date
             post = v["date"] >= intervention_date
 
@@ -1039,7 +1039,7 @@ with tabs[7]:
                 t3.metric("Slope gap", f'{trend["slope_gap"]:+.4f}/day')
                 st.caption("This is a simple diagnostic of pre-period slopes, not a formal parallel-trends test.")
             else:
-                st.info("Not enough pre-period observations to compute a slope diagnostic.")
+                st.info(tr("干预前观测不足，无法计算斜率诊断。", "Not enough pre-period observations to compute a slope diagnostic."))
 
             st.warning(
                 "Interpretation boundary: DID compares the treated group's change with "
