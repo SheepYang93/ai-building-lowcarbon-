@@ -17,6 +17,22 @@ except ImportError:
     from prediction_range import add_range
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
+# UI language selector, placed at the top-right and persisted across reruns.
+LANGUAGE_OPTIONS = {"中文": "zh", "English": "en"}
+_lang_spacer, _lang_control = st.columns([8, 1.5])
+with _lang_control:
+    _language_label = st.selectbox(
+        "语言 / Language",
+        options=list(LANGUAGE_OPTIONS),
+        index=0,
+        key="ui_language_selector",
+    )
+UI_LANGUAGE = LANGUAGE_OPTIONS[_language_label]
+
+def tr(zh, en):
+    """Return a UI string in the selected language."""
+    return zh if UI_LANGUAGE == "zh" else en
+
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
@@ -354,8 +370,8 @@ st.markdown("""
 <div class="hero-grid">
   <div>
     <div class="hero-kicker">AI · ENERGY · CARBON INTELLIGENCE</div>
-    <h1>Building Energy & Low-carbon Intelligence</h1>
-    <p>从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。</p>
+    <h1>{tr("建筑能源与低碳智能决策系统", "Building Energy & Low-carbon Intelligence")}</h1>
+    <p>{tr("从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。", "Detect anomalies, understand building behavior, and translate model outputs into cost and carbon scenarios.")}</p>
   </div>
   <div class="hero-side">
     <div class="small">DECISION SUPPORT PROTOTYPE</div>
@@ -367,20 +383,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 tabs = st.tabs([
-    "Overview",
-    "Upload & Diagnose",
-    "Building Diagnosis",
-    "Counterfactual",
-    "Intervention",
-    "Carbon",
-    "Report",
-    "Field Validation",
+    tr("总览", "Overview"),
+    tr("上传与诊断", "Upload & Diagnose"),
+    tr("建筑诊断", "Building Diagnosis"),
+    tr("反事实筛查", "Counterfactual"),
+    tr("干预建议", "Intervention"),
+    tr("碳排放情景", "Carbon"),
+    tr("诊断报告", "Report"),
+    tr("现场验证", "Field Validation"),
 ])
 
 with tabs[0]:
     st.markdown('<div class="section-title">Portfolio Dashboard</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">AI 驱动的建筑能源异常诊断与低碳决策支持 Demo。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("AI 驱动的建筑能源异常诊断与低碳决策支持演示。", "An AI-driven demo for building-energy anomaly diagnosis and low-carbon decision support.")}</div>', unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Buildings", metrics.get("buildings", "—"))
