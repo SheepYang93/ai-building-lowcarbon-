@@ -117,13 +117,18 @@ except ImportError:
 
 
 
-def score_upload_quality(daily):
+def score_upload_quality(daily, raw=None):
     """Return a transparent 0-100 data-quality score for the uploaded building series."""
     checks = {}
     checks["timestamp_valid"] = float(daily["date"].notna().mean())
     checks["energy_valid"] = float(daily["energy"].notna().mean())
     checks["energy_nonnegative"] = float((daily["energy"] >= 0).mean())
-    checks["no_duplicate_dates"] = float((~daily["date"].duplicated()).mean())
+    # Daily rows are aggregated by date, so duplicate checks must use raw readings.
+    # Otherwise this check is always 100% and hides duplicated meter timestamps.
+    if raw is not None and "timestamp" in raw.columns:
+        checks["no_duplicate_timestamps"] = float((~raw["timestamp"].duplicated()).mean())
+    else:
+        checks["no_duplicate_timestamps"] = 1.0
     span_days = (daily["date"].max() - daily["date"].min()).days + 1
     coverage = min(len(daily) / max(span_days, 1), 1.0)
     checks["temporal_coverage"] = coverage
@@ -134,7 +139,7 @@ def score_upload_quality(daily):
         0.20 * checks["timestamp_valid"]
         + 0.25 * checks["energy_valid"]
         + 0.15 * checks["energy_nonnegative"]
-        + 0.15 * checks["no_duplicate_dates"]
+        + 0.15 * checks["no_duplicate_timestamps"]
         + 0.15 * checks["temporal_coverage"]
         + 0.10 * checks["temperature_available"]
     ), 1)
@@ -517,7 +522,7 @@ with tabs[1]:
                     "use 8–12 weeks for a stronger field validation baseline."
                 )
 
-            quality_score, quality_checks = score_upload_quality(daily)
+            quality_score, quality_checks = score_upload_quality(daily, raw_uploaded)
             summary["data_quality_score"] = quality_score
             summary["evidence_level"] = evidence_level(quality_score)
             intraday = run_intraday_screening(raw_uploaded)
