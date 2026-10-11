@@ -22,3 +22,20 @@ def test_median_baseline_does_not_cross_building_boundaries():
     # Stable buildings should not borrow meter history from another building.
     assert metrics["median_28"]["mae"] == 0.0
     assert metrics["median_28"]["wape"] == 0.0
+
+
+def test_unseen_building_evaluation_keeps_groups_disjoint():
+    frames = []
+    for idx in range(6):
+        frame = toy()
+        frame["building_id"] = f"B{idx}"
+        frame["meter_reading"] = frame["meter_reading"] + idx * 20
+        frames.append(frame)
+    raw = pd.concat(frames, ignore_index=True).sort_values(["building_id", "date"])
+    engineered, feature_cols = features(raw)
+    _, train, test, _, metrics = evaluate_unseen_buildings(
+        engineered, feature_cols, test_size=0.33, seed=7
+    )
+    assert set(train["building_id"]).isdisjoint(set(test["building_id"]))
+    assert set(metrics["train_buildings"]).isdisjoint(set(metrics["test_buildings"]))
+    assert metrics["split"] == "unseen_building_group_holdout"
