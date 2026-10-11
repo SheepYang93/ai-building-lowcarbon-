@@ -275,18 +275,18 @@ def build_report(summary, d, metadata):
     peak = peak.sort_values("robust_z", ascending=False).head(10)
 
     lines = [
-        "# AI Building Energy Diagnosis Report",
+        f"# {tr('建筑能源诊断报告', 'AI Building Energy Diagnosis Report')}",
         "",
-        "## 1. Building",
+        f"## 1. {tr('建筑信息', 'Building')}",
         f"- Building ID: {metadata.get('building_id', 'not provided')}",
         f"- Building type: {metadata.get('building_type', 'not provided')}",
         f"- Area (m²): {metadata.get('area_m2', 'not provided')}",
         f"- Analysis period: {summary['start']} to {summary['end']}",
         "",
-        "## 2. Data quality",
+        f"## 2. {tr('数据质量', 'Data quality')}",
         f"- Valid daily records: {summary['records']}",
         "",
-        "## 3. Diagnostic result",
+        f"## 3. {tr('诊断结果', 'Diagnostic result')}",
         f"- Robust anomaly days: {summary['anomaly_days']}",
         f"- Anomaly share: {summary['anomaly_share'] * 100:.1f}%",
         f"- Energy fingerprint: {summary['fingerprint']}",
@@ -297,16 +297,16 @@ def build_report(summary, d, metadata):
             else "- Weekend/weekday median ratio: unavailable"
         ),
         "",
-        "## 4. Counterfactual screening signal",
-        "- Baseline: trailing 28-day median using past observations only",
+        f"## 4. {tr('反事实筛查信号', 'Counterfactual screening signal')}",
+        f"- {tr('基线：仅使用历史观测的滚动 28 天中位数', 'Baseline: trailing 28-day median using past observations only')}",
         f"- Potential reduction signal: {summary['potential_pct']:.1f}%",
-        "- This is a model-based screening signal, not measured savings.",
+        f"- {tr('这是模型筛查信号，并非实测节能量。', 'This is a model-based screening signal, not measured savings.')}",
         "",
-        "## 5. Suggested intervention",
+        f"## 5. {tr('建议干预措施', 'Suggested intervention')}",
         f"- {summary['intervention']}",
-        "- Verify operating schedules, HVAC settings and equipment status before intervention.",
+        f"- {tr('实施干预前，请核实运行时段、HVAC 设置和设备状态。', 'Verify operating schedules, HVAC settings and equipment status before intervention.')}",
         "",
-        "## 6. Highest anomaly dates",
+        f"## 6. {tr('异常程度最高的日期', 'Highest anomaly dates')}",
     ]
 
     if len(peak):
@@ -325,7 +325,7 @@ def build_report(summary, d, metadata):
 
     lines.extend([
         "",
-        "## 7. Evidence boundary",
+        f"## 7. {tr('证据边界', 'Evidence boundary')}",
         "- Uploaded-data screening uses a trailing robust baseline; it is not the same as the validated ExtraTrees model reported for the public dataset.",
         "- Counterfactual and intervention values are screening hypotheses and must not be presented as realized energy or carbon savings.",
         "- For real campus deployment, validate with treatment/control, Difference-in-Differences and placebo tests.",
@@ -795,11 +795,11 @@ with tabs[3]:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
             st.caption(tr("候选效果仅为筛查信号，并非实测节能量。", "Candidate effects are screening signals, not measured savings."))
         else:
-            st.info("No counterfactual artifact is available.")
+            st.info(tr("当前没有可用的反事实筛查结果文件。", "No counterfactual artifact is available."))
 
 with tabs[4]:
     st.markdown(f'<div class="section-title">{tr("干预措施映射", "Intervention Mapping")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">把诊断指纹转换成可执行的检查顺序；上传数据优先，公共 artifact 作为备用。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("将诊断特征转化为可执行的检查顺序；优先使用上传数据，公共示例作为备用。", "Turn diagnostic fingerprints into an actionable inspection sequence; uploaded data takes priority, with public artifacts as fallback.")}</div>', unsafe_allow_html=True)
 
     upload_summary = st.session_state.get("upload_summary")
     upload_ai = st.session_state.get("upload_ai")
@@ -835,7 +835,7 @@ with tabs[4]:
         if upload_ai is not None:
             anomaly_days = upload_ai["data"][upload_ai["data"]["ai_anomaly"].eq(1)]
             if len(anomaly_days):
-                st.markdown("**Highest-priority anomaly periods**")
+                st.markdown("**" + tr("优先排查的异常时段", "Highest-priority anomaly periods") + "**")
                 show = anomaly_days[["date", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
                 show["relative_gap"] *= 100
                 st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(10), width="stretch", hide_index=True)
@@ -869,7 +869,7 @@ with tabs[4]:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
             st.caption("Public-data intervention mappings are screening artifacts; scenario savings are not measured engineering results.")
         else:
-            st.info("No intervention mapping artifact is available.")
+            st.info(tr("当前没有可用的干预措施映射文件。", "No intervention mapping artifact is available."))
 
 with tabs[5]:
     st.markdown(f'<div class="section-title">{tr("能源、成本与碳排放情景", "Energy · Cost · Carbon scenario")}</div>', unsafe_allow_html=True)
