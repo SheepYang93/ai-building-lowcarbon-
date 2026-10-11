@@ -47,7 +47,7 @@ metrics.update({
     "model":"ExtraTreesRegressor",
     "train_cap":args.train_cap
 })
-(out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2,allow_nan=False))
+(out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
 pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False)
 
 an=anomaly_table(df)
