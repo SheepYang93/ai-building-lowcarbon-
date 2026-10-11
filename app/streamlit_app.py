@@ -394,12 +394,12 @@ tabs = st.tabs([
 ])
 
 with tabs[0]:
-    st.markdown('<div class="section-title">Portfolio Dashboard</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("项目总览", "Portfolio Dashboard")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="section-subtitle">{tr("AI 驱动的建筑能源异常诊断与低碳决策支持演示。", "An AI-driven demo for building-energy anomaly diagnosis and low-carbon decision support.")}</div>', unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Buildings", metrics.get("buildings", "—"))
+    c1.metric(tr("建筑数量", "Buildings"), metrics.get("buildings", "—"))
     c2.metric("Test R²", f'{metrics["r2"]:.3f}' if "r2" in metrics else "—")
     c3.metric("WAPE", f'{metrics["wape"] * 100:.1f}%' if "wape" in metrics else "—")
 
@@ -410,9 +410,9 @@ with tabs[0]:
         if len(an) and "anomaly_days" in an.columns
         else len(demo_cf)
     )
-    c4.metric("Screening candidates", candidate_count)
+    c4.metric(tr("筛查候选项", "Screening candidates"), candidate_count)
 
-    st.markdown("### What this system does")
+    st.markdown("### " + tr("系统能做什么", "What this system does"))
     left, right = st.columns([1.25, 1])
     with left:
         st.markdown(
@@ -436,7 +436,7 @@ with tabs[0]:
             unsafe_allow_html=True,
         )
     with right:
-        st.markdown("**Decision chain**")
+        st.markdown("**" + tr("决策流程", "Decision chain") + "**")
         st.markdown(
             '''
 **Energy data**  
@@ -451,7 +451,7 @@ with tabs[0]:
 ↓  
 **Field validation**
 ''')
-    st.markdown("### Evidence at a glance")
+    st.markdown("### " + tr("核心证据一览", "Evidence at a glance"))
     e1, e2, e3 = st.columns(3)
     e1.markdown(
         '<div class="insight-card"><b>Model evidence</b><br>Public-data prediction and strict time-series validation.</div>',
@@ -472,7 +472,7 @@ with tabs[0]:
     )
 
 with tabs[1]:
-    st.markdown('<div class="section-title">Upload & Diagnose</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("上传与诊断", "Upload & Diagnose")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">把一份建筑能耗 CSV 转化为 AI expected-use + robust baseline 双证据诊断；字段不足时自动回退。</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>AI-ready</b> building_id + area_m2 + outdoor_temperature + ≥60 days &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
@@ -486,13 +486,13 @@ with tabs[1]:
     sample_path = EXAMPLES / "sample_building_energy.csv"
     if sample_path.exists():
         st.download_button(
-            "Download sample CSV",
+            tr("下载示例 CSV", "Download sample CSV"),
             data=sample_path.read_text(encoding="utf-8"),
             file_name="sample_building_energy.csv",
             mime="text/csv",
         )
 
-    uploaded = st.file_uploader("CSV file", type=["csv"], key="building_upload")
+    uploaded = st.file_uploader(tr("上传能耗 CSV 文件", "Upload energy CSV file"), type=["csv"], key="building_upload")
 
     if uploaded is not None:
         try:
@@ -570,7 +570,7 @@ with tabs[1]:
                 ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
                     columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
                 )
-                st.markdown("**Actual vs expected energy**")
+                st.markdown("**" + tr("实际能耗与预期能耗", "Actual vs expected energy") + "**")
                 st.line_chart(ai_plot)
                 weather_used = ai_result["metrics"].get("weather_features_used", [])
                 weather_cov = ai_result["metrics"].get("weather_completeness", {})
@@ -632,7 +632,7 @@ with tabs[1]:
 
             anomaly_view = diagnosed[diagnosed["anomaly"]].copy()
             if len(anomaly_view):
-                st.subheader("Detected anomaly dates")
+                st.subheader(tr("检测到的异常日期", "Detected anomaly dates"))
                 st.dataframe(
                     anomaly_view[
                         ["date", "energy", "baseline_28d", "ratio_to_baseline", "robust_z"]
@@ -646,7 +646,7 @@ with tabs[1]:
             st.error(f"Upload or diagnosis failed: {exc}")
 
 with tabs[2]:
-    st.markdown('<div class="section-title">Building Diagnosis</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("建筑诊断", "Building Diagnosis")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">单建筑诊断：把数据质量、AI expected-use、异常证据与行动建议放进同一张诊断卡。</div>', unsafe_allow_html=True)
 
     upload_daily = st.session_state.get("upload_daily")
@@ -741,7 +741,7 @@ with tabs[2]:
         st.info("Upload a single-building CSV to generate a live building diagnosis.")
 
 with tabs[3]:
-    st.markdown('<div class="section-title">Expected-use / Counterfactual Screening</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("预期能耗与反事实筛查", "Expected-use / Counterfactual Screening")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">先判断“哪里值得查”，再把筛选结果传给干预与碳情景模块。</div>', unsafe_allow_html=True)
 
     upload_ai = st.session_state.get("upload_ai")
@@ -798,7 +798,7 @@ with tabs[3]:
             st.info("No counterfactual artifact is available.")
 
 with tabs[4]:
-    st.markdown('<div class="section-title">Intervention Mapping</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("干预措施映射", "Intervention Mapping")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">把诊断指纹转换成可执行的检查顺序；上传数据优先，公共 artifact 作为备用。</div>', unsafe_allow_html=True)
 
     upload_summary = st.session_state.get("upload_summary")
@@ -872,7 +872,7 @@ with tabs[4]:
             st.info("No intervention mapping artifact is available.")
 
 with tabs[5]:
-    st.markdown('<div class="section-title">Energy · Cost · Carbon scenario</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("能源、成本与碳排放情景", "Energy · Cost · Carbon scenario")}</div>', unsafe_allow_html=True)
     st.caption("Location-based Scope 2 screening scenario. Values are estimates, not measured savings.")
     left, right = st.columns([1.0, 1.45])
     upload_daily = st.session_state.get("upload_daily")
@@ -911,7 +911,7 @@ with tabs[5]:
         st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
 with tabs[6]:
-    st.markdown('<div class="section-title">Diagnostic Report</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("诊断报告", "Diagnostic Report")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">把最近一次上传数据的诊断结果整理成可复用的项目输出。</div>', unsafe_allow_html=True)
     report = st.session_state.get("upload_report")
     if report:
@@ -934,7 +934,7 @@ with tabs[6]:
 
 
 with tabs[7]:
-    st.markdown('<div class="section-title">Field Validation</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">{tr("现场验证", "Field Validation")}</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-subtitle">用 Treatment / Control + DID 把模型筛选结果推进到现场证据。</div>', unsafe_allow_html=True)
     st.markdown('<div class="data-status"><b>Evidence path</b> Baseline → intervention → treatment/control → DID → placebo / pre-trend checks</div>', unsafe_allow_html=True)
     st.caption("Preliminary field-validation prototype: DID + pre-trend slope diagnostic + placebo falsification check + clustered bootstrap interval. These checks do not prove causality.")
