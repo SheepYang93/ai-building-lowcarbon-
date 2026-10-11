@@ -337,7 +337,7 @@ metrics = load_metrics()
 anomaly_path = OUT / "anomaly_buildings.csv"
 an = pd.read_csv(anomaly_path) if anomaly_path.exists() else pd.DataFrame()
 
-st.markdown("""
+st.markdown(f"""
 <style>
 .block-container {max-width:1500px; padding-top:2rem;}
 [data-testid="stMetric"] {background:#fff;border:1px solid #E2EBE8;border-radius:16px;padding:12px 16px;box-shadow:0 3px 16px rgba(23,59,54,.05)}
