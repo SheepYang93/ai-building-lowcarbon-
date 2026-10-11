@@ -39,3 +39,18 @@ def test_unseen_building_evaluation_keeps_groups_disjoint():
     assert set(train["building_id"]).isdisjoint(set(test["building_id"]))
     assert set(metrics["train_buildings"]).isdisjoint(set(metrics["test_buildings"]))
     assert metrics["split"] == "unseen_building_group_holdout"
+
+
+def test_unseen_building_evaluation_rejects_invalid_test_size():
+    raw = pd.concat([toy().assign(building_id="A"), toy().assign(building_id="B")], ignore_index=True)
+    engineered, feature_cols = features(raw)
+    import pytest
+    with pytest.raises(ValueError, match="test_size must be between 0 and 1"):
+        evaluate_unseen_buildings(engineered, feature_cols, test_size=1.0)
+
+
+def test_unseen_building_evaluation_requires_multiple_buildings():
+    engineered, feature_cols = features(toy())
+    import pytest
+    with pytest.raises(ValueError, match="At least two buildings"):
+        evaluate_unseen_buildings(engineered, feature_cols)
