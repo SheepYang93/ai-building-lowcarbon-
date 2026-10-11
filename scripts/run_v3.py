@@ -6,12 +6,14 @@ sys.path.insert(0, str(ROOT))
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from src.pipeline import load_filter, features, train_model, anomaly_table, carbon_scenario
+from src.pipeline import load_filter, features, train_model, evaluate_unseen_buildings, anomaly_table, carbon_scenario
 
 p=argparse.ArgumentParser()
 p.add_argument("--input",required=True)
 p.add_argument("--output",default="outputs")
 p.add_argument("--train-cap",type=int,default=100000)
+p.add_argument("--building-test-size",type=float,default=0.2,help="Fraction of buildings held out for generalization evaluation")
+p.add_argument("--building-seed",type=int,default=42)
 args=p.parse_args()
 
 out=Path(args.output)
@@ -21,6 +23,22 @@ df=load_filter(args.input)
 d,f=features(df)
 model,tr,te,pred,cut,metrics=train_model(d,f,args.train_cap)
 
+# Separate group holdout: test buildings are never used to fit this model.
+# Their own past-only lag features remain available, so this is not a cold-start test.
+try:
+    _, building_tr, building_te, building_pred, building_metrics = evaluate_unseen_buildings(
+        d, f, test_size=args.building_test_size, seed=args.building_seed, cap=args.train_cap
+    )
+    metrics["unseen_building_evaluation"] = building_metrics
+    pd.DataFrame({
+        "building_id": building_te["building_id"].astype(str).to_numpy(),
+        "date": building_te["date"].to_numpy(),
+        "actual": building_te["meter_reading"].to_numpy(),
+        "predicted": building_pred,
+    }).to_csv(out/"unseen_building_predictions.csv", index=False)
+except ValueError as exc:
+    metrics["unseen_building_evaluation"] = {"status": "not_run", "reason": str(exc)}
+
 metrics.update({
     "rows_after_filter":len(df),
     "buildings":df.building_id.nunique(),
@@ -29,7 +47,7 @@ metrics.update({
     "model":"ExtraTreesRegressor",
     "train_cap":args.train_cap
 })
-(out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
+(out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2,allow_nan=False))
 pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False)
 
 an=anomaly_table(df)
