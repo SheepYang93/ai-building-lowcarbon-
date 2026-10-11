@@ -150,7 +150,11 @@ def run_intraday_screening(raw):
     cadence = float(deltas.median()) if len(deltas) else float("nan")
     if not np.isfinite(cadence) or cadence >= 1440:
         return None
-    x["slot"] = x["timestamp"].dt.dayofweek * 24 + x["timestamp"].dt.hour
+    x["slot"] = (
+        x["timestamp"].dt.dayofweek * 1440
+        + x["timestamp"].dt.hour * 60
+        + x["timestamp"].dt.minute
+    )
     g = x.groupby("slot")["energy"]
     x["expected_slot"] = g.transform(lambda z: z.shift(1).expanding(min_periods=5).median())
     x["residual"] = x["energy"] - x["expected_slot"]
