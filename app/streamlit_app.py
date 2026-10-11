@@ -163,9 +163,22 @@ def run_intraday_screening(raw):
             lambda v: np.median(np.abs(v - np.median(v))), raw=True
         )
     )
-    scale = (1.4826 * x["slot_mad"]).clip(lower=1e-9)
-    x["robust_z"] = x["residual"] / scale
-    x["anomaly"] = x["expected_slot"].notna() & (x["robust_z"] >= 3.0)
+    scale = 1.4826 * x["slot_mad"]
+    x["robust_z"] = np.where(
+        scale > 1e-9,
+        x["residual"] / scale,
+        np.where(
+            x["expected_slot"].gt(0) & x["residual"].gt(0),
+            np.inf,
+            0.0,
+        ),
+    )
+    x["relative_gap"] = x["residual"] / x["expected_slot"].abs().clip(lower=1e-9)
+    x["anomaly"] = (
+        x["expected_slot"].notna()
+        & (x["robust_z"] >= 3.0)
+        & (x["relative_gap"] >= 0.20)
+    )
     return {"data": x, "cadence_minutes": cadence, "anomaly_count": int(x["anomaly"].sum())}
 
 
