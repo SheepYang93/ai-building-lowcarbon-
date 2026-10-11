@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
+from sklearn.model_selection import GroupShuffleSplit
 
 from app.config import CONFIG
 
@@ -40,6 +41,60 @@ def train_model(d,f,cap=100000,seed=42):
     model=ExtraTreesRegressor(n_estimators=160,random_state=seed,n_jobs=-1,min_samples_leaf=2,max_features=.9)
     model.fit(tr_fit[f],tr_fit.meter_reading); pred=model.predict(te[f]); y=te.meter_reading.to_numpy()
     return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/np.abs(y).sum()),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d)}
+
+
+def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
+    """Evaluate transfer to buildings excluded entirely from model fitting.
+
+    Test-building rows may use their own past-only lag features, representing
+    a deployment where historical meter data for a new building are available.
+    This is a building-group holdout, not a cold-start test without history.
+    """
+    required = list(dict.fromkeys(list(f) + ["building_id", "date", "meter_reading"]))
+    data = d.dropna(subset=required).copy()
+    groups = data["building_id"].dropna().unique()
+    if len(groups) < 2:
+        raise ValueError("At least two buildings with complete feature rows are required.")
+    if not 0 < float(test_size) < 1:
+        raise ValueError("test_size must be between 0 and 1.")
+
+    splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
+    train_idx, test_idx = next(splitter.split(data, groups=data["building_id"]))
+    train = data.iloc[train_idx].copy()
+    test = data.iloc[test_idx].copy()
+    train_ids = set(train["building_id"].unique())
+    test_ids = set(test["building_id"].unique())
+    if train_ids & test_ids:
+        raise RuntimeError("Building-group split leaked building IDs across partitions.")
+    if train.empty or test.empty:
+        raise ValueError("The building-group split produced an empty partition.")
+
+    train_fit = deterministic_sample(train, cap)
+    model = ExtraTreesRegressor(
+        n_estimators=160,
+        random_state=seed,
+        n_jobs=-1,
+        min_samples_leaf=2,
+        max_features=0.9,
+    )
+    model.fit(train_fit[f], train_fit["meter_reading"])
+    pred = model.predict(test[f])
+    y = test["meter_reading"].to_numpy()
+    denom = float(np.abs(y).sum())
+    metrics = {
+        "r2": float(r2_score(y, pred)) if len(y) >= 2 else float("nan"),
+        "mae": float(mean_absolute_error(y, pred)),
+        "wape": float(np.abs(y - pred).sum() / denom) if denom > 0 else float("nan"),
+        "train_rows": int(len(train_fit)),
+        "test_rows": int(len(test)),
+        "train_buildings": sorted(map(str, train_ids)),
+        "test_buildings": sorted(map(str, test_ids)),
+        "split": "unseen_building_group_holdout",
+        "test_size": float(test_size),
+        "seed": int(seed),
+        "history_note": "Test buildings may use their own past-only lag features; their rows are excluded from model fitting.",
+    }
+    return model, train_fit, test, pred, metrics
 
 def anomaly_table(df):
     x=df[["building_id","date","meter_reading","sub_primaryspaceusage","sqm","site_id"]].copy(); g=x.groupby("building_id")["meter_reading"]
