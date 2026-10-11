@@ -151,7 +151,7 @@ The uploader also accepts common aliases such as `datetime`, `date`, `energy_kwh
 
 The repository keeps the distinction between **model evidence**, **screening hypotheses** and **field evidence** explicit. This matters because a good energy-AI portfolio should show not only that a model can predict, but also where its conclusions stop being experimentally verified.
 
-The main validation design is chronological: historical lag/rolling features are shifted so future observations do not leak into the feature set. Field-effect claims are reserved for treatment/control data and DID-style validation.
+The main validation design is chronological: historical lag/rolling features are shifted so future observations do not leak into the feature set. Field-effect claims are reserved for treatment/control data and DID-style validation. The reproducible training script also runs a separate building-group holdout to measure transfer to buildings excluded from model fitting; this evaluation assumes those buildings have their own historical meter data and is not a cold-start test. Results are written to `outputs/metrics.json` and row-level held-out predictions to `outputs/unseen_building_predictions.csv`.
 
 ## Repository structure
 
