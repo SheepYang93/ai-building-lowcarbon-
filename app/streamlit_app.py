@@ -278,32 +278,32 @@ def build_report(summary, d, metadata):
         f"# {tr('建筑能源诊断报告', 'AI Building Energy Diagnosis Report')}",
         "",
         f"## 1. {tr('建筑信息', 'Building')}",
-        f"- Building ID: {metadata.get('building_id', 'not provided')}",
-        f"- Building type: {metadata.get('building_type', 'not provided')}",
-        f"- Area (m²): {metadata.get('area_m2', 'not provided')}",
-        f"- Analysis period: {summary['start']} to {summary['end']}",
+        f"- {tr('建筑编号', 'Building ID')}: {metadata.get('building_id', tr('未提供', 'not provided'))}",
+        f"- {tr('建筑类型', 'Building type')}: {metadata.get('building_type', tr('未提供', 'not provided'))}",
+        f"- {tr('建筑面积（m²）', 'Area (m²)')}: {metadata.get('area_m2', tr('未提供', 'not provided'))}",
+        f"- {tr('分析时段', 'Analysis period')}: {summary['start']} {tr('至', 'to')} {summary['end']}",
         "",
         f"## 2. {tr('数据质量', 'Data quality')}",
-        f"- Valid daily records: {summary['records']}",
+        f"- {tr('有效日记录数', 'Valid daily records')}: {summary['records']}",
         "",
         f"## 3. {tr('诊断结果', 'Diagnostic result')}",
-        f"- Robust anomaly days: {summary['anomaly_days']}",
-        f"- Anomaly share: {summary['anomaly_share'] * 100:.1f}%",
-        f"- Energy fingerprint: {summary['fingerprint']}",
-        f"- Recent-vs-early median trend: {summary['trend_pct']:.1f}%",
+        f"- {tr('稳健异常天数', 'Robust anomaly days')}: {summary['anomaly_days']}",
+        f"- {tr('异常占比', 'Anomaly share')}: {summary['anomaly_share'] * 100:.1f}%",
+        f"- {tr('能耗特征', 'Energy fingerprint')}: {summary['fingerprint']}",
+        f"- {tr('近期与早期能耗中位数变化', 'Recent-vs-early median trend')}: {summary['trend_pct']:.1f}%",
         (
             f"- Weekend/weekday median ratio: {summary['weekend_ratio']:.2f}"
             if not pd.isna(summary["weekend_ratio"])
-            else "- Weekend/weekday median ratio: unavailable"
+            else f"- {tr('周末/工作日中位数比值', 'Weekend/weekday median ratio')}: {tr('不可用', 'unavailable')}"
         ),
         "",
         f"## 4. {tr('反事实筛查信号', 'Counterfactual screening signal')}",
         f"- {tr('基线：仅使用历史观测的滚动 28 天中位数', 'Baseline: trailing 28-day median using past observations only')}",
-        f"- Potential reduction signal: {summary['potential_pct']:.1f}%",
+        f"- {tr('潜在节能信号', 'Potential reduction signal')}: {summary['potential_pct']:.1f}%",
         f"- {tr('这是模型筛查信号，并非实测节能量。', 'This is a model-based screening signal, not measured savings.')}",
         "",
         f"## 5. {tr('建议干预措施', 'Suggested intervention')}",
-        f"- {summary['intervention']}",
+        f"- {tr('建议措施', 'Suggested action')}: {summary['intervention']}",
         f"- {tr('实施干预前，请核实运行时段、HVAC 设置和设备状态。', 'Verify operating schedules, HVAC settings and equipment status before intervention.')}",
         "",
         f"## 6. {tr('异常程度最高的日期', 'Highest anomaly dates')}",
@@ -312,7 +312,7 @@ def build_report(summary, d, metadata):
     if len(peak):
         lines.extend([
             "",
-            "| Date | Energy | Past baseline | Robust z |",
+            f"| {tr('日期', 'Date')} | {tr('能耗', 'Energy')} | {tr('历史基线', 'Past baseline')} | Robust z |",
             "|---|---:|---:|---:|",
         ])
         for _, row in peak.iterrows():
@@ -321,14 +321,14 @@ def build_report(summary, d, metadata):
                 f"{row['baseline_28d']:.2f} | {row['robust_z']:.2f} |"
             )
     else:
-        lines.append("- No robust anomaly dates detected.")
+        lines.append(f"- {tr('未检测到稳健异常日期。', 'No robust anomaly dates detected.')}")
 
     lines.extend([
         "",
         f"## 7. {tr('证据边界', 'Evidence boundary')}",
-        "- Uploaded-data screening uses a trailing robust baseline; it is not the same as the validated ExtraTrees model reported for the public dataset.",
-        "- Counterfactual and intervention values are screening hypotheses and must not be presented as realized energy or carbon savings.",
-        "- For real campus deployment, validate with treatment/control, Difference-in-Differences and placebo tests.",
+        f"- {tr('上传数据筛查使用历史滚动稳健基线，不等同于公开数据集上验证过的 ExtraTrees 模型。', 'Uploaded-data screening uses a trailing robust baseline; it is not the same as the validated ExtraTrees model reported for the public dataset.')}",
+        f"- {tr('反事实与干预数值属于筛查假设，不应表述为已实现的节能或减排量。', 'Counterfactual and intervention values are screening hypotheses and must not be presented as realized energy or carbon savings.')}",
+        f"- {tr('用于真实校园场景前，应进行干预组/对照组、双重差分和安慰剂检验。', 'For real campus deployment, validate with treatment/control, Difference-in-Differences and placebo tests.')}",
     ])
     return "\n".join(lines)
 
