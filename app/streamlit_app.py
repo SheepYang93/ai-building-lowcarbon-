@@ -467,8 +467,7 @@ with tabs[0]:
     )
 
     st.info(
-        "Demo boundary: public-data model results and uploaded-data screening are shown separately. "
-        "Scenario CO₂e is conditional, not measured emissions reduction."
+        tr("演示边界：公开数据模型结果与上传数据筛查结果分开展示。情景 CO₂e 为条件估算，不代表实测减排。", "Demo boundary: public-data model results and uploaded-data screening are shown separately. Scenario CO₂e is conditional, not measured emissions reduction.")
     )
 
 with tabs[1]:
@@ -544,7 +543,7 @@ with tabs[1]:
             intraday = run_intraday_screening(raw_uploaded)
             if intraday is not None:
                 st.session_state["upload_intraday"] = intraday
-                st.info(f'Sub-daily data detected: median cadence {intraday["cadence_minutes"]:.0f} minutes; {intraday["anomaly_count"]} same-slot anomaly observations flagged.')
+                st.info(tr(f'检测到日内数据：中位采样间隔 {intraday["cadence_minutes"]:.0f} 分钟，标记 {intraday["anomaly_count"]} 个同时间段异常观测。', f'Sub-daily data detected: median cadence {intraday["cadence_minutes"]:.0f} minutes; {intraday["anomaly_count"]} same-slot anomaly observations flagged.'))
             else:
                 st.session_state.pop("upload_intraday", None)
             q1, q2, q3 = st.columns(3)
@@ -556,9 +555,7 @@ with tabs[1]:
             if ai_result is not None:
                 st.session_state["upload_ai"] = ai_result
                 st.success(
-                    f"AI screening available: chronological ExtraTrees trained on the uploaded history "
-                    f"and evaluated on the holdout period (R²={ai_result['metrics']['r2']:.3f}, "
-                    f"WAPE={ai_result['metrics']['wape'] * 100:.1f}%)."
+                    tr(f"AI 筛查可用：基于上传历史数据按时间顺序训练 ExtraTrees，并在留出时段评估（R²={ai_result['metrics']['r2']:.3f}，WAPE={ai_result['metrics']['wape'] * 100:.1f}）。", f"AI screening available: chronological ExtraTrees trained on the uploaded history and evaluated on the holdout period (R²={ai_result['metrics']['r2']:.3f}, WAPE={ai_result['metrics']['wape'] * 100:.1f}%).")
                 )
                 ai1, ai2, ai3 = st.columns(3)
                 ai1.metric(tr("AI 测试 R²", "AI test R²"), f"{ai_result['metrics']['r2']:.3f}")
@@ -575,15 +572,14 @@ with tabs[1]:
                 weather_used = ai_result["metrics"].get("weather_features_used", [])
                 weather_cov = ai_result["metrics"].get("weather_completeness", {})
                 st.caption(
-                    "Weather readiness: "
-                    + ", ".join(f"{k} {weather_cov.get(k, 0) * 100:.0f}%" for k in weather_cov)
+                    tr("天气数据完整度：", "Weather readiness: ") + ", ".join(f"{k} {weather_cov.get(k, 0) * 100:.0f}%" for k in weather_cov)
                     + ". Features below 80% coverage are excluded rather than filled with synthetic zeros."
                 )
                 st.caption(tr("上传数据的 AI 筛查会基于本次历史数据重新训练，不是公开数据基准模型。", "Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model."))
             else:
-                st.info(ai_message + " The robust past-only baseline remains available.")
+                st.info(tr(f"{ai_message}；仍可使用仅依赖历史数据的稳健基线。", f"{ai_message} The robust past-only baseline remains available."))
 
-            st.markdown('<div class="section-title">Building health</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="section-title">{tr("建筑运行状态", "Building health")}</div>', unsafe_allow_html=True)
             card1, card2, card3 = st.columns(3)
             card1.metric("Status", summary["fingerprint"])
             card2.metric("Anomaly level", f'{summary["anomaly_share"] * 100:.1f}% of valid days')
@@ -643,7 +639,7 @@ with tabs[1]:
                 st.info(tr("上传时段内未检测到稳健统计意义上的异常日期。", "No robust anomaly dates were detected in the uploaded period."))
 
         except Exception as exc:
-            st.error(f"Upload or diagnosis failed: {exc}")
+            st.error(tr(f"上传或诊断失败：{exc}", f"Upload or diagnosis failed: {exc}"))
 
 with tabs[2]:
     st.markdown(f'<div class="section-title">{tr("建筑诊断", "Building Diagnosis")}</div>', unsafe_allow_html=True)
@@ -687,7 +683,7 @@ with tabs[2]:
             st.markdown("**" + tr("残差异常证据", "Residual anomaly evidence") + "**")
             st.line_chart(residual_plot)
         else:
-            st.info("AI expected-use screening is not available for this upload; the robust past-only baseline remains the evidence source.")
+            st.info(tr("本次上传数据暂不可用 AI 预期能耗筛查；当前仍以仅使用历史数据的稳健基线作为证据来源。", "AI expected-use screening is not available for this upload; the robust past-only baseline remains the evidence source."))
 
         left, right = st.columns(2)
         with left:
@@ -700,7 +696,7 @@ with tabs[2]:
         with right:
             st.markdown("**" + tr("优先建议措施", "Recommended first action") + "**")
             st.markdown(f'**{s["intervention"]}**')
-            st.caption("Action is a screening recommendation. Confirm schedules, HVAC status and equipment operation before intervention.")
+            st.caption(tr("该措施是初筛建议。实施前请确认运行时段、暖通空调状态及设备运行情况。", "Action is a screening recommendation. Confirm schedules, HVAC status and equipment operation before intervention."))
 
         st.markdown("**" + tr("建筑档案", "Building profile") + "**")
         st.dataframe(pd.DataFrame([{
@@ -765,7 +761,7 @@ with tabs[3]:
             show = candidate_days[["date", "meter_reading", "predicted_energy", "expected_low", "expected_high", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
             show["relative_gap"] *= 100
             st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(20), width="stretch", hide_index=True)
-        st.caption("Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action.")
+        st.caption(tr("候选时段可进入干预措施评估；采取行动前请核实运行时段、天气和设备状态。", "Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action."))
     else:
         cf = ADV / "ai_exp45_robust_candidates.csv"
         source = "pipeline output"
@@ -867,7 +863,7 @@ with tabs[4]:
                     k3.metric("Scenario @20%", f'{data["energy_saving_20%"].median():.1f}%')
             if cols:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
-            st.caption("Public-data intervention mappings are screening artifacts; scenario savings are not measured engineering results.")
+            st.caption(tr("基于公开数据的干预映射仅用于筛查；情景节能量并非工程实测结果。", "Public-data intervention mappings are screening artifacts; scenario savings are not measured engineering results."))
         else:
             st.info(tr("当前没有可用的干预措施映射文件。", "No intervention mapping artifact is available."))
 
@@ -888,7 +884,7 @@ with tabs[5]:
         tariff = st.number_input(tr("电价（¥/kWh）", "Electricity tariff (¥/kWh)"), min_value=0.0, max_value=10.0, value=0.80, step=0.05)
         factor_key = st.selectbox(tr("排放因子", "Emission factor"), list(EMISSION_FACTORS))
         factor = EMISSION_FACTORS[factor_key]["value"]
-        st.caption(f"Source: {EMISSION_FACTORS[factor_key]['source']} · {EMISSION_FACTORS[factor_key]['unit']}")
+        st.caption(tr(f"来源：{EMISSION_FACTORS[factor_key]['source']} · {EMISSION_FACTORS[factor_key]['unit']}", f"Source: {EMISSION_FACTORS[factor_key]['source']} · {EMISSION_FACTORS[factor_key]['unit']}"))
     with right:
         result = scenario(annual, reduction, tariff, factor)
         a, b, c = st.columns(3)
@@ -907,7 +903,7 @@ with tabs[5]:
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
         st.markdown(f'<div class="section-title">{tr("情景敏感性分析", "Scenario sensitivity")}</div>', unsafe_allow_html=True)
-        st.caption("同一能耗基线下，不同假设节能率对应的成本与碳减排情景。")
+        st.caption(tr("在相同能耗基线下，对比不同假设节能率对应的成本与碳减排情景。", "Compare cost and carbon-reduction scenarios at different assumed savings rates using the same energy baseline."))
         st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
 
 with tabs[6]:
@@ -935,9 +931,9 @@ with tabs[6]:
 
 with tabs[7]:
     st.markdown(f'<div class="section-title">{tr("现场验证", "Field Validation")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">用 Treatment / Control + DID 把模型筛选结果推进到现场证据。</div>', unsafe_allow_html=True)
-    st.markdown('<div class="data-status"><b>Evidence path</b> Baseline → intervention → treatment/control → DID → placebo / pre-trend checks</div>', unsafe_allow_html=True)
-    st.caption("Preliminary field-validation prototype: DID + pre-trend slope diagnostic + placebo falsification check + clustered bootstrap interval. These checks do not prove causality.")
+    st.markdown(f'<div class="section-subtitle">{tr("通过干预组/对照组与 DID，将模型筛查结果推进到现场证据验证。", "Use treatment/control groups and DID to advance model screening into field evidence.")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="data-status"><b>{tr("证据路径", "Evidence path")}</b> {tr("基线 → 干预 → 干预组/对照组 → DID → 安慰剂/前趋势检验", "Baseline → intervention → treatment/control → DID → placebo / pre-trend checks")}</div>', unsafe_allow_html=True)
+    st.caption(tr("现场验证原型：DID + 干预前趋势斜率诊断 + 安慰剂伪证检验 + 聚类 Bootstrap 区间。这些检验不能单独证明因果关系。", "Preliminary field-validation prototype: DID + pre-trend slope diagnostic + placebo falsification check + clustered bootstrap interval. These checks do not prove causality."))
     st.write(
         "Upload a validation CSV with one row per building-day. Required columns: "
         "date, energy, building_id, group, intervention_date. "
@@ -1037,7 +1033,7 @@ with tabs[7]:
                 t1.metric("Treated pre-slope", f'{trend["treated_slope"]:+.4f}/day')
                 t2.metric("Control pre-slope", f'{trend["control_slope"]:+.4f}/day')
                 t3.metric("Slope gap", f'{trend["slope_gap"]:+.4f}/day')
-                st.caption("This is a simple diagnostic of pre-period slopes, not a formal parallel-trends test.")
+                st.caption(tr("这是对干预前斜率的简单诊断，不是正式的平行趋势检验。", "This is a simple diagnostic of pre-period slopes, not a formal parallel-trends test."))
             else:
                 st.info(tr("干预前观测不足，无法计算斜率诊断。", "Not enough pre-period observations to compute a slope diagnostic."))
 
@@ -1056,4 +1052,4 @@ with tabs[7]:
                 mime="text/csv",
             )
         except Exception as exc:
-            st.error(f"Validation analysis failed: {exc}")
+            st.error(tr(f"现场验证分析失败：{exc}", f"Validation analysis failed: {exc}"))
