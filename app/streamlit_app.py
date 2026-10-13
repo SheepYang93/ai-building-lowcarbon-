@@ -909,7 +909,7 @@ with tabs[5]:
         })
         st.markdown(f'<div class="section-title">{tr("情景敏感性分析", "Scenario sensitivity")}</div>', unsafe_allow_html=True)
         st.caption(tr("在相同能耗基线下，对比不同假设节能率对应的成本与碳减排情景。", "Compare cost and carbon-reduction scenarios at different assumed savings rates using the same energy baseline."))
-        st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
+        st.line_chart(scenario_df[[tr("电费节省（¥）", "Energy-charge saving (¥)"), tr("预计减排 CO₂e（吨）", "Avoided CO₂e (t)")]], height=300)
 
 with tabs[6]:
     st.markdown(f'<div class="section-title">{tr("诊断报告", "Diagnostic Report")}</div>', unsafe_allow_html=True)
