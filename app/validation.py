@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def _prepare(frame, intervention_date):
+def _prepare(frame, intervention_date, require_both_periods=True):
     required = {"date", "energy", "group"}
     missing = required - set(frame.columns)
     if missing:
@@ -31,7 +31,7 @@ def _prepare(frame, intervention_date):
 
     for group in ["treated", "control"]:
         g = v[v["group"] == group]
-        if g.empty or set(g["period"]) != {"pre", "post"}:
+        if g.empty or (require_both_periods and set(g["period"]) != {"pre", "post"}):
             raise ValueError(
                 f"Both pre- and post-intervention observations are required for the {group} group."
             )
@@ -55,7 +55,7 @@ def did_effect(frame, intervention_date):
 
 
 def pretrend_check(frame, intervention_date):
-    v = _prepare(frame, intervention_date)
+    v = _prepare(frame, intervention_date, require_both_periods=False)
     pre = v[v["period"] == "pre"].copy()
     if pre["date"].nunique() < 3:
         return {"status": "insufficient", "treated_slope": np.nan, "control_slope": np.nan, "slope_gap": np.nan}
