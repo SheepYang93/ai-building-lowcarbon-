@@ -908,12 +908,13 @@ with tabs[5]:
 
 with tabs[6]:
     st.markdown(f'<div class="section-title">{tr("诊断报告", "Diagnostic Report")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">把最近一次上传数据的诊断结果整理成可复用的项目输出。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("把最近一次上传数据的诊断结果整理成可复用的项目输出。", "Package the latest uploaded-data diagnosis into a reusable project output.")}</div>', unsafe_allow_html=True)
     report = st.session_state.get("upload_report")
     if report:
-        st.markdown(
+        st.markdown(tr(
+            "以下报告由最近一次上传的数据集自动生成。",
             "The report below was generated from the most recent uploaded dataset."
-        )
+        ))
         st.download_button(
             tr("下载 Markdown 诊断报告", "Download Markdown report"),
             data=report,
@@ -923,10 +924,10 @@ with tabs[6]:
         st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂e 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
         st.text_area(tr("报告预览", "Report preview"), report, height=600)
     else:
-        st.info(
-            "Upload a building CSV in Upload & Diagnose first. "
-            "The system will generate a diagnosis report automatically."
-        )
+        st.info(tr(
+            "请先在“上传与诊断”中上传建筑能耗 CSV，系统随后会自动生成诊断报告。",
+            "Upload a building CSV in Upload & Diagnose first. The system will generate a diagnosis report automatically."
+        ))
 
 
 with tabs[7]:
@@ -934,12 +935,10 @@ with tabs[7]:
     st.markdown(f'<div class="section-subtitle">{tr("通过干预组/对照组与 DID，将模型筛查结果推进到现场证据验证。", "Use treatment/control groups and DID to advance model screening into field evidence.")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="data-status"><b>{tr("证据路径", "Evidence path")}</b> {tr("基线 → 干预 → 干预组/对照组 → DID → 安慰剂/前趋势检验", "Baseline → intervention → treatment/control → DID → placebo / pre-trend checks")}</div>', unsafe_allow_html=True)
     st.caption(tr("现场验证原型：DID + 干预前趋势斜率诊断 + 安慰剂伪证检验 + 聚类 Bootstrap 区间。这些检验不能单独证明因果关系。", "Preliminary field-validation prototype: DID + pre-trend slope diagnostic + placebo falsification check + clustered bootstrap interval. These checks do not prove causality."))
-    st.write(
-        "Upload a validation CSV with one row per building-day. Required columns: "
-        "date, energy, building_id, group, intervention_date. "
-        "Use group=treated for buildings receiving the intervention and group=control "
-        "for comparable buildings without the intervention."
-    )
+    st.write(tr(
+        "上传现场验证 CSV，每行代表一栋建筑的一天。必需列：date、energy、building_id、group、intervention_date。接受干预的建筑使用 group=treated，可比的未干预建筑使用 group=control。",
+        "Upload a validation CSV with one row per building-day. Required columns: date, energy, building_id, group, intervention_date. Use group=treated for buildings receiving the intervention and group=control for comparable buildings without the intervention."
+    ))
     st.code(
         "date,energy,building_id,group,intervention_date\n"
         "2026-03-01,1200,B001,treated,2026-04-01\n"
