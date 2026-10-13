@@ -902,6 +902,11 @@ with tabs[5]:
                 "Avoided CO₂e (t)": sr["avoided_co2e_t"],
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
+        scenario_df.index.name = tr("节能率（%）", "Reduction (%)")
+        scenario_df = scenario_df.rename(columns={
+            "Energy-charge saving (¥)": tr("电费节省（¥）", "Energy-charge saving (¥)"),
+            "Avoided CO₂e (t)": tr("预计减排 CO₂e（吨）", "Avoided CO₂e (t)"),
+        })
         st.markdown(f'<div class="section-title">{tr("情景敏感性分析", "Scenario sensitivity")}</div>', unsafe_allow_html=True)
         st.caption(tr("在相同能耗基线下，对比不同假设节能率对应的成本与碳减排情景。", "Compare cost and carbon-reduction scenarios at different assumed savings rates using the same energy baseline."))
         st.line_chart(scenario_df[["Energy-charge saving (¥)", "Avoided CO₂e (t)"]], height=300)
@@ -992,7 +997,7 @@ with tabs[7]:
 
             if not pre.any() or not post.any():
                 raise ValueError(
-                    "The dataset needs observations both before and after the intervention date."
+                    tr("数据必须同时包含干预日期之前和之后的观测记录。", "The dataset needs observations both before and after the intervention date.")
                 )
 
             result = did_effect(v, intervention_date)
@@ -1029,9 +1034,9 @@ with tabs[7]:
             st.markdown("**" + tr("干预前趋势诊断", "Pre-trend diagnostic") + "**")
             if trend["status"] == "diagnostic":
                 t1, t2, t3 = st.columns(3)
-                t1.metric("Treated pre-slope", f'{trend["treated_slope"]:+.4f}/day')
-                t2.metric("Control pre-slope", f'{trend["control_slope"]:+.4f}/day')
-                t3.metric("Slope gap", f'{trend["slope_gap"]:+.4f}/day')
+                t1.metric(tr("干预组前期斜率", "Treated pre-slope"), f'{trend["treated_slope"]:+.4f}/day')
+                t2.metric(tr("对照组前期斜率", "Control pre-slope"), f'{trend["control_slope"]:+.4f}/day')
+                t3.metric(tr("斜率差", "Slope gap"), f'{trend["slope_gap"]:+.4f}/day')
                 st.caption(tr("这是对干预前斜率的简单诊断，不是正式的平行趋势检验。", "This is a simple diagnostic of pre-period slopes, not a formal parallel-trends test."))
             else:
                 st.info(tr("干预前观测不足，无法计算斜率诊断。", "Not enough pre-period observations to compute a slope diagnostic."))
