@@ -76,3 +76,33 @@ def test_features_impute_partial_weather_gaps_without_dropping_rows():
     assert "airTemperature" in feature_columns
     assert engineered["airTemperature"].isna().sum() == 0
     assert len(engineered) == len(data)
+
+
+def test_features_sort_each_building_history_before_lags():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 40,
+        "date": list(pd.date_range("2026-01-01", periods=40)[::-1]),
+        "meter_reading": list(range(40)),
+        "sqm": [500.0] * 40,
+    })
+
+    engineered, _ = features(data)
+
+    assert engineered["date"].is_monotonic_increasing
+    assert engineered.loc[28, "lag1"] == engineered.loc[27, "meter_reading"]
+
+
+def test_partial_weather_missingness_does_not_impute_or_drop_rows():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 40,
+        "date": pd.date_range("2026-01-01", periods=40),
+        "meter_reading": [100.0] * 40,
+        "sqm": [500.0] * 40,
+        "airTemperature": [10.0] * 39 + [float("nan")],
+    })
+
+    engineered, feature_columns = features(data)
+
+    assert len(engineered) == 40
+    assert "airTemperature" not in feature_columns
+    assert pd.isna(engineered.loc[39, "airTemperature"])
