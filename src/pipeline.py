@@ -25,25 +25,23 @@ def load_filter(path):
 def features(df):
     d=df.copy()
     d["date"] = pd.to_datetime(d["date"], errors="coerce")
+    d=d.dropna(subset=["building_id","date","meter_reading","sqm"]).copy()
+    d=d.sort_values(["building_id","date"],kind="mergesort").reset_index(drop=True)
     d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
     g=d.groupby("building_id")["meter_reading"]
     for k in [1,7,14,28]: d[f"lag{k}"]=g.shift(k)
     for w in [7,28]:
         d[f"rm{w}"]=g.transform(lambda s:s.shift(1).rolling(w,min_periods=w).mean())
         d[f"rv{w}"]=g.transform(lambda s:s.shift(1).rolling(w,min_periods=w).std())
-    # Weather fields are optional in many public building datasets. Only use
-    # them when present and at least one value is available; never drop every
-    # row simply because an optional weather column is absent.
+    # Weather fields are optional. Include a weather feature only when
+    # every retained row has a numeric value: median-imputing across the full
+    # timeline would leak information from the future into chronological tests.
     f=["sqm","month","dayofyear","dow","is_weekend","lag1","lag7","lag14","lag28","rm7","rm28","rv7","rv28"]
     for col in ["airTemperature","cloudCoverage","dewTemperature","windSpeed"]:
         if col in d.columns:
             values = pd.to_numeric(d[col], errors="coerce")
-            # Keep a weather feature only when it has observed values, then
-            # median-impute its missing rows so optional gaps do not discard
-            # otherwise valid energy history.
-            if values.notna().any():
-                median_value = values.median()
-                d[col] = values.fillna(median_value)
+            if values.notna().all():
+                d[col] = values
                 f.append(col)
     return d,f
 
