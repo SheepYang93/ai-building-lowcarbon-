@@ -41,11 +41,23 @@ def deterministic_sample(train,cap=100000):
     return s if len(s)<=cap else s.iloc[np.linspace(0,len(s)-1,cap).astype(int)]
 
 def train_model(d,f,cap=100000,seed=42):
-    d=d.dropna(subset=f+["meter_reading"]).copy(); dates=np.sort(d.date.unique()); cutoff=pd.Timestamp(dates[int(len(dates)*.8)])
-    tr=d[d.date<cutoff]; te=d[d.date>=cutoff]; tr_fit=deterministic_sample(tr,cap)
+    d=d.dropna(subset=f+["meter_reading"]).copy()
+    if d.empty:
+        raise ValueError("No complete rows remain after feature engineering. Check required fields and history length.")
+    dates=np.sort(d.date.dropna().unique())
+    if len(dates)<2:
+        raise ValueError("At least two distinct dates with complete features are required for chronological evaluation.")
+    cutoff=pd.Timestamp(dates[int(len(dates)*.8)])
+    tr=d[d.date<cutoff]; te=d[d.date>=cutoff]
+    if tr.empty or te.empty:
+        raise ValueError("Chronological split produced an empty train or test set. Provide more valid historical data.")
+    tr_fit=deterministic_sample(tr,cap)
+    if tr_fit.empty:
+        raise ValueError("Training sample is empty; increase input data or check train-cap.")
     model=ExtraTreesRegressor(n_estimators=160,random_state=seed,n_jobs=-1,min_samples_leaf=2,max_features=.9)
     model.fit(tr_fit[f],tr_fit.meter_reading); pred=model.predict(te[f]); y=te.meter_reading.to_numpy()
-    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/np.abs(y).sum()),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d)}
+    denominator=float(np.abs(y).sum())
+    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d)}
 
 
 def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
