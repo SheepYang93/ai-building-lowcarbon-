@@ -36,9 +36,15 @@ def features(df):
     # row simply because an optional weather column is absent.
     f=["sqm","month","dayofyear","dow","is_weekend","lag1","lag7","lag14","lag28","rm7","rm28","rv7","rv28"]
     for col in ["airTemperature","cloudCoverage","dewTemperature","windSpeed"]:
-        if col in d.columns and pd.to_numeric(d[col], errors="coerce").notna().any():
-            d[col] = pd.to_numeric(d[col], errors="coerce")
-            f.append(col)
+        if col in d.columns:
+            values = pd.to_numeric(d[col], errors="coerce")
+            # Keep a weather feature only when it has observed values, then
+            # median-impute its missing rows so optional gaps do not discard
+            # otherwise valid energy history.
+            if values.notna().any():
+                median_value = values.median()
+                d[col] = values.fillna(median_value)
+                f.append(col)
     return d,f
 
 def deterministic_sample(train,cap=100000):
