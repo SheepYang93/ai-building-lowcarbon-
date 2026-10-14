@@ -60,3 +60,19 @@ def test_features_impute_partial_weather_gaps():
     assert "airTemperature" in feature_columns
     assert engineered["airTemperature"].isna().sum() == 0
     assert engineered["airTemperature"].iloc[-1] == 10.0
+
+
+def test_features_impute_partial_weather_gaps_without_dropping_rows():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 40,
+        "date": pd.date_range("2026-01-01", periods=40),
+        "meter_reading": [100.0 + i for i in range(40)],
+        "sqm": [500.0] * 40,
+        "airTemperature": [10.0, None, 12.0, None] + [14.0] * 36,
+    })
+
+    engineered, feature_columns = features(data)
+
+    assert "airTemperature" in feature_columns
+    assert engineered["airTemperature"].isna().sum() == 0
+    assert len(engineered) == len(data)
