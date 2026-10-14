@@ -8,12 +8,12 @@ import streamlit as st
 try:
     from app.economics import scenario
     from app.emission_factors import EMISSION_FACTORS
-    from app.validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
+    from app.validation import did_effect, pretrend_check
     from app.prediction_range import add_range
 except ImportError:
     from economics import scenario
     from emission_factors import EMISSION_FACTORS
-    from validation import did_effect, pretrend_check, placebo_effect, bootstrap_did
+    from validation import did_effect, pretrend_check
     from prediction_range import add_range
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
@@ -692,10 +692,16 @@ with tabs[2]:
         left, right = st.columns(2)
         with left:
             st.markdown("**" + tr("能耗特征", "Energy fingerprint") + "**")
+            weekend_ratio = s["weekend_ratio"]
+            weekend_label = (
+                f"{weekend_ratio:.2f}"
+                if pd.notna(weekend_ratio)
+                else tr("不可用（缺少有效周末数据）", "unavailable (insufficient weekend data)")
+            )
             st.markdown(
                 f'**{s["fingerprint"]}**  \\n'
-                f'Weekend / weekday ratio: {s["weekend_ratio"]:.2f}  ·  '
-                f'Recent-vs-early median trend: {s["trend_pct"]:+.1f}%'
+                f'{tr("周末/工作日中位数比值", "Weekend / weekday median ratio")}: {weekend_label}  ·  '
+                f'{tr("近期与早期能耗中位数变化", "Recent-vs-early median trend")}: {s["trend_pct"]:+.1f}%'
             )
         with right:
             st.markdown("**" + tr("优先建议措施", "Recommended first action") + "**")
