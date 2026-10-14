@@ -127,7 +127,17 @@ def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
     return model, train_fit, test, pred, metrics
 
 def anomaly_table(df):
-    x=df[["building_id","date","meter_reading","sub_primaryspaceusage","sqm","site_id"]].copy(); g=x.groupby("building_id")["meter_reading"]
+    # site_id is optional in the accepted input schema; preserve diagnosis
+    # when a dataset has no site-level identifier.
+    x = df.copy()
+    if "site_id" not in x.columns:
+        x["site_id"] = pd.NA
+    required = ["building_id", "date", "meter_reading", "sub_primaryspaceusage", "sqm", "site_id"]
+    missing = [column for column in required if column not in x.columns]
+    if missing:
+        raise ValueError("Anomaly diagnosis is missing required columns: " + ", ".join(missing))
+    x = x[required].sort_values(["building_id", "date"]).copy()
+    g=x.groupby("building_id")["meter_reading"]
     x["baseline28"]=g.transform(lambda s:s.shift(1).rolling(28,min_periods=14).median()); x["residual"]=x.meter_reading-x.baseline28
     x["mad56"]=x.groupby("building_id")["residual"].transform(lambda s:s.shift(1).rolling(56,min_periods=14).apply(lambda v:np.median(np.abs(v-np.median(v))),raw=True))
     x["scale"]=(1.4826*x.mad56).clip(lower=1e-9); x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9); x["robust_z"]=x.residual/x.scale
