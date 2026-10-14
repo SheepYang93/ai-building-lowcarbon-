@@ -989,9 +989,15 @@ with tabs[7]:
             if v.empty:
                 raise ValueError("No valid treated/control rows remain.")
 
-            intervention_date = v["intervention_date"].mode().iloc[0]
-            if v["intervention_date"].nunique() > 1:
-                st.warning(tr("检测到多个干预日期；本次初筛使用出现频率最高的日期。", "Multiple intervention dates detected; using the most frequent date for this screening run."))
+            intervention_dates = v["intervention_date"].dropna().unique()
+            if len(intervention_dates) != 1:
+                raise ValueError(
+                    tr(
+                        "同一次现场验证必须使用唯一的干预日期。请按干预日期拆分数据后分别分析。",
+                        "A validation run must use exactly one intervention date. Split the data by intervention date and analyze each run separately.",
+                    )
+                )
+            intervention_date = pd.Timestamp(intervention_dates[0])
             pre = v["date"] < intervention_date
             post = v["date"] >= intervention_date
 
