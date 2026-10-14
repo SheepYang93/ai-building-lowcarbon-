@@ -23,13 +23,22 @@ def load_filter(path):
     return df.dropna(subset=["building_id","date","meter_reading","sqm"]).loc[lambda x:x["sqm"]>0].sort_values(["building_id","date"])
 
 def features(df):
-    d=df.copy(); d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
+    d=df.copy()
+    d["date"] = pd.to_datetime(d["date"], errors="coerce")
+    d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
     g=d.groupby("building_id")["meter_reading"]
     for k in [1,7,14,28]: d[f"lag{k}"]=g.shift(k)
     for w in [7,28]:
         d[f"rm{w}"]=g.transform(lambda s:s.shift(1).rolling(w,min_periods=w).mean())
         d[f"rv{w}"]=g.transform(lambda s:s.shift(1).rolling(w,min_periods=w).std())
-    f=["sqm","month","dayofyear","dow","is_weekend","airTemperature","cloudCoverage","dewTemperature","windSpeed","lag1","lag7","lag14","lag28","rm7","rm28","rv7","rv28"]
+    # Weather fields are optional in many public building datasets. Only use
+    # them when present and at least one value is available; never drop every
+    # row simply because an optional weather column is absent.
+    f=["sqm","month","dayofyear","dow","is_weekend","lag1","lag7","lag14","lag28","rm7","rm28","rv7","rv28"]
+    for col in ["airTemperature","cloudCoverage","dewTemperature","windSpeed"]:
+        if col in d.columns and pd.to_numeric(d[col], errors="coerce").notna().any():
+            d[col] = pd.to_numeric(d[col], errors="coerce")
+            f.append(col)
     return d,f
 
 def deterministic_sample(train,cap=100000):
