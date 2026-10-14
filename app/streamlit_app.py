@@ -532,9 +532,10 @@ with tabs[1]:
 
             if summary["records"] < 35:
                 st.warning(
-                    "The uploaded period is shorter than 35 days. "
-                    "The 28-day robust baseline will have limited context; "
-                    "use 8–12 weeks for a stronger field validation baseline."
+                    tr(
+                        "上传时段不足 35 天，28 天稳健基线的参考信息有限；建议使用 8–12 周数据进行更可靠的现场验证。",
+                        "The uploaded period is shorter than 35 days, so the 28-day robust baseline has limited context. Use 8–12 weeks for stronger field validation.",
+                    )
                 )
 
             quality_score, quality_checks = score_upload_quality(daily, raw_uploaded)
@@ -618,7 +619,7 @@ with tabs[1]:
                 "suggested_intervention": summary["intervention"],
             })
 
-            st.markdown('<div class="section-title">Energy fingerprint</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="section-title">{tr("能耗特征", "Energy fingerprint")}</div>', unsafe_allow_html=True)
             fp1, fp2 = st.columns(2)
             with fp1:
                 st.line_chart(diagnosed.set_index("date")[["energy", "baseline_28d"]])
