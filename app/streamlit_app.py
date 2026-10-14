@@ -209,6 +209,9 @@ def run_uploaded_ai_screening(daily):
     if not required.issubset(daily.columns) or len(daily) < 60:
         return None, "AI prediction requires building_id, area_m2, outdoor_temperature and at least 60 daily records."
     try:
+        import sys
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
         from src.pipeline import features, train_model
         d = daily.copy().rename(columns={
             "area_m2": "sqm",
