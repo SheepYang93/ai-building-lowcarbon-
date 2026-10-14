@@ -13,7 +13,7 @@ def test_load_filter_reports_missing_required_columns(tmp_path):
 
 
 def test_train_model_rejects_empty_complete_feature_rows():
-    columns = ["date", "meter_reading", "building_id"]
+    columns = ["date", "meter_reading", "building_id", "missing_feature"]
     data = pd.DataFrame(columns=columns)
 
     with pytest.raises(ValueError, match="No complete rows remain"):
