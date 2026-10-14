@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.pipeline import REQUIRED, features, load_filter, train_model
+from src.pipeline import REQUIRED, anomaly_table, features, load_filter, train_model
 
 
 def test_load_filter_reports_missing_required_columns(tmp_path):
@@ -106,3 +106,18 @@ def test_partial_weather_missingness_does_not_impute_or_drop_rows():
     assert len(engineered) == 40
     assert "airTemperature" not in feature_columns
     assert pd.isna(engineered.loc[39, "airTemperature"])
+
+
+def test_anomaly_table_accepts_missing_optional_site_id():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 70,
+        "date": pd.date_range("2026-01-01", periods=70),
+        "meter_reading": [100.0] * 69 + [150.0],
+        "sub_primaryspaceusage": ["Education"] * 70,
+        "sqm": [500.0] * 70,
+    })
+
+    result = anomaly_table(data)
+
+    assert len(result) == 1
+    assert pd.isna(result.loc[0, "site_id"])
