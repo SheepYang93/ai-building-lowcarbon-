@@ -10,6 +10,11 @@ REQUIRED=["building_id","meter","date","meter_reading","sub_primaryspaceusage","
 
 def load_filter(path):
     cols=REQUIRED+["site_id","airTemperature","cloudCoverage","dewTemperature","windSpeed","season"]
+    # Read the header first so missing required columns produce an actionable error.
+    header = pd.read_csv(path, nrows=0).columns
+    missing = sorted(set(REQUIRED) - set(header))
+    if missing:
+        raise ValueError("Input CSV is missing required columns: " + ", ".join(missing))
     df=pd.read_csv(path,usecols=lambda c:c in cols,parse_dates=["date"])
     df=df[df["meter"].eq("electricity")].copy()
     df=df[df["sub_primaryspaceusage"].fillna("").str.contains("Education|College|University|Classroom|Laboratory|School",case=False,regex=True)]
