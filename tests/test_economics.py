@@ -10,7 +10,7 @@ def test_scenario_calculates_expected_values():
 
 
 
-def test_annualize_period_energy_uses_inclusive_date_span():
+def test_annualize_period_energy_uses_observed_day_count():
     assert annualize_period_energy(100, observed_days=9) == 100 * 365 / 9
 
 
