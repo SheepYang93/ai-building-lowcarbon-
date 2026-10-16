@@ -70,7 +70,7 @@ def train_model(d,f,cap=100000,seed=42):
     model=ExtraTreesRegressor(n_estimators=160,random_state=seed,n_jobs=-1,min_samples_leaf=2,max_features=.9)
     model.fit(tr_fit[f],tr_fit.meter_reading); pred=model.predict(te[f]); y=te.meter_reading.to_numpy()
     denominator=float(np.abs(y).sum())
-    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d)}
+    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d, evaluation_frame=te)}
 
 
 def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
@@ -168,21 +168,45 @@ def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location
     return a
 
 
-def baseline_metrics(d, target="meter_reading"):
-    """Compare simple past-only baselines on the same chronological holdout."""
-    d=d.copy().sort_values(["building_id","date"])
-    dates=np.sort(d.date.dropna().unique())
-    if len(dates)<10: return {}
-    cutoff=pd.Timestamp(dates[int(len(dates)*.8)])
-    g=d.groupby("building_id")[target]
-    d["naive_1"]=g.shift(1)
-    d["seasonal_7"]=g.shift(7)
-    d["median_28"]=g.transform(lambda s:s.shift(1).rolling(28,min_periods=7).median())
-    te=d[d.date>=cutoff]
-    out={}; y=te[target].to_numpy()
-    for name in ["naive_1","seasonal_7","median_28"]:
-        p=te[name].to_numpy(); ok=np.isfinite(p)&np.isfinite(y)
+def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
+    """Evaluate past-only baselines on the supplied model holdout rows.
+
+    When evaluation_frame is provided, all baselines are scored on those exact
+    rows (excluding only rows where a baseline cannot be formed). This avoids
+    comparing the model against a different, easier or larger test sample.
+    """
+    history = d.copy().sort_values(["building_id", "date"])
+    dates = np.sort(history.date.dropna().unique())
+    if len(dates) < 10:
+        return {}
+
+    g = history.groupby("building_id")[target]
+    history["naive_1"] = g.shift(1)
+    history["seasonal_7"] = g.shift(7)
+    history["median_28"] = g.transform(
+        lambda s: s.shift(1).rolling(28, min_periods=7).median()
+    )
+
+    if evaluation_frame is None:
+        cutoff = pd.Timestamp(dates[int(len(dates) * 0.8)])
+        evaluation = history[history.date >= cutoff].copy()
+    else:
+        if not evaluation_frame.index.is_unique:
+            raise ValueError("Evaluation frame must have unique row indices.")
+        missing = evaluation_frame.index.difference(history.index)
+        if len(missing):
+            raise ValueError("Evaluation rows must be present in the history data.")
+        evaluation = history.loc[evaluation_frame.index].copy()
+
+    out = {}
+    y = pd.to_numeric(evaluation[target], errors="coerce").to_numpy(dtype=float)
+    for name in ["naive_1", "seasonal_7", "median_28"]:
+        p = pd.to_numeric(evaluation[name], errors="coerce").to_numpy(dtype=float)
+        ok = np.isfinite(p) & np.isfinite(y)
         if ok.sum():
-            out[name]={"mae":float(mean_absolute_error(y[ok],p[ok])),
-                       "wape":float(np.abs(y[ok]-p[ok]).sum()/max(np.abs(y[ok]).sum(),1e-9))}
+            out[name] = {
+                "mae": float(mean_absolute_error(y[ok], p[ok])),
+                "wape": float(np.abs(y[ok] - p[ok]).sum() / max(np.abs(y[ok]).sum(), 1e-9)),
+                "n": int(ok.sum()),
+            }
     return out
