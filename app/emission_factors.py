@@ -14,7 +14,8 @@ EMISSION_FACTORS = {
     "China national · 2023 · location-based": {
         "value": 0.5306,
         "unit": "kgCO2/kWh",
-        "source": "MEE + NBS, 2023 national average electricity CO2 emission factor",
+        "source": "MEE + NBS, Announcement 2025 No. 47, 2023 national average electricity CO2 emission factor",
+        "source_url": "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202512/t20251231_1139517.html",
         "year": 2023,
         "region": "China",
         "scope": "Scope 2 · location-based screening",
@@ -22,7 +23,8 @@ EMISSION_FACTORS = {
     "Guangdong · 2023 · location-based": {
         "value": 0.4419,
         "unit": "kgCO2/kWh",
-        "source": "MEE + NBS, 2023 Guangdong average electricity CO2 emission factor",
+        "source": "MEE + NBS, Announcement 2025 No. 47, 2023 Guangdong average electricity CO2 emission factor",
+        "source_url": "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202512/t20251231_1139517.html",
         "year": 2023,
         "region": "Guangdong",
         "scope": "Scope 2 · location-based screening",
