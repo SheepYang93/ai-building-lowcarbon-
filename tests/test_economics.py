@@ -11,11 +11,11 @@ def test_scenario_calculates_expected_values():
 
 
 def test_annualize_period_energy_uses_inclusive_date_span():
-    assert annualize_period_energy(100, "2026-01-01", "2026-01-09") == 100 * 365 / 9
+    assert annualize_period_energy(100, observed_days=9) == 100 * 365 / 9
 
 
 def test_annualize_period_energy_rejects_invalid_date_range():
     import pytest
 
-    with pytest.raises(ValueError, match="valid start_date and end_date"):
-        annualize_period_energy(100, "not-a-date", "2026-01-09")
+    with pytest.raises(ValueError, match="At least one observed day"):
+        annualize_period_energy(100, observed_days=0)
