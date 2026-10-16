@@ -450,7 +450,7 @@ with tabs[0]:
 ↓  
 **Intervention screening**  
 ↓  
-**Cost & CO₂e scenario**  
+**Cost & CO₂ scenario**  
 ↓  
 **Field validation**
 ''')
@@ -470,7 +470,7 @@ with tabs[0]:
     )
 
     st.info(
-        tr("演示边界：公开数据模型结果与上传数据筛查结果分开展示。情景 CO₂e 为条件估算，不代表实测减排。", "Demo boundary: public-data model results and uploaded-data screening are shown separately. Scenario CO₂e is conditional, not measured emissions reduction.")
+        tr("演示边界：公开数据模型结果与上传数据筛查结果分开展示。情景 CO₂ 为条件估算，不代表实测减排。", "Demo boundary: public-data model results and uploaded-data screening are shown separately. Scenario CO₂ is conditional, not measured emissions reduction.")
     )
 
 with tabs[1]:
@@ -913,17 +913,17 @@ with tabs[5]:
             scenario_rows.append({
                 "Reduction": pct,
                 "Energy-charge saving (¥)": sr["estimated_energy_charge_saving"],
-                "Avoided CO₂e (t)": sr["avoided_co2_t"],
+                "Avoided CO₂ (t)": sr["avoided_co2_t"],
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
         scenario_df.index.name = tr("节能率（%）", "Reduction (%)")
         scenario_df = scenario_df.rename(columns={
             "Energy-charge saving (¥)": tr("电费节省（¥）", "Energy-charge saving (¥)"),
-            "Avoided CO₂e (t)": tr("预计减排 CO₂e（吨）", "Avoided CO₂e (t)"),
+            "Avoided CO₂ (t)": tr("预计减排 CO₂（吨）", "Avoided CO₂ (t)"),
         })
         st.markdown(f'<div class="section-title">{tr("情景敏感性分析", "Scenario sensitivity")}</div>', unsafe_allow_html=True)
         st.caption(tr("在相同能耗基线下，对比不同假设节能率对应的成本与碳减排情景。", "Compare cost and carbon-reduction scenarios at different assumed savings rates using the same energy baseline."))
-        st.line_chart(scenario_df[[tr("电费节省（¥）", "Energy-charge saving (¥)"), tr("预计减排 CO₂e（吨）", "Avoided CO₂e (t)")]], height=300)
+        st.line_chart(scenario_df[[tr("电费节省（¥）", "Energy-charge saving (¥)"), tr("预计减排 CO₂（吨）", "Avoided CO₂ (t)")]], height=300)
 
 with tabs[6]:
     st.markdown(f'<div class="section-title">{tr("诊断报告", "Diagnostic Report")}</div>', unsafe_allow_html=True)
@@ -940,7 +940,7 @@ with tabs[6]:
             file_name="building_energy_diagnosis_report.md",
             mime="text/markdown",
         )
-        st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂e 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
+        st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂ 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
         st.text_area(tr("报告预览", "Report preview"), report, height=600)
     else:
         st.info(tr(
