@@ -31,16 +31,15 @@ def scenario(
     }
 
 
-def annualize_period_energy(total_energy: float, start_date, end_date, days_per_year: float = 365.0) -> float:
-    """Project an observed-period total to a simple annualized estimate."""
-    import pandas as pd
+def annualize_period_energy(total_energy: float, observed_days: int, days_per_year: float = 365.0) -> float:
+    """Annualize a total using average energy per observed day.
 
+    Missing calendar dates are not treated as zero-consumption days. This is
+    still a simple screening extrapolation, not a seasonal or weather-adjusted
+    forecast; sparse or unrepresentative observations can bias the estimate.
+    """
     total_energy = max(float(total_energy), 0.0)
-    start = pd.to_datetime(start_date, errors="coerce")
-    end = pd.to_datetime(end_date, errors="coerce")
-    if pd.isna(start) or pd.isna(end) or end < start:
-        raise ValueError("A valid start_date and end_date are required.")
-    observed_days = int((end.normalize() - start.normalize()).days) + 1
-    if observed_days <= 0:
-        raise ValueError("Observed period must contain at least one day.")
+    observed_days = int(observed_days)
+    if observed_days < 1:
+        raise ValueError("At least one observed day is required.")
     return total_energy * float(days_per_year) / observed_days
