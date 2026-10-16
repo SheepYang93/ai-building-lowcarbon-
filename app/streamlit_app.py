@@ -886,10 +886,9 @@ with tabs[5]:
     if upload_daily is not None:
         inferred_annual = annualize_period_energy(
             upload_daily["energy"].sum(),
-            upload_daily["date"].min(),
-            upload_daily["date"].max(),
+            observed_days=len(upload_daily),
         )
-        st.markdown('<div class="data-status"><b>Live building baseline</b> · simple annualized estimate from the observed date span; seasonality, missing days and meter units still require verification.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="data-status"><b>Live building baseline</b> · simple annualized estimate from observed daily records; seasonality, data coverage and meter units still require verification.</div>', unsafe_allow_html=True)
     else:
         inferred_annual = 1000000.0
     with left:
