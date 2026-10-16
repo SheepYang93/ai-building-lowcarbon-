@@ -25,6 +25,22 @@ def scenario(
         "avoided_energy_kwh": avoided_energy_kwh,
         "estimated_energy_charge_saving": energy_charge_saving,
         "estimated_cost_saving": energy_charge_saving,
-        "avoided_co2e_kg": avoided_co2_kg,
-        "avoided_co2e_t": avoided_co2_kg / 1000.0,
+        # Configured factors are kgCO2/kWh, not full life-cycle CO2e factors.
+        "avoided_co2_kg": avoided_co2_kg,
+        "avoided_co2_t": avoided_co2_kg / 1000.0,
     }
+
+
+def annualize_period_energy(total_energy: float, start_date, end_date, days_per_year: float = 365.0) -> float:
+    """Project an observed-period total to a simple annualized estimate."""
+    import pandas as pd
+
+    total_energy = max(float(total_energy), 0.0)
+    start = pd.to_datetime(start_date, errors="coerce")
+    end = pd.to_datetime(end_date, errors="coerce")
+    if pd.isna(start) or pd.isna(end) or end < start:
+        raise ValueError("A valid start_date and end_date are required.")
+    observed_days = int((end.normalize() - start.normalize()).days) + 1
+    if observed_days <= 0:
+        raise ValueError("Observed period must contain at least one day.")
+    return total_energy * float(days_per_year) / observed_days
