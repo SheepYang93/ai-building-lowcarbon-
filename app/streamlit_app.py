@@ -6,12 +6,12 @@ import pandas as pd
 import streamlit as st
 
 try:
-    from app.economics import scenario
+    from app.economics import annualize_period_energy, scenario
     from app.emission_factors import EMISSION_FACTORS
     from app.validation import did_effect, pretrend_check
     from app.prediction_range import add_range
 except ImportError:
-    from economics import scenario
+    from economics import annualize_period_energy, scenario
     from emission_factors import EMISSION_FACTORS
     from validation import did_effect, pretrend_check
     from prediction_range import add_range
@@ -884,8 +884,12 @@ with tabs[5]:
     upload_daily = st.session_state.get("upload_daily")
     upload_summary = st.session_state.get("upload_summary")
     if upload_daily is not None:
-        inferred_annual = float(upload_daily["energy"].sum())
-        st.markdown('<div class="data-status"><b>Live building baseline</b> · annualized from uploaded records; verify meter unit before using as kWh.</div>', unsafe_allow_html=True)
+        inferred_annual = annualize_period_energy(
+            upload_daily["energy"].sum(),
+            upload_daily["date"].min(),
+            upload_daily["date"].max(),
+        )
+        st.markdown('<div class="data-status"><b>Live building baseline</b> · simple annualized estimate from the observed date span; seasonality, missing days and meter units still require verification.</div>', unsafe_allow_html=True)
     else:
         inferred_annual = 1000000.0
     with left:
@@ -900,7 +904,7 @@ with tabs[5]:
         a, b, c = st.columns(3)
         a.metric(tr("预计节约能耗", "Avoided energy"), f'{result["avoided_energy_kwh"]:,.0f} kWh')
         b.metric(tr("预计电费节省", "Estimated energy-charge saving"), f'¥{result["estimated_energy_charge_saving"]:,.0f}')
-        c.metric(tr("预计减排 CO₂e", "Avoided CO₂e"), f'{result["avoided_co2e_t"]:,.1f} t')
+        c.metric(tr("预计减排 CO₂", "Avoided CO₂"), f'{result["avoided_co2_t"]:,.1f} t')
         st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify meter units, reporting boundary, electricity tariff and emission-factor year/geography before real decisions. Cost output is a simplified energy-charge estimate; CO₂ is a location-based Scope 2 screening result, not a measured reduction.</div>', unsafe_allow_html=True)
 
         scenario_rows = []
@@ -909,7 +913,7 @@ with tabs[5]:
             scenario_rows.append({
                 "Reduction": pct,
                 "Energy-charge saving (¥)": sr["estimated_energy_charge_saving"],
-                "Avoided CO₂e (t)": sr["avoided_co2e_t"],
+                "Avoided CO₂e (t)": sr["avoided_co2_t"],
             })
         scenario_df = pd.DataFrame(scenario_rows).set_index("Reduction")
         scenario_df.index.name = tr("节能率（%）", "Reduction (%)")
