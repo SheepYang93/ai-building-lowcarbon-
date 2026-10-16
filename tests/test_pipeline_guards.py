@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.pipeline import REQUIRED, anomaly_table, features, load_filter, train_model
+from src.pipeline import REQUIRED, anomaly_table, baseline_metrics, features, load_filter, train_model
 
 
 def test_load_filter_reports_missing_required_columns(tmp_path):
@@ -89,3 +89,21 @@ def test_anomaly_table_accepts_missing_optional_site_id():
 
     assert len(result) == 1
     assert pd.isna(result.loc[0, "site_id"])
+
+
+
+def test_baselines_use_exact_model_holdout_rows():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 80,
+        "date": pd.date_range("2026-01-01", periods=80),
+        "meter_reading": [100.0 + (i % 7) * 5 + i * 0.2 for i in range(80)],
+        "sqm": [500.0] * 80,
+    })
+    engineered, feature_columns = features(data)
+    _, _, test_frame, _, _, metrics = train_model(engineered, feature_columns)
+
+    baselines = metrics["baseline_benchmarks"]
+
+    assert set(baselines) == {"naive_1", "seasonal_7", "median_28"}
+    assert all(item["n"] == len(test_frame) for item in baselines.values())
+    assert all(item["mae"] >= 0 and item["wape"] >= 0 for item in baselines.values())
