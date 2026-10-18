@@ -205,9 +205,9 @@ def run_intraday_screening(raw):
 
 def run_uploaded_ai_screening(daily):
     """Train a small chronological ExtraTrees model when upload fields are sufficient."""
-    required = {"building_id", "area_m2", "outdoor_temperature"}
+    required = {"building_id", "area_m2"}
     if not required.issubset(daily.columns) or len(daily) < 60:
-        return None, "AI prediction requires building_id, area_m2, outdoor_temperature and at least 60 daily records."
+        return None, "AI prediction requires building_id, area_m2 and at least 60 daily records. Outdoor temperature is optional."
     try:
         import sys
         if str(ROOT) not in sys.path:
@@ -223,13 +223,14 @@ def run_uploaded_ai_screening(daily):
         d["site_id"] = "uploaded"
         d["date"] = pd.to_datetime(d["date"])
         d["sqm"] = pd.to_numeric(d["sqm"], errors="coerce")
-        d["airTemperature"] = pd.to_numeric(d["airTemperature"], errors="coerce")
+        if "airTemperature" in d.columns:
+            d["airTemperature"] = pd.to_numeric(d["airTemperature"], errors="coerce")
         d["meter_reading"] = pd.to_numeric(d["meter_reading"], errors="coerce")
         weather_candidates = ["airTemperature", "cloudCoverage", "dewTemperature", "windSpeed"]
         for weather_col in ["cloudCoverage", "dewTemperature", "windSpeed"]:
             if weather_col not in d.columns:
                 d[weather_col] = np.nan
-        d = d.dropna(subset=["building_id", "date", "sqm", "airTemperature", "meter_reading"])
+        d = d.dropna(subset=["building_id", "date", "sqm", "meter_reading"])
         d = d[d["sqm"] > 0].sort_values(["building_id", "date"])
         if len(d) < 60 or d["date"].nunique() < 60:
             return None, "Not enough valid daily observations for chronological AI screening."
