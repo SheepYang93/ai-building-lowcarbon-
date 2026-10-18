@@ -38,7 +38,7 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 | Expected-use baseline | historical past-only baseline / screening | potential intervention signal |
 | Intervention | fingerprint-to-action mapping | intervention family |
 | Carbon | versioned electricity emission factor + accounting boundary | conditional Scope 2 CO₂ screening scenario |
-| Validation | treatment/control + DID; placebo/pre-trend as next checks | field evidence |
+| Validation | treatment/control DID, pre-trend slope diagnostic, pre-intervention placebo DID, optional clustered bootstrap interval | field evidence |
 
 ## Model design
 
