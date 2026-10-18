@@ -221,5 +221,5 @@ MIT
 - Simple forecasting baselines (yesterday, 7-day seasonal, 28-day median) are retained for model comparison.
 - Uploaded sub-daily data preserves raw cadence and can receive same-slot anomaly screening before daily decision aggregation.
 - Expected-use screening exposes a residual-based expected range rather than a point estimate alone.
-- Field-validation UI currently includes DID and a pre-trend slope diagnostic. Placebo falsification and clustered-bootstrap utilities exist in code but are not yet connected to the UI.
+- Field-validation UI includes DID, a pre-intervention slope diagnostic, a placebo DID calculated from pre-intervention observations only, and an optional building-cluster bootstrap interval. These are preliminary diagnostics, not proof of causality.
 - Data quality is mapped to an evidence level; low-quality uploads are not treated as strong decision evidence.
