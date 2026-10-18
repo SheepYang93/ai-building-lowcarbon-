@@ -84,22 +84,29 @@ def bootstrap_did(frame, intervention_date, n_boot=300, seed=42):
     if "building_id" not in frame.columns:
         return {"status": "insufficient", "n": 0, "reason": "building_id is required for clustered bootstrap."}
     v = _prepare(frame, intervention_date)
-    ids = v["building_id"].dropna().unique()
-    if len(ids) < 2:
+    ids_by_group = {
+        group: v.loc[v["group"] == group, "building_id"].dropna().unique()
+        for group in ["treated", "control"]
+    }
+    if any(len(ids) < 1 for ids in ids_by_group.values()) or sum(map(len, ids_by_group.values())) < 2:
         return {"status": "insufficient", "n": 0}
     if int(n_boot) < 1:
         raise ValueError("n_boot must be at least 1.")
     rng = np.random.default_rng(seed)
     effects = []
     for _ in range(int(n_boot)):
-        sampled = rng.choice(ids, size=len(ids), replace=True)
         parts = []
-        for index, bid in enumerate(sampled):
-            part = v[v["building_id"] == bid].copy()
-            # Give repeated bootstrap draws unique IDs so duplicate sampled clusters
-            # remain separate clusters and do not trigger duplicate-key validation.
-            part["building_id"] = f"bootstrap_{index}"
-            parts.append(part)
+        draw_index = 0
+        # Resample clusters within each arm so every replicate retains both
+        # treatment groups and the original treatment assignment structure.
+        for group, ids in ids_by_group.items():
+            sampled = rng.choice(ids, size=len(ids), replace=True)
+            for bid in sampled:
+                part = v[(v["group"] == group) & (v["building_id"] == bid)].copy()
+                # Repeated draws must remain distinct bootstrap clusters.
+                part["building_id"] = f"bootstrap_{draw_index}"
+                draw_index += 1
+                parts.append(part)
         b = pd.concat(parts, ignore_index=True)
         try:
             effects.append(did_effect(b, intervention_date)["did_abs"])
