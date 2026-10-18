@@ -37,7 +37,7 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 | Fingerprint | persistence, recurrence, trend, morphology | building behavior type |
 | Expected-use baseline | historical past-only baseline / screening | potential intervention signal |
 | Intervention | fingerprint-to-action mapping | intervention family |
-| Carbon | versioned electricity emission factor + accounting boundary | conditional Scope 2 CO₂e |
+| Carbon | versioned electricity emission factor + accounting boundary | conditional Scope 2 CO₂ screening scenario |
 | Validation | treatment/control + DID; placebo/pre-trend as next checks | field evidence |
 
 ## Model design
@@ -72,7 +72,7 @@ The project is intentionally presented as a **decision-support prototype**, not 
 | Diagnostics | robust median/MAD, anomaly screening, energy fingerprint |
 | Decision support | counterfactual screening, intervention mapping, scenario analysis |
 | Product | Streamlit |
-| Validation | treatment/control, DID, pre-trend slope diagnostics; placebo/bootstrap utilities exist but are not wired into the UI |
+| Validation | treatment/control DID, pre-trend slope diagnostic, pre-intervention placebo DID, optional clustered bootstrap interval |
 | Engineering | Git, pytest, reproducible scripts |
 
 ## Demo
@@ -86,7 +86,7 @@ The public Streamlit app demonstrates the full decision workflow and can be open
 5. **Intervention** — map the fingerprint to an intervention family
 6. **Carbon** — explore conditional carbon scenarios
 7. **Report** — generate a downloadable Markdown diagnosis report
-8. **Field Validation** — upload treatment/control data and calculate a basic Difference-in-Differences (DID) estimate; automated pre-trend/placebo testing is not yet part of the UI
+8. **Field Validation** — upload treatment/control data; calculate DID, inspect pre-intervention slope diagnostics, evaluate a pre-intervention placebo date, and optionally estimate a clustered-bootstrap interval. These are preliminary diagnostics, not proof of causality.
 
 ### Demo workflow
 
@@ -120,7 +120,7 @@ The pipeline is designed for a BDG2-derived daily building-energy dataset. Raw d
 
 The derivative dataset's exact `meter_reading` unit lineage must be verified before treating readings as kWh.
 
-> **CO₂e values are conditional Scope 2 screening scenarios until meter units, reporting boundary, factor year/geography and any green-electricity treatment are independently verified.**
+> **CO₂ values are conditional Scope 2 screening scenarios until meter units, reporting boundary, factor year/geography and any green-electricity treatment are independently verified. The configured factors are electricity CO₂ factors, not full life-cycle CO₂e factors.**
 
 ## Quick start
 
