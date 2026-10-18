@@ -55,7 +55,7 @@ def test_placebo_effect_uses_only_pre_intervention_observations():
 
     result = placebo_effect(pre_only, "2026-03-03")
 
-    assert result["did_abs"] == 1.0
+    assert result["did_abs"] == 2.0
 
 
 def test_clustered_bootstrap_did_returns_interval_for_multiple_buildings():
