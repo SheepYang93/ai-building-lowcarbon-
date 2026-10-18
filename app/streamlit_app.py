@@ -8,12 +8,12 @@ import streamlit as st
 try:
     from app.economics import annualize_period_energy, scenario
     from app.emission_factors import EMISSION_FACTORS
-    from app.validation import did_effect, pretrend_check
+    from app.validation import bootstrap_did, did_effect, placebo_effect, pretrend_check
     from app.prediction_range import add_range
 except ImportError:
     from economics import annualize_period_energy, scenario
     from emission_factors import EMISSION_FACTORS
-    from validation import did_effect, pretrend_check
+    from validation import bootstrap_did, did_effect, placebo_effect, pretrend_check
     from prediction_range import add_range
 
 st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
@@ -1060,12 +1060,63 @@ with tabs[7]:
             else:
                 st.info(tr("干预前观测不足，无法计算斜率诊断。", "Not enough pre-period observations to compute a slope diagnostic."))
 
+            # A placebo date must be inside the pre-intervention period. Evaluate
+            # only observations before the real intervention to avoid contamination.
+            pre_dates = sorted(v.loc[pre, "date"].dropna().unique())
+            placebo_candidates = pre_dates[1:-1] if len(pre_dates) >= 3 else []
+            if placebo_candidates:
+                chosen_placebo = st.selectbox(
+                    tr("安慰剂日期（必须早于真实干预）", "Placebo date (must precede the real intervention)"),
+                    options=placebo_candidates,
+                    index=len(placebo_candidates) // 2,
+                    format_func=lambda x: pd.Timestamp(x).strftime("%Y-%m-%d"),
+                    key="placebo_date_selector",
+                )
+                placebo_frame = v[v["date"] < intervention_date].copy()
+                try:
+                    placebo = placebo_effect(placebo_frame, pd.Timestamp(chosen_placebo))
+                    st.metric(
+                        tr("安慰剂 DID（伪干预效应）", "Placebo DID (pseudo-effect)"),
+                        f'{placebo["did_abs"]:+.2f}',
+                    )
+                    st.caption(tr(
+                        "安慰剂结果不是正式显著性检验；若伪干预也出现较大效应，需要进一步检查趋势差异与混杂因素。",
+                        "This placebo is a falsification diagnostic, not a formal significance test. A large pseudo-effect warrants further checks for trend differences and confounding."
+                    ))
+                except ValueError as exc:
+                    st.info(tr(f"当前数据无法计算安慰剂效应：{exc}", f"Placebo effect unavailable for this data: {exc}"))
+            else:
+                st.info(tr(
+                    "至少需要三个不同的干预前日期，才能构造一个可比较的安慰剂日期。",
+                    "At least three distinct pre-intervention dates are needed to construct a comparable placebo date."
+                ))
+
+            if st.button(tr("计算聚类 Bootstrap 置信区间", "Calculate clustered bootstrap interval"), key="run_did_bootstrap"):
+                try:
+                    boot = bootstrap_did(v, intervention_date, n_boot=200, seed=42)
+                    if boot["status"] == "ok":
+                        b1, b2, b3 = st.columns(3)
+                        b1.metric(tr("Bootstrap 有效次数", "Valid bootstrap draws"), str(boot["n"]))
+                        b2.metric(tr("95% 区间下限", "95% CI lower"), f'{boot["ci_low"]:+.2f}')
+                        b3.metric(tr("95% 区间上限", "95% CI upper"), f'{boot["ci_high"]:+.2f}')
+                        st.caption(tr(
+                            f'Bootstrap 估计值：{boot["estimate"]:+.2f}；负效应抽样占比：{boot["share_negative"]:.1%}。该区间是探索性结果。',
+                            f'Bootstrap estimate: {boot["estimate"]:+.2f}; share of draws below zero: {boot["share_negative"]:.1%}. Treat this interval as exploratory.'
+                        ))
+                    else:
+                        st.info(tr(
+                            "无法计算聚类 Bootstrap：需要至少两个可用建筑聚类，并且重抽样后仍有有效的干预组和对照组。",
+                            "Clustered bootstrap unavailable: at least two building clusters and valid treated/control draws are required."
+                        ))
+                except ValueError as exc:
+                    st.error(tr(f"Bootstrap 计算失败：{exc}", f"Bootstrap failed: {exc}"))
+
             st.warning(
                 "Interpretation boundary: DID compares the treated group's change with "
                 "the control group's change. A negative DID means treated energy fell "
-                "more than control energy. This calculator does not automatically test "
-                "parallel pre-trends, placebo dates, weather confounding or statistical "
-                "significance, so the result should be treated as preliminary evidence."
+                "more than control energy. Pre-trend, placebo and bootstrap outputs are "
+                "diagnostics, not proof of causality; weather confounding, seasonality, "
+                "autocorrelation and intervention compliance still need study-specific review."
             )
 
             st.download_button(
