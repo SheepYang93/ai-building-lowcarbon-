@@ -156,10 +156,10 @@ def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location
     a = (
         df.groupby("building_id")["meter_reading"]
         .sum()
-        .rename("annual_meter_reading")
+        .rename("period_meter_reading")
         .reset_index()
     )
-    a["scenario_reduction"] = a["annual_meter_reading"] * float(reduction)
+    a["scenario_reduction"] = a["period_meter_reading"] * float(reduction)
     a["scenario_co2_t_if_kwh"] = a["scenario_reduction"] * float(ef) / 1000
     a["emission_factor_kgco2_per_kwh"] = float(ef)
     a["emission_factor_label"] = ef_label
