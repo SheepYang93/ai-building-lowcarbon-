@@ -23,6 +23,10 @@ Most building-energy analytics stops at prediction. This project closes more of 
 
 The objective is an auditable AI workflow that turns meter data into actionable hypotheses while separating model evidence from claims that require field measurement.
 
+## Portfolio showcase
+
+See the dedicated [portfolio overview](docs/PORTFOLIO.md) for the complete workflow, module outputs, technical stack and evidence boundaries. The project infographic is organized as **data input → AI prediction → anomaly diagnosis → energy-saving decision → carbon accounting → field validation**.
+
 ## System architecture
 
 ![Architecture](docs/architecture.svg)
