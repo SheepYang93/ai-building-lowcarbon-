@@ -25,7 +25,11 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 
 ## Portfolio showcase
 
-See the dedicated [portfolio overview](docs/PORTFOLIO.md) for the complete workflow, module outputs, technical stack and evidence boundaries. The project infographic is organized as **data input → AI prediction → anomaly diagnosis → energy-saving decision → carbon accounting → field validation**.
+See the dedicated [portfolio overview](docs/PORTFOLIO.md) for the complete workflow, module outputs, technical stack and evidence boundaries.
+
+![AI Building Energy Low-carbon Decision System workflow](docs/images/project-overview.svg)
+
+**Data input → AI prediction → anomaly diagnosis → energy-saving decision → carbon accounting → field validation**.
 
 ## System architecture
 
@@ -139,9 +143,15 @@ streamlit run app/streamlit_app.py
 Windows: `run_demo.bat`  
 Linux/macOS: `bash run_demo.sh`
 
-### Minimal demo CSV
+### Synthetic demo data
 
-A small example is included under `examples/`, so the UI can be understood without downloading the original public dataset. For your own data, the minimum required fields are:
+A fully synthetic 4-building × 120-day dataset is included at [`examples/synthetic_building_energy.csv`](examples/synthetic_building_energy.csv). It is for checking the workflow and exploring the UI only—not real building measurements or evidence of savings. Run the pipeline without obtaining the original BDG2-derived data:
+
+```bash
+python scripts/run_v3.py --input examples/synthetic_building_energy.csv --output outputs-demo
+```
+
+For your own data, the minimum required fields are:
 
 ```text
 timestamp, electricity_kwh
