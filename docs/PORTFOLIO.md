@@ -7,6 +7,8 @@
 
 An end-to-end prototype that turns building meter data into **energy forecasts, anomaly candidates, diagnostic fingerprints, intervention-screening suggestions, conditional Scope 2 CO₂ scenarios, and a treatment/control validation workflow**.
 
+![Project workflow infographic](images/project-overview.svg)
+
 ## Workflow at a glance
 
 ```mermaid
@@ -41,6 +43,15 @@ flowchart LR
 - **DID is not automatic causal proof.** Pre-trend, placebo and clustered-bootstrap diagnostics help assess robustness but cannot replace a sound field design.
 - **Building-group holdout is not cold-start.** Held-out buildings may use their own historical meter observations.
 
+## Run a reproducible demo
+
+A synthetic sample (4 buildings × 120 days) is included for smoke-testing and UI exploration; it is not real meter data and must not be used as evidence of energy/carbon savings.
+
+```bash
+python scripts/run_v3.py --input examples/synthetic_building_energy.csv --output outputs-demo
+streamlit run app/streamlit_app.py
+```
+
 ## How to explore
 
 - **Live demo:** [Open Streamlit app](https://ai-building-lowcarbon-production-e8b1.up.railway.app)
@@ -50,7 +61,5 @@ flowchart LR
 
 ## Portfolio visual
 
-The project overview graphic is designed around six stages: **data input → AI prediction → anomaly diagnosis → energy-saving decision → carbon accounting → field validation**. Add the generated PNG to `docs/images/` as `project-overview.png` and embed it here:
-
-`![Project workflow](images/project-overview.png)`
+The vector workflow infographic is maintained at [`docs/images/project-overview.svg`](images/project-overview.svg), suitable for README and portfolio use.
 
