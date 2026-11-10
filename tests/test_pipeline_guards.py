@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.pipeline import REQUIRED, anomaly_table, baseline_metrics, features, load_filter, train_model
+from src.pipeline import REQUIRED, anomaly_table, baseline_metrics, carbon_scenario, features, load_filter, train_model
 
 
 def test_load_filter_reports_missing_required_columns(tmp_path):
@@ -107,3 +107,16 @@ def test_baselines_use_exact_model_holdout_rows():
     assert set(baselines) == {"naive_1", "seasonal_7", "median_28"}
     assert all(item["n"] == len(test_frame) for item in baselines.values())
     assert all(item["mae"] >= 0 and item["wape"] >= 0 for item in baselines.values())
+
+
+def test_carbon_scenario_labels_observed_period_not_annual():
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 30,
+        "meter_reading": [100.0] * 30,
+    })
+
+    result = carbon_scenario(data, reduction=0.2, ef=0.5)
+
+    assert result.loc[0, "period_meter_reading"] == 3000.0
+    assert "annual_meter_reading" not in result.columns
+    assert result.loc[0, "scenario_reduction"] == 600.0
