@@ -53,6 +53,43 @@ metrics.update({
     "train_cap":args.train_cap
 })
 (out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
+
+# Machine-readable metrics above are paired with a recruiter-friendly Markdown summary.
+report_path = out/"evaluation_report.md"
+bm = metrics.get("baseline_benchmarks", {})
+unseen = metrics.get("unseen_building_evaluation", {})
+fmt = lambda x: f"{float(x):.4f}" if x is not None else "N/A"
+lines = [
+    "# Building Energy Model Evaluation", "",
+    "> Auto-generated; results apply only to this dataset and split.", "",
+    "## Dataset",
+    f"- Rows: {metrics['rows_after_filter']:,}",
+    f"- Buildings: {metrics['buildings']:,}",
+    f"- Period: {metrics['date_start']} to {metrics['date_end']}",
+    f"- Model: {metrics['model']}",
+    f"- Chronological cutoff: {metrics.get('cutoff', 'N/A')}", "",
+    "## Chronological holdout",
+    "| Metric | Value |", "|---|---:|",
+    f"| R² | {fmt(metrics.get('r2'))} |",
+    f"| MAE | {fmt(metrics.get('mae'))} |",
+    f"| WAPE | {fmt(metrics.get('wape'))} |",
+    f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
+    "## Baselines on the same test rows",
+    "| Baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
+]
+for name, item in bm.items():
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+lines += ["", "## Building-group holdout",
+    f"- Status: {unseen.get('status', 'ok' if 'r2' in unseen else 'not_run')}",
+    f"- R² / MAE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('wape'))}",
+    f"- Test rows / buildings: {unseen.get('test_rows','N/A')} / {len(unseen.get('test_buildings', []))}",
+    f"- Note: {unseen.get('history_note', unseen.get('reason',''))}", "",
+    "## Limits",
+    "- Building holdout is not cold-start: held-out buildings can use their own past meter history.",
+    "- Metrics depend on filtering, time window, building mix and meter-unit lineage.",
+    "- Predictive accuracy does not establish energy savings or causal intervention effects.", ""]
+report_path.write_text("\\n".join(lines), encoding="utf-8")
+print(f"Evaluation report written to: {report_path}")
 pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False)
 
 an=anomaly_table(df)
