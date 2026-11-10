@@ -19,7 +19,7 @@ Intervention families were mapped from temporal/behavioral fingerprints. Their e
 Carbon scenarios use an emission factor only conditionally. The public derivative's meter-unit lineage must be verified before treating readings as kWh.
 
 ## Field validation
-The validation prototype now supports treatment/control DID, a simple pre-trend slope diagnostic, a pre-period placebo DID and clustered bootstrap intervals. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment.
+The validation UI supports treatment/control DID, a pre-intervention slope diagnostic, a placebo DID restricted to observations before the actual intervention, and an optional cluster bootstrap resampled separately within treated and control groups. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment.
 
 ## Generalization to unseen buildings
 
