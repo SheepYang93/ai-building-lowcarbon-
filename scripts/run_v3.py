@@ -88,7 +88,7 @@ lines += ["", "## Building-group holdout",
     "- Building holdout is not cold-start: held-out buildings can use their own past meter history.",
     "- Metrics depend on filtering, time window, building mix and meter-unit lineage.",
     "- Predictive accuracy does not establish energy savings or causal intervention effects.", ""]
-report_path.write_text("\\n".join(lines), encoding="utf-8")
+report_path.write_text("\n".join(lines), encoding="utf-8")
 print(f"Evaluation report written to: {report_path}")
 pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False)
 
