@@ -25,7 +25,7 @@ The objective is an auditable AI workflow that turns meter data into actionable 
 
 ## Portfolio showcase
 
-See the dedicated [portfolio overview](docs/PORTFOLIO.md) for the complete workflow, module outputs, technical stack and evidence boundaries.
+See the [portfolio overview](docs/PORTFOLIO.md) for workflow, modules and evidence boundaries, and the [recruiter demo walkthrough](docs/RECRUITER_DEMO_WALKTHROUGH.md) for a reproducible 5–10 minute project tour.
 
 ![AI Building Energy Low-carbon Decision System portfolio dashboard](docs/images/portfolio-dashboard.svg)
 
