@@ -368,6 +368,14 @@ st.markdown(f"""
 [data-baseweb="tab-list"] {{gap:.3rem;background:#F7FAF9;border:1px solid #E2EBE8;border-radius:14px;padding:.3rem}}
 [data-baseweb="tab"] {{border-radius:10px;font-weight:650;color:#55706A}}
 [data-testid="stDataFrame"] {{border:1px solid #E2EBE8;border-radius:14px;overflow:hidden}}
+[data-testid="stButton"] button {{border-radius:11px;font-weight:650;transition:all .16s ease}}
+[data-testid="stButton"] button[kind="primary"] {{background:linear-gradient(135deg,#0F766E,#0D9488);border:0;box-shadow:0 4px 12px rgba(15,118,110,.18)}}
+[data-testid="stButton"] button[kind="primary"]:hover {{filter:brightness(1.06);box-shadow:0 6px 18px rgba(15,118,110,.24)}}
+[data-testid="stDownloadButton"] button {{border:1px solid #CFE2DC;background:#F8FCFA;color:#17665D}}
+[data-testid="stFileUploader"] section {{border:1.5px dashed #B8D5CC;border-radius:16px;background:#F8FCFA}}
+[data-testid="stAlert"] {{border-radius:14px}}
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div {{border-radius:10px}}
+[data-testid="stNumberInput"] input {{border-radius:10px}}
 @media (max-width:900px){{.hero-grid{{grid-template-columns:1fr}}.hero{{padding:1.5rem}}.hero h1{{font-size:1.9rem}}}}
 </style>
 <div class="hero">
