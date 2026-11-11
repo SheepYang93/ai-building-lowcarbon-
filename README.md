@@ -2,7 +2,7 @@
 
 > **AI for building-energy diagnosis, anomaly detection, counterfactual screening and low-carbon decision support.**
 
-**Live Demo:** https://ai-building-lowcarbon-production-e8b1.up.railway.app  
+**Demo deployment:** pending · [Deploy on Streamlit Community Cloud](docs/DEPLOY_STREAMLIT_CLOUD.md) · [Run locally](#quick-start)  
 **Repository:** https://github.com/SheepYang93/ai-building-lowcarbon-
 
 ## 30-second overview
@@ -35,7 +35,7 @@ See the dedicated [portfolio overview](docs/PORTFOLIO.md) for the complete workf
 
 ![Architecture](docs/architecture.svg)
 
-**Live product:** [Streamlit demo](https://ai-building-lowcarbon-production-e8b1.up.railway.app) · **Code:** [GitHub repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
+**Demo:** deployment pending ([deployment guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) · **Code:** [GitHub repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
 
 | Layer | Method | Output |
 |---|---|---|
@@ -62,7 +62,7 @@ See [EXPERIMENTS.md](EXPERIMENTS.md) for the evidence boundary and limitations.
 
 ## For a recruiter: what to look at first
 
-If you only have one minute, open the **Live Demo** and then inspect these three files:
+If you only have one minute, run the **local demo** (or deploy it using the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) and then inspect these three files:
 
 1. `app/streamlit_app.py` — the productized decision workflow and UI.
 2. `src/` — feature engineering, modeling and diagnostic logic.
@@ -85,7 +85,7 @@ The project is intentionally presented as a **decision-support prototype**, not 
 
 ## Demo
 
-The public Streamlit app demonstrates the full decision workflow and can be opened directly without installing the project:
+The Streamlit app demonstrates the full decision workflow. Deployment is currently pending; see the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md), or run it locally:
 
 1. **Overview** — system scope, polished product dashboard and evidence boundary
 2. **Upload & Diagnose** — upload a single-building daily-energy CSV and run robust anomaly screening
@@ -224,7 +224,7 @@ See [RESUME_PROJECT.md](RESUME_PROJECT.md).
 
 ## Current demo status
 
-The hosted Streamlit demo is deployed as a single production service on Railway. The repository remains the source of truth for the application code and reproducible local workflow.
+The hosted demo is currently unavailable; deployment is pending. Use the [Streamlit Community Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md) or run the app locally. Do not present the old Railway URL as a live demo.
 
 ## License
 
