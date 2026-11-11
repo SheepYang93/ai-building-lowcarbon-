@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f4fbfa"/><stop offset="1" stop-color="#e6f2ef"/></linearGradient><linearGradient id="teal" x2="1"><stop stop-color="#0f766e"/><stop offset="1" stop-color="#14b8a6"/></linearGradient><filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="#164e63" flood-opacity=".10"/></filter></defs>
+<rect width="1600" height="900" rx="28" fill="url(#bg)"/>
+<rect width="1600" height="180" rx="28" fill="#0b3b42"/><rect y="150" width="1600" height="30" fill="#0b3b42"/>
+<text x="64" y="75" font-family="Arial,'Noto Sans SC',sans-serif" font-size="42" font-weight="700" fill="#fff">AI 建筑能耗低碳决策系统</text><text x="66" y="120" font-family="Arial,sans-serif" font-size="20" fill="#a7f3d0">BUILDING ENERGY INTELLIGENCE · FROM DATA TO FIELD EVIDENCE</text>
+<text x="1530" y="76" text-anchor="end" font-family="Arial,sans-serif" font-size="18" fill="#d1fae5">DATA → MODEL → DECISION → VALIDATION</text>
+<!-- workflow -->
+<g font-family="Arial,'Noto Sans SC',sans-serif" font-size="18" font-weight="600" text-anchor="middle">
+<rect x="35" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="130" y="246" fill="#115e59">数据输入</text><text x="235" y="246" fill="#0f766e" font-size="24">›</text><rect x="255" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="350" y="246" fill="#115e59">AI 能耗预测</text><text x="455" y="246" fill="#0f766e" font-size="24">›</text><rect x="475" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="570" y="246" fill="#115e59">异常诊断</text><text x="675" y="246" fill="#0f766e" font-size="24">›</text><rect x="695" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="790" y="246" fill="#115e59">反事实筛查</text><text x="895" y="246" fill="#0f766e" font-size="24">›</text><rect x="915" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="1010" y="246" fill="#115e59">干预建议</text><text x="1115" y="246" fill="#0f766e" font-size="24">›</text><rect x="1135" y="205" width="190" height="68" rx="14" fill="#fff" stroke="#b7d9d2"/><text x="1230" y="246" fill="#115e59">Scope 2 核算</text><text x="1335" y="246" fill="#0f766e" font-size="24">›</text><rect x="1355" y="205" width="190" height="68" rx="14" fill="#d1fae5" stroke="#b7d9d2"/><text x="1450" y="246" fill="#115e59">DID 验证</text>
+</g>
+<!-- panels -->
+<g filter="url(#shadow)"><rect x="45" y="310" width="480" height="310" rx="20" fill="#fff"/><rect x="550" y="310" width="650" height="310" rx="20" fill="#fff"/><rect x="1225" y="310" width="330" height="310" rx="20" fill="#fff"/><rect x="45" y="645" width="730" height="205" rx="20" fill="#fff"/><rect x="800" y="645" width="755" height="205" rx="20" fill="#fff"/></g>
+<g font-family="Arial,'Noto Sans SC',sans-serif" fill="#164e63"><text x="75" y="355" font-size="25" font-weight="700">建筑能耗概览</text><text x="580" y="355" font-size="25" font-weight="700">预测与异常诊断</text><text x="1255" y="355" font-size="25" font-weight="700">碳核算情景</text><text x="75" y="690" font-size="25" font-weight="700">多维分析</text><text x="830" y="690" font-size="25" font-weight="700">干预决策 · 效果验证</text></g>
+<!-- chart 1 -->
+<g stroke="#e2eeeb" stroke-width="1"><path d="M80 410H490 M80 460H490 M80 510H490 M80 560H490 M80 590H490"/></g>
+<path d="M85 540 L140 520 L195 535 L250 480 L305 500 L360 460 L415 490 L485 445" fill="none" stroke="#0f9f91" stroke-width="5" stroke-linecap="round"/><path d="M85 550 L140 535 L195 520 L250 510 L305 485 L360 490 L415 465 L485 460" fill="none" stroke="#75cfc3" stroke-width="4" stroke-dasharray="8 7"/>
+<g fill="#0f9f91"><circle cx="140" cy="520" r="6"/><circle cx="250" cy="480" r="6"/><circle cx="360" cy="460" r="6"/></g>
+<!-- chart 2 -->
+<g stroke="#e2eeeb"><path d="M590 410H1160 M590 460H1160 M590 510H1160 M590 560H1160 M590 590H1160"/></g>
+<path d="M600 540 L670 520 L740 530 L810 480 L880 500 L950 460 L1020 520 L1090 490 L1150 455" fill="none" stroke="#0f9f91" stroke-width="5"/>
+<path d="M600 515 L670 510 L740 500 L810 495 L880 490 L950 485 L1020 480 L1090 475 L1150 470" fill="none" stroke="#75cfc3" stroke-width="4" stroke-dasharray="8 7"/>
+<rect x="930" y="420" width="85" height="165" fill="#fee2e2" opacity=".55"/><circle cx="950" cy="460" r="10" fill="#dc2626"/><text x="965" y="435" font-family="Arial,'Noto Sans SC',sans-serif" font-size="16" fill="#b91c1c">异常点</text>
+<!-- carbon gauge -->
+<circle cx="1388" cy="475" r="78" fill="none" stroke="#d9eeea" stroke-width="18"/><circle cx="1388" cy="475" r="78" fill="none" stroke="url(#teal)" stroke-width="18" stroke-dasharray="330 160" transform="rotate(-90 1388 475)"/><text x="1388" y="470" text-anchor="middle" font-family="Arial,sans-serif" font-size="22" font-weight="700" fill="#0f766e">Scope 2</text><text x="1388" y="500" text-anchor="middle" font-family="Arial,'Noto Sans SC',sans-serif" font-size="16" fill="#527084">条件核算</text><text x="1260" y="585" font-family="Arial,'Noto Sans SC',sans-serif" font-size="16" fill="#527084">因子与边界可追溯 · 非实测减排</text>
+<!-- bottom modules -->
+<g font-family="Arial,'Noto Sans SC',sans-serif" font-size="19" fill="#35656b"><text x="80" y="740">区域对比</text><text x="250" y="740">设备分析</text><text x="420" y="740">碳排趋势</text></g>
+<g fill="#14b8a6"><rect x="80" y="780" width="48" height="40" rx="7"/><rect x="175" y="758" width="48" height="62" rx="7"/><rect x="270" y="736" width="48" height="84" rx="7"/><rect x="365" y="780" width="48" height="40" rx="7"/><rect x="460" y="758" width="48" height="62" rx="7"/><rect x="555" y="736" width="48" height="84" rx="7"/></g>
+<g font-family="Arial,'Noto Sans SC',sans-serif" fill="#35656b"><text x="835" y="745" font-size="19">策略筛选</text><text x="1000" y="745" font-size="19">效果评估</text><text x="1170" y="745" font-size="19">DID 现场验证</text></g>
+<path d="M850 800H1480" stroke="#b7d9d2" stroke-width="3"/><circle cx="880" cy="800" r="9" fill="#0f9f91"/><circle cx="1150" cy="800" r="9" fill="#0f9f91"/><circle cx="1450" cy="800" r="9" fill="#0f9f91"/>
+<text x="800" y="875" font-family="Arial,'Noto Sans SC',sans-serif" font-size="16" fill="#66858a">Prototype · Screening signals ≠ measured savings · Field evidence required</text>
+</svg>
