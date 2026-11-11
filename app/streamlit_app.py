@@ -487,15 +487,30 @@ with tabs[1]:
         "2026-01-01 01:00,115.2,B001,Classroom,5000"
     )
     sample_path = EXAMPLES / "sample_building_energy.csv"
+    load_demo = False
     if sample_path.exists():
-        st.download_button(
-            tr("下载示例 CSV", "Download sample CSV"),
-            data=sample_path.read_text(encoding="utf-8"),
-            file_name="sample_building_energy.csv",
-            mime="text/csv",
-        )
-
+        demo_col, download_col = st.columns([1, 1])
+        with demo_col:
+            load_demo = st.button(
+                tr("一键加载演示数据", "Load demo data"),
+                type="primary",
+                help=tr("直接载入仓库内的示例建筑数据，无需先下载再上传。", "Load the bundled sample directly without downloading and re-uploading it."),
+                use_container_width=True,
+            )
+        with download_col:
+            st.download_button(
+                tr("下载示例 CSV", "Download sample CSV"),
+                data=sample_path.read_text(encoding="utf-8"),
+                file_name="sample_building_energy.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+        if load_demo:
+            st.info(tr("当前载入的是内置示例数据，仅用于演示功能，不代表真实建筑运行或节能效果。", "Bundled sample data is loaded for demonstration only; it is not real building operation or verified savings."))
+    
     uploaded = st.file_uploader(tr("上传能耗 CSV 文件", "Upload energy CSV file"), type=["csv"], key="building_upload")
+    if load_demo and sample_path.exists():
+        uploaded = sample_path
 
     if uploaded is not None:
         try:
