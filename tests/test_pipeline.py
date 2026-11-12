@@ -54,3 +54,29 @@ def test_unseen_building_evaluation_requires_multiple_buildings():
     import pytest
     with pytest.raises(ValueError, match="At least two buildings"):
         evaluate_unseen_buildings(engineered, feature_cols)
+
+
+def test_baselines_are_scored_on_chronological_holdout_rows():
+    frames = []
+    for building, level in [("A", 100.0), ("B", 250.0)]:
+        frame = toy()
+        frame["building_id"] = building
+        frame["meter_reading"] = level
+        frames.append(frame)
+    raw = pd.concat(frames, ignore_index=True)
+    engineered, feature_cols = features(raw)
+    from src.pipeline import train_model
+    _, _, test, _, metrics = train_model(engineered, feature_cols)
+    baselines = metrics["baseline_benchmarks"]
+    assert metrics["baseline_comparison_rows"] == len(test)
+    # Feature rows require 28 days of history, so all three past-only baselines
+    # should be available on the same chronological holdout rows.
+    assert all(item["n"] == len(test) for item in baselines.values())
+
+
+def test_prediction_features_do_not_use_current_day_reading():
+    raw = toy()
+    engineered, feature_cols = features(raw)
+    row = engineered.loc[engineered["date"].eq(pd.Timestamp("2017-03-11"))].iloc[0]
+    assert row["lag1"] == raw.loc[raw["date"].eq(pd.Timestamp("2017-03-10")), "meter_reading"].iloc[0]
+    assert row["lag1"] != row["meter_reading"]
