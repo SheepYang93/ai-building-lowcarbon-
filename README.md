@@ -1,5 +1,7 @@
 # AI-driven Building Energy Anomaly & Low-carbon Decision System
 
+[![Tests](https://github.com/SheepYang93/ai-building-lowcarbon-/actions/workflows/ci.yml/badge.svg)](https://github.com/SheepYang93/ai-building-lowcarbon-/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-demo-red)
+
 > **AI for building-energy diagnosis, anomaly detection, counterfactual screening and low-carbon decision support.**
 
 **Demo deployment:** pending · [Deploy on Streamlit Community Cloud](docs/DEPLOY_STREAMLIT_CLOUD.md) · [Run locally](#quick-start)  
