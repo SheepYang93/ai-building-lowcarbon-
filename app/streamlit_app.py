@@ -276,36 +276,67 @@ def run_uploaded_ai_screening(daily):
 
 
 def report_to_docx(report_text):
-    """Create a Word document from the generated diagnosis report."""
+    """Convert a bilingual Markdown diagnosis report into a formatted Word document."""
     from io import BytesIO
     from docx import Document
     from docx.shared import Pt, RGBColor
+
     doc = Document()
-    doc.styles["Normal"].font.name = "Microsoft YaHei"
-    doc.styles["Normal"].font.size = Pt(10)
-    doc.styles["Normal"].font.color.rgb = RGBColor(45, 65, 60)
-    for line in report_text.splitlines():
-        line = line.strip()
+    section = doc.sections[0]
+    section.top_margin = Pt(48)
+    section.bottom_margin = Pt(48)
+    normal = doc.styles["Normal"]
+    normal.font.name = "Microsoft YaHei"
+    normal.font.size = Pt(10)
+    normal.font.color.rgb = RGBColor(45, 65, 60)
+    for style_name in ("Title", "Heading 1", "Heading 2"):
+        doc.styles[style_name].font.name = "Microsoft YaHei"
+
+    lines = report_text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
         if not line:
+            i += 1
+            continue
+        if line.startswith("|"):
+            table_lines = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                raw = lines[i].strip()
+                cells = [cell.strip() for cell in raw.strip("|").split("|")]
+                if not all(set(cell) <= set("-: ") for cell in cells):
+                    table_lines.append(cells)
+                i += 1
+            if table_lines:
+                width = max(len(row) for row in table_lines)
+                table = doc.add_table(rows=1, cols=width)
+                table.style = "Light Shading Accent 1"
+                for col, value in enumerate(table_lines[0]):
+                    table.rows[0].cells[col].text = value
+                for row in table_lines[1:]:
+                    cells = table.add_row().cells
+                    for col in range(width):
+                        cells[col].text = row[col] if col < len(row) else ""
             continue
         if line.startswith("# "):
             doc.add_heading(line[2:], level=0)
         elif line.startswith("## "):
             doc.add_heading(line[3:], level=1)
-        elif line.startswith("|"):
-            if not line.startswith("|---"):
-                doc.add_paragraph("  ·  ".join(x.strip() for x in line.strip("|").split("|")))
         elif line.startswith("- "):
             doc.add_paragraph(line[2:], style="List Bullet")
         elif line.startswith("> "):
             doc.add_paragraph(line[2:], style="Quote")
         else:
             doc.add_paragraph(line)
-    doc.add_paragraph("说明：本报告为数据筛查输出；预测、异常与情景结果不等同于实测节能或减排。")
-    buf = BytesIO()
-    doc.save(buf)
-    return buf.getvalue()
+        i += 1
 
+    note = ("说明：本报告为数据筛查输出；预测、异常与情景结果不等同于实测节能或减排。"
+            if UI_LANGUAGE == "zh" else
+            "Note: This report is a screening output; predictions, anomalies and scenarios are not measured savings or emissions reductions.")
+    doc.add_paragraph(note)
+    buffer = BytesIO()
+    doc.save(buffer)
+    return buffer.getvalue()
 def build_report(summary, d, metadata):
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
     peak = peak.sort_values("robust_z", ascending=False).head(10)
@@ -516,7 +547,7 @@ with tabs[0]:
 
 with tabs[1]:
     st.markdown(f'<div class="section-title">{tr("上传与诊断", "Upload & Diagnose")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">把一份建筑能耗 CSV 转化为 AI expected-use + robust baseline 双证据诊断；字段不足时自动回退。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("把建筑能耗 CSV 转化为 AI 预期能耗与稳健基线双证据诊断；字段不足时自动回退。", "Turn a building-energy CSV into AI expected-use and robust-baseline evidence; fall back when fields are insufficient.")}</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>AI-ready</b> building_id + area_m2 + outdoor_temperature + ≥60 days &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
         unsafe_allow_html=True,
@@ -641,9 +672,9 @@ with tabs[1]:
 
             st.markdown(f'<div class="section-title">{tr("建筑运行状态", "Building health")}</div>', unsafe_allow_html=True)
             card1, card2, card3 = st.columns(3)
-            card1.metric("Status", summary["fingerprint"])
-            card2.metric("Anomaly level", f'{summary["anomaly_share"] * 100:.1f}% of valid days')
-            card3.metric("Trend", f'{summary["trend_pct"]:+.1f}%')
+            card1.metric(tr("状态", "Status"), summary["fingerprint"])
+            card2.metric(tr("异常水平", "Anomaly level"), f'{summary["anomaly_share"] * 100:.1f}% {tr("有效天数", "of valid days")}')
+            card3.metric(tr("趋势", "Trend"), f'{summary["trend_pct"]:+.1f}%')
 
             weekend_ratio_label = (
                 f"{summary['weekend_ratio']:.2f}"
@@ -716,10 +747,10 @@ with tabs[2]:
         ai_data = upload_ai["data"] if upload_ai is not None else None
 
         k1, k2, k3, k4 = st.columns(4)
-        k1.metric("Data quality", f"{quality_score:.0f}/100")
-        k2.metric("Anomaly days", int(s["anomaly_days"]))
-        k3.metric("Anomaly share", f'{s["anomaly_share"] * 100:.1f}%')
-        k4.metric("Trend", f'{s["trend_pct"]:+.1f}%')
+        k1.metric(tr("数据质量", "Data quality"), f"{quality_score:.0f}/100")
+        k2.metric(tr("异常天数", "Anomaly days"), int(s["anomaly_days"]))
+        k3.metric(tr("异常占比", "Anomaly share"), f'{s["anomaly_share"] * 100:.1f}%')
+        k4.metric(tr("趋势", "Trend"), f'{s["trend_pct"]:+.1f}%')
 
         if ai_data is not None:
             gap = float(ai_data["relative_gap"].mean() * 100)
@@ -786,9 +817,9 @@ with tabs[2]:
         r = q[q.label.eq(label)].iloc[0]
         a1, b1, c1, d1 = st.columns(4)
         a1.metric("Priority", f"{r.priority_score:.1f}")
-        b1.metric("Anomaly days", int(r.anomaly_days))
-        c1.metric("Anomaly share", f"{r.anomaly_share * 100:.1f}%")
-        d1.metric("Area", f"{float(r.sqm):,.0f} m²")
+        b1.metric(tr("异常天数", "Anomaly days"), int(r.anomaly_days))
+        c1.metric(tr("异常占比", "Anomaly share"), f"{r.anomaly_share * 100:.1f}%")
+        d1.metric(tr("面积", "Area"), f"{float(r.sqm):,.0f} m²")
         st.markdown(
             f'<div class="insight-card"><b>Portfolio screening</b><br>{r.sub_primaryspaceusage} building · priority {float(r.priority_score):.1f}. This public-data view is a screening artifact; use Upload & Diagnose for building-level AI evidence.</div>',
             unsafe_allow_html=True,
@@ -814,9 +845,9 @@ with tabs[3]:
         median_gap = float(d["relative_gap"].median() * 100)
         st.markdown('<div class="data-status"><b>Live upload screening</b> · retrained chronological model · holdout evidence</div>', unsafe_allow_html=True)
         k1, k2, k3 = st.columns(3)
-        k1.metric("AI anomaly days", int(d["ai_anomaly"].sum()))
-        k2.metric("Median actual-vs-expected gap", f"{median_gap:+.1f}%")
-        k3.metric("Mean anomaly score", f'{d["anomaly_confidence"].mean() * 100:.0f}%')
+        k1.metric(tr("AI 异常天数", "AI anomaly days"), int(d["ai_anomaly"].sum()))
+        k2.metric(tr("实际与预期中位差", "Median actual-vs-expected gap"), f"{median_gap:+.1f}%")
+        k3.metric(tr("平均异常评分", "Mean anomaly score"), f'{d["anomaly_confidence"].mean() * 100:.0f}%')
         st.markdown(
             '<div class="insight-card"><b>Decision meaning</b><br>'
             'This view identifies periods where observed use is unusually above the model expected-use level. '
@@ -884,9 +915,9 @@ with tabs[4]:
         )
         st.markdown('<div class="data-status"><b>Live building evidence</b> · intervention hypothesis generated from uploaded diagnosis</div>', unsafe_allow_html=True)
         k1, k2, k3 = st.columns(3)
-        k1.metric("Priority", priority.upper())
-        k2.metric("Action confidence", f"{confidence * 100:.0f}%")
-        k3.metric("Fingerprint", fp)
+        k1.metric(tr("优先级", "Priority"), priority.upper())
+        k2.metric(tr("措施置信度", "Action confidence"), f"{confidence * 100:.0f}%")
+        k3.metric(tr("能耗特征", "Fingerprint"), fp)
         st.markdown(
             f'<div class="insight-card"><b>Recommended first action</b><br>'
             f'<b>Possible cause:</b> {cause}<br>'
@@ -922,11 +953,11 @@ with tabs[4]:
             if len(data):
                 k1, k2, k3 = st.columns(3)
                 if "action_priority" in data:
-                    k1.metric("Top priority", str(data["action_priority"].iloc[0]))
+                    k1.metric(tr("最高优先级", "Top priority"), str(data["action_priority"].iloc[0]))
                 if "action_confidence" in data:
-                    k2.metric("Top confidence", f'{float(data["action_confidence"].iloc[0]):.2f}')
+                    k2.metric(tr("最高置信度", "Top confidence"), f'{float(data["action_confidence"].iloc[0]):.2f}')
                 if "energy_saving_20%" in data:
-                    k3.metric("Scenario @20%", f'{data["energy_saving_20%"].median():.1f}%')
+                    k3.metric(tr("20% 节能情景", "Scenario @20%"), f'{data["energy_saving_20%"].median():.1f}%')
             if cols:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
             st.caption(tr("基于公开数据的干预映射仅用于筛查；情景节能量并非工程实测结果。", "Public-data intervention mappings are screening artifacts; scenario savings are not measured engineering results."))
@@ -960,7 +991,7 @@ with tabs[5]:
         a.metric(tr("预计节约能耗", "Avoided energy"), f'{result["avoided_energy_kwh"]:,.0f} kWh')
         b.metric(tr("预计电费节省", "Estimated energy-charge saving"), f'¥{result["estimated_energy_charge_saving"]:,.0f}')
         c.metric(tr("预计减排 CO₂", "Avoided CO₂"), f'{result["avoided_co2_t"]:,.1f} t')
-        st.markdown('<div class="warning-card"><b>SCENARIO ONLY</b><br>Verify meter units, reporting boundary, electricity tariff and emission-factor year/geography before real decisions. Cost output is a simplified energy-charge estimate; CO₂ is a location-based Scope 2 screening result, not a measured reduction.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="warning-card"><b>{tr("仅为情景估算", "SCENARIO ONLY")}</b><br>{tr("用于实际决策前，请核实电表单位、核算边界、电价及排放因子的年份和地域。成本为简化电费估算；CO₂ 属于基于位置法的 Scope 2 筛查结果，不是实测减排。", "Verify meter units, reporting boundary, electricity tariff and emission-factor year/geography before decisions. Cost is a simplified energy-charge estimate; CO₂ is location-based Scope 2 screening, not measured reduction.")}</div>', unsafe_allow_html=True)
 
         scenario_rows = []
         for pct in range(0, 51, 5):
@@ -1001,7 +1032,7 @@ with tabs[6]:
             file_name="building_energy_diagnosis_report.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
-        st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂ 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="insight-card"><b>{tr("证据边界", "Evidence boundary")}</b><br>{tr("报告中的筛查信号、情景节能率和 CO₂ 均不等同于实测节能或实测减排；正式应用前需要现场验证。", "Screening signals, assumed savings and CO₂ scenarios are not measured savings or reductions; field validation is required before deployment.")}</div>', unsafe_allow_html=True)
         st.text_area(tr("报告预览", "Report preview"), report, height=600)
     else:
         st.info(tr(
