@@ -66,7 +66,7 @@ def test_baselines_are_scored_on_chronological_holdout_rows():
     raw = pd.concat(frames, ignore_index=True)
     engineered, feature_cols = features(raw)
     from src.pipeline import train_model
-    _, _, test, _, metrics = train_model(engineered, feature_cols)
+    _, _, test, _, _, metrics = train_model(engineered, feature_cols)
     baselines = metrics["baseline_benchmarks"]
     assert metrics["baseline_comparison_rows"] == len(test)
     # Feature rows require 28 days of history, so all three past-only baselines
