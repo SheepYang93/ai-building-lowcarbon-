@@ -475,7 +475,7 @@ with tabs[0]:
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric(tr("建筑数量", "Buildings"), metrics.get("buildings", "—"))
-    c2.metric("Test R²", f'{metrics["r2"]:.3f}' if "r2" in metrics else "—")
+    c2.metric(tr("测试集 R²", "Test R²"), f'{metrics["r2"]:.3f}' if "r2" in metrics else "—")
     c3.metric("WAPE", f'{metrics["wape"] * 100:.1f}%' if "wape" in metrics else "—")
 
     demo_cf_path = EXAMPLES / "counterfactual_candidates_demo.csv"
@@ -734,7 +734,7 @@ with tabs[1]:
 
 with tabs[2]:
     st.markdown(f'<div class="section-title">{tr("建筑诊断", "Building Diagnosis")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">单建筑诊断：把数据质量、AI expected-use、异常证据与行动建议放进同一张诊断卡。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("单建筑诊断：整合数据质量、AI 预期能耗、异常证据与行动建议。", "Single-building diagnosis combining data quality, AI expected-use, anomaly evidence and actions.")}</div>', unsafe_allow_html=True)
 
     upload_daily = st.session_state.get("upload_daily")
     upload_summary = st.session_state.get("upload_summary")
@@ -816,7 +816,7 @@ with tabs[2]:
         label = st.selectbox(tr("选择建筑", "Select building"), q.label.head(200).tolist())
         r = q[q.label.eq(label)].iloc[0]
         a1, b1, c1, d1 = st.columns(4)
-        a1.metric("Priority", f"{r.priority_score:.1f}")
+        a1.metric(tr("优先级", "Priority"), f"{r.priority_score:.1f}")
         b1.metric(tr("异常天数", "Anomaly days"), int(r.anomaly_days))
         c1.metric(tr("异常占比", "Anomaly share"), f"{r.anomaly_share * 100:.1f}%")
         d1.metric(tr("面积", "Area"), f"{float(r.sqm):,.0f} m²")
@@ -835,7 +835,7 @@ with tabs[2]:
 
 with tabs[3]:
     st.markdown(f'<div class="section-title">{tr("预期能耗与反事实筛查", "Expected-use / Counterfactual Screening")}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-subtitle">先判断“哪里值得查”，再把筛选结果传给干预与碳情景模块。</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">{tr("先判断哪里值得排查，再将筛查结果传入干预与碳情景模块。", "Identify what deserves investigation, then pass screening results to intervention and carbon scenarios.")}</div>', unsafe_allow_html=True)
 
     upload_ai = st.session_state.get("upload_ai")
     upload_summary = st.session_state.get("upload_summary")
@@ -843,7 +843,7 @@ with tabs[3]:
         d = upload_ai["data"].copy()
         candidate_days = d[d["ai_anomaly"].eq(1)].copy()
         median_gap = float(d["relative_gap"].median() * 100)
-        st.markdown('<div class="data-status"><b>Live upload screening</b> · retrained chronological model · holdout evidence</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="data-status"><b>{tr("上传数据实时筛查", "Live upload screening")}</b> · {tr("按时间重新训练模型 · 留出集证据", "chronological retraining · holdout evidence")}</div>', unsafe_allow_html=True)
         k1, k2, k3 = st.columns(3)
         k1.metric(tr("AI 异常天数", "AI anomaly days"), int(d["ai_anomaly"].sum()))
         k2.metric(tr("实际与预期中位差", "Median actual-vs-expected gap"), f"{median_gap:+.1f}%")
@@ -878,12 +878,12 @@ with tabs[3]:
             if len(data):
                 k1, k2, k3 = st.columns(3)
                 if "protected_calibrated_pct" in data:
-                    k1.metric("Median screening effect", f'{data["protected_calibrated_pct"].median():.1f}%')
+                    k1.metric(tr("筛查效应中位数", "Median screening effect"), f'{data["protected_calibrated_pct"].median():.1f}%')
                 if "robust_confidence" in data:
-                    k2.metric("Median confidence", f'{data["robust_confidence"].median():.2f}')
+                    k2.metric(tr("置信度中位数", "Median confidence"), f'{data["robust_confidence"].median():.2f}')
                 if "robust_class" in data:
-                    k3.metric("Candidate class", str(data["robust_class"].iloc[0]))
-            st.markdown('<div class="insight-card"><b>Public-data screening</b><br>Use this artifact for portfolio prioritization. Realized savings require field validation.</div>', unsafe_allow_html=True)
+                    k3.metric(tr("候选类别", "Candidate class"), str(data["robust_class"].iloc[0]))
+            st.markdown(f'<div class="insight-card"><b>{tr("公开数据筛查", "Public-data screening")}</b><br>{tr("该结果用于项目优先级排序；实际节能量仍需现场验证。", "Use this artifact for portfolio prioritization; realized savings require field validation.")}</div>', unsafe_allow_html=True)
             if cols:
                 st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
             st.caption(tr("候选效果仅为筛查信号，并非实测节能量。", "Candidate effects are screening signals, not measured savings."))
@@ -913,7 +913,7 @@ with tabs[4]:
             float(upload_ai["data"]["anomaly_confidence"].mean())
             if upload_ai is not None else 0.0
         )
-        st.markdown('<div class="data-status"><b>Live building evidence</b> · intervention hypothesis generated from uploaded diagnosis</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="data-status"><b>{tr("实时建筑证据", "Live building evidence")}</b> · {tr("根据上传诊断生成干预假设", "intervention hypothesis generated from uploaded diagnosis")}</div>', unsafe_allow_html=True)
         k1, k2, k3 = st.columns(3)
         k1.metric(tr("优先级", "Priority"), priority.upper())
         k2.metric(tr("措施置信度", "Action confidence"), f"{confidence * 100:.0f}%")
@@ -975,7 +975,7 @@ with tabs[5]:
             upload_daily["energy"].sum(),
             observed_days=len(upload_daily),
         )
-        st.markdown('<div class="data-status"><b>Live building baseline</b> · simple annualized estimate from observed daily records; seasonality, data coverage and meter units still require verification.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="data-status"><b>{tr("实时建筑基线", "Live building baseline")}</b> · {tr("根据观测日记录进行简单年化；季节性、数据覆盖和电表单位仍需核实。", "simple annualized estimate from observed daily records; seasonality, coverage and meter units require verification.")}</div>', unsafe_allow_html=True)
     else:
         inferred_annual = 1000000.0
     with left:
