@@ -274,6 +274,38 @@ def run_uploaded_ai_screening(daily):
     except Exception as exc:
         return None, f"AI screening unavailable: {exc}"
 
+
+def report_to_docx(report_text):
+    """Create a Word document from the generated diagnosis report."""
+    from io import BytesIO
+    from docx import Document
+    from docx.shared import Pt, RGBColor
+    doc = Document()
+    doc.styles["Normal"].font.name = "Microsoft YaHei"
+    doc.styles["Normal"].font.size = Pt(10)
+    doc.styles["Normal"].font.color.rgb = RGBColor(45, 65, 60)
+    for line in report_text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("# "):
+            doc.add_heading(line[2:], level=0)
+        elif line.startswith("## "):
+            doc.add_heading(line[3:], level=1)
+        elif line.startswith("|"):
+            if not line.startswith("|---"):
+                doc.add_paragraph("  ·  ".join(x.strip() for x in line.strip("|").split("|")))
+        elif line.startswith("- "):
+            doc.add_paragraph(line[2:], style="List Bullet")
+        elif line.startswith("> "):
+            doc.add_paragraph(line[2:], style="Quote")
+        else:
+            doc.add_paragraph(line)
+    doc.add_paragraph("说明：本报告为数据筛查输出；预测、异常与情景结果不等同于实测节能或减排。")
+    buf = BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
 def build_report(summary, d, metadata):
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
     peak = peak.sort_values("robust_z", ascending=False).head(10)
@@ -962,6 +994,12 @@ with tabs[6]:
             data=report,
             file_name="building_energy_diagnosis_report.md",
             mime="text/markdown",
+        )
+        st.download_button(
+            tr("下载 Word 诊断报告（DOCX）", "Download Word diagnosis report (DOCX)"),
+            data=report_to_docx(report),
+            file_name="building_energy_diagnosis_report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
         st.markdown('<div class="insight-card"><b>Evidence boundary</b><br>报告中的 screening signal、情景节能率和 CO₂ 均不等同于实测节能或实测减排；正式应用前需要现场验证。</div>', unsafe_allow_html=True)
         st.text_area(tr("报告预览", "Report preview"), report, height=600)
