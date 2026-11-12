@@ -80,3 +80,20 @@ def test_prediction_features_do_not_use_current_day_reading():
     row = engineered.loc[engineered["date"].eq(pd.Timestamp("2017-03-11"))].iloc[0]
     assert row["lag1"] == raw.loc[raw["date"].eq(pd.Timestamp("2017-03-10")), "meter_reading"].iloc[0]
     assert row["lag1"] != row["meter_reading"]
+
+
+def test_calendar_baselines_do_not_treat_previous_row_as_previous_day():
+    dates = pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-09", "2026-01-10"])
+    frame = pd.DataFrame({
+        "building_id": ["A"] * 4,
+        "date": dates,
+        "meter_reading": [10.0, 20.0, 70.0, 80.0],
+    })
+    evaluation = frame.iloc[[2, 3]].copy()
+    metrics = baseline_metrics(frame, evaluation_frame=evaluation)
+    # Jan 9 has an exact 7-day predecessor (Jan 2), while Jan 10 has
+    # no Jan 9 predecessor in this dataset. A row-shift baseline would differ.
+    assert metrics["seasonal_7d"]["n"] == 1
+    assert metrics["seasonal_7d"]["mae"] == 50.0
+    assert metrics["naive_1d"]["n"] == 1
+    assert metrics["naive_1d"]["mae"] == 60.0
