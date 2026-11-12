@@ -528,20 +528,20 @@ with tabs[0]:
         st.markdown(
             '''
 <div class="insight-card">
-<b>From energy data to operational decisions</b><br>
-系统不是只做“能耗预测”，而是把预测、异常识别、反事实筛选、干预建议和碳情景连接起来。
+<b>{tr("从能源数据到运营决策", "From energy data to operational decisions")}</b><br>
+{tr("系统不是只做“能耗预测”，而是把预测、异常识别、反事实筛选、干预建议和碳情景连接起来。", "The system links prediction, anomaly detection, counterfactual screening, intervention suggestions and carbon scenarios—not just energy forecasting.")}
 </div>
 ''',
             unsafe_allow_html=True,
         )
         st.markdown(
             '''
-<span class="chip">01 · Predict</span>
-<span class="chip">02 · Detect anomalies</span>
-<span class="chip">03 · Build fingerprint</span>
-<span class="chip">04 · Counterfactual</span>
-<span class="chip">05 · Intervention</span>
-<span class="chip">06 · Carbon scenario</span>
+<span class="chip">01 · {tr("预测", "Predict")}</span>
+<span class="chip">02 · {tr("异常识别", "Anomaly detection")}</span>
+<span class="chip">03 · {tr("能耗特征", "Energy fingerprint")}</span>
+<span class="chip">04 · {tr("反事实筛选", "Counterfactual")}</span>
+<span class="chip">05 · {tr("干预建议", "Intervention")}</span>
+<span class="chip">06 · {tr("碳情景", "Carbon scenario")}</span>
 ''',
             unsafe_allow_html=True,
         )
@@ -549,17 +549,17 @@ with tabs[0]:
         st.markdown("**" + tr("决策流程", "Decision chain") + "**")
         st.markdown(
             '''
-**Energy data**  
+**{tr("能源数据", "Energy data")}**  
 ↓  
-**AI / robust statistical diagnosis**  
+**{tr("AI / 稳健统计诊断", "AI / robust statistical diagnosis")}**  
 ↓  
-**Operational cause candidates**  
+**{tr("运营原因候选", "Operational cause candidates")}**  
 ↓  
-**Intervention screening**  
+**{tr("干预筛选", "Intervention screening")}**  
 ↓  
-**Cost & CO₂ scenario**  
+**{tr("成本与 CO₂ 情景", "Cost & CO₂ scenario")}**  
 ↓  
-**Field validation**
+**{tr("现场验证", "Field validation")}**
 ''')
     st.markdown("### " + tr("核心证据一览", "Evidence at a glance"))
     e1, e2, e3 = st.columns(3)
@@ -584,7 +584,7 @@ with tabs[1]:
     st.markdown(f'<div class="section-title">{tr("上传与诊断", "Upload & Diagnose")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="section-subtitle">{tr("把建筑能耗 CSV 转化为 AI 预期能耗与稳健基线双证据诊断；字段不足时自动回退。", "Turn a building-energy CSV into AI expected-use and robust-baseline evidence; fall back when fields are insufficient.")}</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="data-status"><b>Required</b> 时间列 + 能耗列 &nbsp; · &nbsp; <b>AI-ready</b> building_id + area_m2 + outdoor_temperature + ≥60 days &nbsp; · &nbsp; <b>Scope</b> 单建筑 CSV</div>',
+        f'<div class="data-status"><b>{tr("必需字段", "Required")}</b> {tr("时间列 + 能耗列", "timestamp + energy")} &nbsp; · &nbsp; <b>{tr("AI 就绪", "AI-ready")}</b> building_id + area_m2 + outdoor_temperature + ≥60 days &nbsp; · &nbsp; <b>{tr("范围", "Scope")}</b> {tr("单建筑 CSV", "single-building CSV")}</div>',
         unsafe_allow_html=True,
     )
     st.code(
