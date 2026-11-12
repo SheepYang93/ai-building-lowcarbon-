@@ -52,6 +52,24 @@ metrics.update({
     "model":"ExtraTreesRegressor",
     "train_cap":args.train_cap
 })
+# Export row-level chronological residuals and per-building error summaries.
+chronological_predictions = te[["building_id", "date", "meter_reading"]].copy()
+chronological_predictions["predicted"] = pred
+chronological_predictions["residual"] = chronological_predictions["meter_reading"] - chronological_predictions["predicted"]
+chronological_predictions["absolute_error"] = chronological_predictions["residual"].abs()
+chronological_predictions["absolute_percentage_error"] = (
+    chronological_predictions["absolute_error"] / chronological_predictions["meter_reading"].abs().clip(lower=1e-9)
+)
+chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False)
+error_by_building = chronological_predictions.groupby("building_id").agg(
+    test_rows=("residual", "size"),
+    mae=("absolute_error", "mean"),
+    mean_error=("residual", "mean"),
+    wape=("absolute_error", lambda s: float(s.sum() / max(chronological_predictions.loc[s.index, "meter_reading"].abs().sum(), 1e-9))),
+    median_absolute_percentage_error=("absolute_percentage_error", "median"),
+).reset_index().sort_values("mae", ascending=False)
+error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
+
 (out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
 
 # Machine-readable metrics above are paired with a recruiter-friendly Markdown summary.
@@ -74,7 +92,7 @@ lines = [
     f"| MAE | {fmt(metrics.get('mae'))} |",
     f"| WAPE | {fmt(metrics.get('wape'))} |",
     f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
-    "## Baselines on the same test rows",
+    "## Baselines on the same test rows (baseline n can be smaller if history is unavailable)",
     "| Baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
 ]
 for name, item in bm.items():
