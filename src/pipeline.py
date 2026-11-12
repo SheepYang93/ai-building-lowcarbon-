@@ -169,44 +169,67 @@ def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location
 
 
 def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
-    """Evaluate past-only baselines on the supplied model holdout rows.
+    """Score calendar-aligned, past-only baselines on model evaluation rows.
 
-    When evaluation_frame is provided, all baselines are scored on those exact
-    rows (excluding only rows where a baseline cannot be formed). This avoids
-    comparing the model against a different, easier or larger test sample.
+    naive_1d and seasonal_7d require an exact prior calendar date for the
+    same building. rolling_median_28d uses observations in the preceding
+    28 calendar days (excluding the target date), with at least 7 readings.
     """
-    history = d.copy().sort_values(["building_id", "date"])
-    dates = np.sort(history.date.dropna().unique())
-    if len(dates) < 10:
-        return {}
-
-    g = history.groupby("building_id")[target]
-    history["naive_1"] = g.shift(1)
-    history["seasonal_7"] = g.shift(7)
-    history["median_28"] = g.transform(
-        lambda s: s.shift(1).rolling(28, min_periods=7).median()
+    history = d.copy()
+    history["date"] = pd.to_datetime(history["date"], errors="coerce").dt.normalize()
+    history[target] = pd.to_numeric(history[target], errors="coerce")
+    history = history.dropna(subset=["building_id", "date", target]).sort_values(
+        ["building_id", "date"], kind="mergesort"
     )
+    if history.duplicated(["building_id", "date"]).any():
+        raise ValueError("Baseline history must contain at most one reading per building/date.")
 
     if evaluation_frame is None:
+        dates = np.sort(history.date.unique())
+        if len(dates) < 10:
+            return {}
         cutoff = pd.Timestamp(dates[int(len(dates) * 0.8)])
         evaluation = history[history.date >= cutoff].copy()
     else:
-        if not evaluation_frame.index.is_unique:
+        evaluation = evaluation_frame.copy()
+        evaluation["date"] = pd.to_datetime(evaluation["date"], errors="coerce").dt.normalize()
+        if not evaluation.index.is_unique:
             raise ValueError("Evaluation frame must have unique row indices.")
-        missing = evaluation_frame.index.difference(history.index)
-        if len(missing):
-            raise ValueError("Evaluation rows must be present in the history data.")
-        evaluation = history.loc[evaluation_frame.index].copy()
+
+    lookup = history.set_index(["building_id", "date"])[target]
+    evaluation["naive_1d"] = [
+        lookup.get((bid, date - pd.Timedelta(days=1)), np.nan)
+        for bid, date in zip(evaluation["building_id"], evaluation["date"])
+    ]
+    evaluation["seasonal_7d"] = [
+        lookup.get((bid, date - pd.Timedelta(days=7)), np.nan)
+        for bid, date in zip(evaluation["building_id"], evaluation["date"])
+    ]
+
+    # Explicit calendar windows prevent "28 observations" from being mislabeled
+    # as 28 days when the source has missing dates.
+    median_values = []
+    grouped = {bid: group for bid, group in history.groupby("building_id", sort=False)}
+    for bid, date in zip(evaluation["building_id"], evaluation["date"]):
+        group = grouped.get(bid)
+        if group is None or pd.isna(date):
+            median_values.append(np.nan)
+            continue
+        past = group.loc[(group["date"] >= date - pd.Timedelta(days=28)) & (group["date"] < date), target]
+        median_values.append(float(past.median()) if len(past) >= 7 else np.nan)
+    evaluation["median_28"] = median_values
 
     out = {}
     y = pd.to_numeric(evaluation[target], errors="coerce").to_numpy(dtype=float)
-    for name in ["naive_1", "seasonal_7", "median_28"]:
+    for name in ["naive_1d", "seasonal_7d", "median_28"]:
         p = pd.to_numeric(evaluation[name], errors="coerce").to_numpy(dtype=float)
         ok = np.isfinite(p) & np.isfinite(y)
-        if ok.sum():
+        n = int(ok.sum())
+        if n:
             out[name] = {
                 "mae": float(mean_absolute_error(y[ok], p[ok])),
                 "wape": float(np.abs(y[ok] - p[ok]).sum() / max(np.abs(y[ok]).sum(), 1e-9)),
-                "n": int(ok.sum()),
+                "n": n,
+                "coverage": float(n / len(evaluation)) if len(evaluation) else 0.0,
             }
     return out
