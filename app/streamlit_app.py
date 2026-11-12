@@ -406,7 +406,7 @@ an = pd.read_csv(anomaly_path) if anomaly_path.exists() else pd.DataFrame()
 
 st.markdown(f"""
 <style>
-.block-container {{max-width:1500px; padding-top:2rem;}}
+.block-container {{max-width:1500px; padding-top:2rem; padding-bottom:3rem;}}\n.stApp {{overflow-x:hidden;}}\n[data-testid="stMain"] {{min-width:0;}}\n[data-testid="stVerticalBlock"] {{min-width:0;}}\n[data-testid="stDataFrame"], [data-testid="stPlotlyChart"], [data-testid="stVegaLiteChart"] {{max-width:100%;}}
 [data-testid="stMetric"] {{background:#fff;border:1px solid #E2EBE8;border-radius:16px;padding:12px 16px;box-shadow:0 3px 16px rgba(23,59,54,.05)}}
 [data-testid="stMetricLabel"] {{color:#617873}}
 [data-testid="stMetricValue"] {{color:#173B36}}
@@ -449,9 +449,9 @@ st.markdown(f"""
     <p>{tr("从能源数据识别异常、理解建筑行为，并把模型结果转化为成本与碳排放情景。", "Detect anomalies, understand building behavior, and translate model outputs into cost and carbon scenarios.")}</p>
   </div>
   <div class="hero-side">
-    <div class="small">DECISION SUPPORT PROTOTYPE</div>
+    <div class="small">{tr("决策支持原型", "DECISION SUPPORT PROTOTYPE")}</div>
     <div class="big">Data → Diagnosis → Action</div>
-    <div class="small">Model evidence ≠ measured savings</div>
+    <div class="small">{tr("模型证据 ≠ 实测节能", "Model evidence ≠ measured savings")}</div>
   </div>
 </div>
 </div>
