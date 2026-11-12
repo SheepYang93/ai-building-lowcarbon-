@@ -280,17 +280,36 @@ def report_to_docx(report_text):
     from io import BytesIO
     from docx import Document
     from docx.shared import Pt, RGBColor
+    from datetime import datetime
 
     doc = Document()
     section = doc.sections[0]
     section.top_margin = Pt(48)
     section.bottom_margin = Pt(48)
+    section.left_margin = Pt(54)
+    section.right_margin = Pt(54)
     normal = doc.styles["Normal"]
     normal.font.name = "Microsoft YaHei"
     normal.font.size = Pt(10)
     normal.font.color.rgb = RGBColor(45, 65, 60)
-    for style_name in ("Title", "Heading 1", "Heading 2"):
+    normal.paragraph_format.space_after = Pt(5)
+    normal.paragraph_format.line_spacing = 1.15
+    doc.styles["Title"].font.name = "Microsoft YaHei"
+    doc.styles["Title"].font.size = Pt(22)
+    doc.styles["Title"].font.bold = True
+    doc.styles["Title"].font.color.rgb = RGBColor(15, 118, 110)
+    for style_name in ("Heading 1", "Heading 2"):
         doc.styles[style_name].font.name = "Microsoft YaHei"
+        doc.styles[style_name].font.color.rgb = RGBColor(21, 94, 117)
+    header = section.header.paragraphs[0]
+    header.text = "AI Building Low-carbon Intelligence  |  Building Energy Diagnosis"
+    header.style = "Caption"
+    footer = section.footer.paragraphs[0]
+    footer.text = (
+        "生成日期 / Generated: " + datetime.now().strftime("%Y-%m-%d")
+        + "  ·  Screening output — not measured savings"
+    )
+    footer.style = "Caption"
 
     lines = report_text.splitlines()
     i = 0
@@ -313,6 +332,10 @@ def report_to_docx(report_text):
                 table.style = "Light Shading Accent 1"
                 for col, value in enumerate(table_lines[0]):
                     table.rows[0].cells[col].text = value
+                    for run in table.rows[0].cells[col].paragraphs[0].runs:
+                        run.bold = True
+                        run.font.color.rgb = RGBColor(15, 85, 78)
+                table.rows[0]._tr.get_or_add_trPr()
                 for row in table_lines[1:]:
                     cells = table.add_row().cells
                     for col in range(width):
@@ -333,7 +356,11 @@ def report_to_docx(report_text):
     note = ("说明：本报告为数据筛查输出；预测、异常与情景结果不等同于实测节能或减排。"
             if UI_LANGUAGE == "zh" else
             "Note: This report is a screening output; predictions, anomalies and scenarios are not measured savings or emissions reductions.")
-    doc.add_paragraph(note)
+    disclaimer = doc.add_paragraph(note)
+    disclaimer.paragraph_format.space_before = Pt(10)
+    for run in disclaimer.runs:
+        run.italic = True
+        run.font.color.rgb = RGBColor(95, 112, 108)
     buffer = BytesIO()
     doc.save(buffer)
     return buffer.getvalue()
