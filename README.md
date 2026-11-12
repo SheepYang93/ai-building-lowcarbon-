@@ -62,6 +62,10 @@ Across repeated rolling-window experiments on the public dataset:
 
 See [EXPERIMENTS.md](EXPERIMENTS.md) for the evidence boundary and limitations.
 
+
+
+**Technical review & interview notes:** [deployment checklist, evidence requirements and interview preparation](docs/TECHNICAL_REVIEW_INTERVIEW_NOTES.md)
+
 ## For a recruiter: what to look at first
 
 If you only have one minute, run the **local demo** (or deploy it using the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) and then inspect these three files:
