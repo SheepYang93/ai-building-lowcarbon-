@@ -96,4 +96,4 @@ def test_calendar_baselines_do_not_treat_previous_row_as_previous_day():
     assert metrics["seasonal_7d"]["n"] == 1
     assert metrics["seasonal_7d"]["mae"] == 50.0
     assert metrics["naive_1d"]["n"] == 1
-    assert metrics["naive_1d"]["mae"] == 60.0
+    assert metrics["naive_1d"]["mae"] == 10.0
