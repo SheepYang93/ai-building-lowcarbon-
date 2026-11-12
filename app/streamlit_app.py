@@ -365,6 +365,9 @@ def report_to_docx(report_text):
     doc.save(buffer)
     return buffer.getvalue()
 def build_report(summary, d, metadata):
+    expected_days = (pd.Timestamp(d["date"].max()) - pd.Timestamp(d["date"].min())).days + 1
+    temporal_coverage = min(len(d) / max(expected_days, 1), 1.0) * 100
+    missing_days = max(expected_days - len(d), 0)
     peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
     peak = peak.sort_values("robust_z", ascending=False).head(10)
 
@@ -379,6 +382,11 @@ def build_report(summary, d, metadata):
         "",
         f"## 2. {tr('数据质量', 'Data quality')}",
         f"- {tr('有效日记录数', 'Valid daily records')}: {summary['records']}",
+        f"- {tr('观测区间内日期覆盖率', 'Date coverage within observed span')}: {temporal_coverage:.1f}%",
+        f"- {tr('缺失日期数（按首末日期计算）', 'Missing dates within first-to-last date')}: {missing_days}",
+        f"- {tr('数据质量筛查分数', 'Data-quality screening score')}: {summary.get('data_quality_score', tr('未计算', 'not calculated'))}/100",
+        f"- {tr('证据等级', 'Evidence level')}: {summary.get('evidence_level', tr('未评定', 'not assessed'))}",
+        f"- {tr('单位边界', 'Unit boundary')}: {tr('上传文件的能耗单位需由使用者确认；系统不会自动证明其为 kWh。', 'The energy unit in the uploaded file must be confirmed by the user; the system does not verify that it is kWh.')}",
         "",
         f"## 3. {tr('诊断结果', 'Diagnostic result')}",
         f"- {tr('稳健异常天数', 'Robust anomaly days')}: {summary['anomaly_days']}",
