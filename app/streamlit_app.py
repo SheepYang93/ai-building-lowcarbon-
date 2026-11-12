@@ -564,15 +564,15 @@ with tabs[0]:
     st.markdown("### " + tr("核心证据一览", "Evidence at a glance"))
     e1, e2, e3 = st.columns(3)
     e1.markdown(
-        '<div class="insight-card"><b>Model evidence</b><br>Public-data prediction and strict time-series validation.</div>',
+        f'<div class="insight-card"><b>{tr("模型证据", "Model evidence")}</b><br>{tr("公开数据预测与严格时间序列验证。", "Public-data prediction and strict time-series validation.")}</div>',
         unsafe_allow_html=True,
     )
     e2.markdown(
-        '<div class="insight-card"><b>Decision evidence</b><br>Robust anomaly detection, energy fingerprints and intervention mapping.</div>',
+        f'<div class="insight-card"><b>{tr("决策证据", "Decision evidence")}</b><br>{tr("稳健异常检测、能耗特征与干预映射。", "Robust anomaly detection, energy fingerprints and intervention mapping.")}</div>',
         unsafe_allow_html=True,
     )
     e3.markdown(
-        '<div class="insight-card"><b>Validation design</b><br>Treatment / control, DID and placebo testing workflow.</div>',
+        f'<div class="insight-card"><b>{tr("验证设计", "Validation design")}</b><br>{tr("处理组/对照组、双重差分与安慰剂检验流程。", "Treatment / control, DID and placebo testing workflow.")}</div>',
         unsafe_allow_html=True,
     )
 
@@ -957,7 +957,7 @@ with tabs[4]:
             f'<div class="insight-card"><b>Recommended first action</b><br>'
             f'<b>Possible cause:</b> {cause}<br>'
             f'<b>Check first:</b> {measure}<br>'
-            f'<span class="muted">Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.</span></div>',
+            ff'<span class="muted">{tr("证据来源：上传建筑诊断。这是运营假设，不是已确认故障。", "Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.")}</span></div>',
             unsafe_allow_html=True,
         )
         if upload_ai is not None:
