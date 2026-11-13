@@ -56,7 +56,7 @@ These tests reduce known leakage risks; they do not prove the absence of every p
 python scripts/run_v3.py --input PATH_TO_DATA.csv --output outputs --building-test-size 0.2 --building-seed 42
 ```
 
-Inspect `outputs/metrics.json`, `outputs/evaluation_report.md`, `outputs/chronological_test_predictions.csv`, `outputs/unseen_building_predictions.csv` and `outputs/error_analysis_by_building.csv`.
+Inspect `outputs/metrics.json`, `outputs/evaluation_report.md` (Markdown), `outputs/evaluation_report.docx` (Word), `outputs/chronological_test_predictions.csv`, `outputs/unseen_building_predictions.csv`, `outputs/error_analysis_by_building.csv` and `outputs/top10_high_error_buildings.csv`.
 
 The repository's CI uses synthetic fixtures for fast regression tests. Synthetic test success is not a substitute for a fresh run on the full public dataset or for campus field validation.
 
