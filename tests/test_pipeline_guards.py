@@ -429,3 +429,34 @@ def test_dashboard_multiline_translations_are_interpolated():
     assert '            f\'\'\'\n<div class="insight-card">' in source
     assert '            f\'\'\'\n<span class="chip">' in source
     assert '            f\'\'\'\n**{tr("能源数据"' in source
+
+
+
+def test_upload_quality_score_does_not_penalize_optional_weather():
+    import ast
+    from pathlib import Path
+    import pandas as pd
+
+    source = Path("app/streamlit_app.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    function_node = next(
+        node for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "score_upload_quality"
+    )
+    namespace = {}
+    exec(compile(ast.Module(body=[function_node], type_ignores=[]), "<score_upload_quality>", "exec"), namespace)
+    score_upload_quality = namespace["score_upload_quality"]
+
+    energy_only = pd.DataFrame({
+        "date": pd.date_range("2026-01-01", periods=10, freq="D"),
+        "energy": [10.0] * 10,
+    })
+    with_weather = energy_only.assign(outdoor_temperature=[20.0] * 10)
+    score_without_weather, checks_without_weather = score_upload_quality(energy_only)
+    score_with_weather, checks_with_weather = score_upload_quality(with_weather)
+
+    assert score_without_weather == 100.0
+    assert score_with_weather == 100.0
+    assert checks_without_weather["temperature_available"] == 0.0
+    assert checks_with_weather["temperature_available"] == 1.0
+    assert checks_without_weather["weather_optional"] is True
