@@ -167,3 +167,23 @@ def test_building_group_holdout_keeps_buildings_disjoint_and_reports_history_bou
     assert len(pred) == len(test)
     assert metrics["split"] == "unseen_building_group_holdout"
     assert "past-only lag features" in metrics["history_note"]
+
+
+def test_regression_metrics_mark_undefined_wape_and_single_sample_r2():
+    import numpy as np
+    from src.pipeline import _regression_metrics
+
+    metrics = _regression_metrics([0.0], [2.0])
+    assert metrics["mae"] == 2.0
+    assert metrics["rmse"] == 2.0
+    assert np.isnan(metrics["wape"])
+    assert metrics["wape_status"] == "undefined_zero_actual_sum"
+    assert np.isnan(metrics["r2"])
+    assert metrics["r2_status"] == "undefined_single_sample"
+
+
+def test_regression_metrics_reject_nonfinite_inputs():
+    from src.pipeline import _regression_metrics
+
+    with pytest.raises(ValueError, match="finite"):
+        _regression_metrics([1.0, float("nan")], [1.0, 2.0])
