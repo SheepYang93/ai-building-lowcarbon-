@@ -106,7 +106,7 @@ def test_baselines_use_exact_model_holdout_rows():
 
     assert set(baselines) == {"naive_1d", "seasonal_7d", "median_28"}
     assert all(item["n"] == len(test_frame) for item in baselines.values())
-    assert all(item["mae"] >= 0 and item["wape"] >= 0 for item in baselines.values())
+    assert all(item["mae"] >= 0 and item["rmse"] >= 0 and item["wape"] >= 0 for item in baselines.values())
 
 
 def test_carbon_scenario_labels_observed_period_not_annual():
