@@ -740,9 +740,14 @@ with tabs[1]:
             st.markdown(f'<div class="section-title">{tr("能耗特征", "Energy fingerprint")}</div>', unsafe_allow_html=True)
             fp1, fp2 = st.columns(2)
             with fp1:
-                st.line_chart(diagnosed.set_index("date")[["energy", "baseline_28d"]])
+                energy_chart = diagnosed.set_index("date")[["energy", "baseline_28d"]].rename(
+                    columns={"energy": tr("实际能耗", "Actual energy"), "baseline_28d": tr("28天历史基线", "28-day historical baseline")}
+                )
+                st.line_chart(energy_chart)
             with fp2:
                 weekly = diagnosed.set_index("date")["energy"].resample("W").sum()
+                weekly.index.name = tr("周", "Week")
+                weekly.name = tr("周能耗", "Weekly energy")
                 st.bar_chart(weekly)
 
             anomaly_view = diagnosed[diagnosed["anomaly"]].copy()
@@ -751,7 +756,13 @@ with tabs[1]:
                 st.dataframe(
                     anomaly_view[
                         ["date", "energy", "baseline_28d", "ratio_to_baseline", "robust_z"]
-                    ].tail(50),
+                    ].tail(50).rename(columns={
+                        "date": tr("日期", "Date"),
+                        "energy": tr("能耗", "Energy"),
+                        "baseline_28d": tr("28天历史基线", "28-day baseline"),
+                        "ratio_to_baseline": tr("相对基线比值", "Ratio to baseline"),
+                        "robust_z": tr("稳健 Z 分数", "Robust Z"),
+                    }),
                     width="stretch",
                 )
             else:
