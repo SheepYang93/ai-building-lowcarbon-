@@ -4,7 +4,7 @@
 
 > **AI for building-energy diagnosis, anomaly detection, counterfactual screening and low-carbon decision support.**
 
-**Demo deployment:** pending · [Deploy on Streamlit Community Cloud](docs/DEPLOY_STREAMLIT_CLOUD.md) · [Run locally](#quick-start)  
+**Live demo:** https://cwtjwabswg9fdbpgvfyhul.streamlit.app/ · [Deployment guide](docs/DEPLOY_STREAMLIT_CLOUD.md) · [Run locally](#quick-start)  
 **Repository:** https://github.com/SheepYang93/ai-building-lowcarbon-
 
 ## 30-second overview
@@ -37,7 +37,7 @@ See the [portfolio overview](docs/PORTFOLIO.md) for workflow, modules and eviden
 
 ![Architecture](docs/architecture.svg)
 
-**Demo:** deployment pending ([deployment guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) · **Code:** [GitHub repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
+**Live demo:** [Open Streamlit app](https://cwtjwabswg9fdbpgvfyhul.streamlit.app/) · **Code:** [GitHub repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
 
 | Layer | Method | Output |
 |---|---|---|
@@ -91,7 +91,7 @@ The project is intentionally presented as a **decision-support prototype**, not 
 
 ## Demo
 
-The Streamlit app demonstrates the full decision workflow. Deployment is currently pending; see the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md), or run it locally:
+The Streamlit app demonstrates the full decision workflow. Open the [live demo](https://cwtjwabswg9fdbpgvfyhul.streamlit.app/) or run it locally using the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md):
 
 1. **Overview** — system scope, polished product dashboard and evidence boundary
 2. **Upload & Diagnose** — upload a single-building daily-energy CSV and run robust anomaly screening
@@ -99,7 +99,7 @@ The Streamlit app demonstrates the full decision workflow. Deployment is current
 4. **Counterfactual** — view potential intervention signals as screening evidence
 5. **Intervention** — map the fingerprint to an intervention family
 6. **Carbon** — explore conditional carbon scenarios
-7. **Report** — generate a downloadable Markdown diagnosis report
+7. **Report** — generate downloadable Markdown and Word diagnosis reports (language follows the UI setting)
 8. **Field Validation** — upload treatment/control data; calculate DID, inspect pre-intervention slope diagnostics, evaluate a pre-intervention placebo date, and optionally estimate a clustered-bootstrap interval. These are preliminary diagnostics, not proof of causality.
 
 ### Demo workflow
