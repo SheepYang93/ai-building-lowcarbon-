@@ -347,7 +347,13 @@ def report_to_docx(report_text):
                     for run in table.rows[0].cells[col].paragraphs[0].runs:
                         run.bold = True
                         run.font.color.rgb = RGBColor(15, 85, 78)
-                table.rows[0]._tr.get_or_add_trPr()
+                # Keep the column header visible when a peak-anomaly table spans pages.
+                from docx.oxml import OxmlElement
+                from docx.oxml.ns import qn
+                header_properties = table.rows[0]._tr.get_or_add_trPr()
+                repeat_header = OxmlElement("w:tblHeader")
+                repeat_header.set(qn("w:val"), "true")
+                header_properties.append(repeat_header)
                 for row in table_lines[1:]:
                     cells = table.add_row().cells
                     for col in range(width):
