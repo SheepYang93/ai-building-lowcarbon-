@@ -390,3 +390,11 @@ def test_building_error_summary_sorts_highest_mae_and_filters_nonfinite():
     assert result.iloc[0]["mae"] == 15.0
     assert result.iloc[0]["test_rows"] == 2
     assert "invalid" not in result["building_id"].tolist()
+
+
+def test_streamlit_demo_and_training_script_compile():
+    from pathlib import Path
+
+    for path in ["app/streamlit_app.py", "scripts/run_v3.py", "src/reporting.py"]:
+        source = Path(path).read_text(encoding="utf-8")
+        compile(source, path, "exec")
