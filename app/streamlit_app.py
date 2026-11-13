@@ -432,7 +432,7 @@ def build_report(summary, d, metadata):
     if len(peak):
         lines.extend([
             "",
-            f"| {tr('日期', 'Date')} | {tr('能耗', 'Energy')} | {tr('历史基线', 'Past baseline')} | {tr('稳健 z 分数', 'Robust z-score')} |",
+            f"| {tr('日期', 'Date')} | {tr('能耗（上传单位）', 'Energy (uploaded unit)')} | {tr('历史基线（同单位）', 'Past baseline (same unit)')} | {tr('稳健 z 分数', 'Robust z-score')} |",
             "|---|---:|---:|---:|",
         ])
         for _, row in peak.iterrows():
