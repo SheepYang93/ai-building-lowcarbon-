@@ -28,10 +28,10 @@ def markdown_to_docx(markdown_path, output_path):
         rows = [row for row in rows if not all(set(cell) <= set("-: ") for cell in row)]
         if rows:
             width = max(map(len, rows))
-            table = document.add_table(rows=1, cols=width)
+            table = document.add_table(rows=0, cols=width)
             table.style = "Light Shading Accent 1"
             for values in rows:
-                cells = table.rows[0].cells if len(table.rows) == 1 and not any(c.text for c in table.rows[0].cells) else table.add_row().cells
+                cells = table.add_row().cells
                 for index, value in enumerate(values):
                     cells[index].text = value
         table_lines = []
