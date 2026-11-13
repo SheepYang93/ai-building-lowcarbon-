@@ -412,3 +412,11 @@ def test_word_export_handles_empty_report_and_blank_lines(tmp_path):
     assert output.exists()
     assert len(document.tables) == 0
     assert len(document.paragraphs) == 0
+
+
+def test_metrics_report_formatter_uses_na_for_nonfinite_values():
+    import numpy as np
+    from src.pipeline import json_safe
+
+    safe = json_safe({"mae": np.nan, "rmse": np.inf, "wape": -np.inf})
+    assert safe == {"mae": None, "rmse": None, "wape": None}
