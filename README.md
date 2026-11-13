@@ -72,7 +72,7 @@ If you only have one minute, run the **local demo** (or deploy it using the [Str
 
 1. `app/streamlit_app.py` — the productized decision workflow and UI.
 2. `src/` — feature engineering, modeling and diagnostic logic.
-3. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.
+3. `MODEL_VALIDATION.md` — reproducible evaluation protocol, metric edge cases and evidence boundaries.\n4. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.\n5. After running `scripts/run_v3.py` on a verified dataset, inspect `outputs/evaluation_report.docx` and `outputs/metrics.json` for the generated model-evaluation evidence.
 
 The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings. The UI separates model evidence, screening signals and field-validation evidence.
 
