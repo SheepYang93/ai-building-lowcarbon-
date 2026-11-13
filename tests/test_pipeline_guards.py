@@ -201,6 +201,6 @@ def test_regression_metrics_zero_actual_and_single_row_are_explicit():
 
 def test_json_safe_converts_nonfinite_metrics_to_null():
     import numpy as np
-    from scripts.run_v3 import json_safe
+    from src.pipeline import json_safe
     safe = json_safe({"wape": float("nan"), "r2": np.float64("inf"), "n": np.int64(2)})
     assert safe == {"wape": None, "r2": None, "n": 2}
