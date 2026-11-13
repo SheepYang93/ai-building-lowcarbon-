@@ -306,3 +306,38 @@ def test_markdown_report_exports_valid_word_with_headings_tables_and_bullets(tmp
     assert len(document.tables) == 1
     assert [cell.text for cell in document.tables[0].rows[0].cells] == ["Metric", "Value"]
     assert [cell.text for cell in document.tables[0].rows[1].cells] == ["MAE", "2.5"]
+
+
+def test_building_error_summary_handles_bias_zero_actual_and_ape_coverage():
+    import numpy as np
+    import pandas as pd
+    from src.reporting import building_error_summary
+
+    rows = pd.DataFrame({
+        "building_id": ["A", "A", "A", "B", "B"],
+        "actual": [10.0, 0.0, 20.0, 0.0, 0.0],
+        "predicted": [8.0, 3.0, 25.0, 1.0, -1.0],
+    })
+    summary = building_error_summary(rows).set_index("building_id")
+
+    assert summary.loc["A", "test_rows"] == 3
+    assert summary.loc["A", "mae"] == 10 / 3
+    assert summary.loc["A", "mean_error"] == -2 / 3
+    assert summary.loc["A", "bias_direction"] == "overprediction"
+    assert summary.loc["A", "ape_valid_rows"] == 2
+    assert summary.loc["A", "median_absolute_percentage_error"] == 0.225
+    assert summary.loc["B", "wape"] != summary.loc["B", "wape"]  # undefined: zero actual sum
+    assert summary.loc["B", "ape_valid_rows"] == 0
+
+
+def test_building_error_summary_rejects_missing_columns_and_empty_rows():
+    import pandas as pd
+    import pytest
+    from src.reporting import building_error_summary
+
+    with pytest.raises(ValueError, match="missing columns"):
+        building_error_summary(pd.DataFrame({"actual": [1], "predicted": [1]}))
+    result = building_error_summary(pd.DataFrame({
+        "building_id": ["A"], "actual": [float("nan")], "predicted": [1.0]
+    }))
+    assert result.empty
