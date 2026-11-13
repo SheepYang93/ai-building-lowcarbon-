@@ -94,7 +94,7 @@ lines = [
     f"| WAPE | {fmt(metrics.get('wape'))} |",
     f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
     "## Baselines on the same test rows (baseline n can be smaller if history is unavailable)",
-    "| Baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
+    "| Baseline | MAE | RMSE | WAPE | n |", "|---|---:|---:|---:|---:|",
 ]
 for name, item in bm.items():
     lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
@@ -106,7 +106,7 @@ lines += ["", "## Fair comparison on identical valid rows",
     "| Model / baseline | MAE | RMSE | WAPE | n |", "|---|---:|---:|---:|---:|",
     f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('rmse'))} | {fmt(cm.get('wape'))} | {cm.get('n','N/A')} |"]
 for name, item in cb.items():
-    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
 lines += ["", "## Building-group holdout",
     f"- Status: {unseen.get('status', 'ok' if 'r2' in unseen else 'not_run')}",
     f"- R² / MAE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('wape'))}",
