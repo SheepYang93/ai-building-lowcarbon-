@@ -82,7 +82,12 @@ error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=Fa
 report_path = out/"evaluation_report.md"
 bm = metrics.get("baseline_benchmarks", {})
 unseen = metrics.get("unseen_building_evaluation", {})
-fmt = lambda x: "N/A" if x is None or not np.isfinite(float(x)) else f"{float(x):.4f}"
+def fmt(x):
+    try:
+        value = float(x)
+        return f"{value:.4f}" if np.isfinite(value) else "N/A"
+    except (TypeError, ValueError):
+        return "N/A"
 lines = [
     "# Building Energy Model Evaluation", "",
     "> Auto-generated; results apply only to this dataset and split.", "",
@@ -100,22 +105,22 @@ lines = [
     f"| WAPE | {fmt(metrics.get('wape'))} |",
     f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
     "## Baselines on the same test rows (baseline n can be smaller if history is unavailable)",
-    "| Baseline | MAE | RMSE | WAPE | n |", "|---|---:|---:|---:|---:|",
+    "| Baseline | MAE | RMSE | WAPE | R² | n | Coverage |", "|---|---:|---:|---:|---:|---:|---:|",
 ]
 for name, item in bm.items():
-    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {fmt(item.get('r2'))} | {item.get('n','N/A')} | {fmt(item.get('coverage'))} |")
 common = metrics.get("common_baseline_comparison", {})
 cm = common.get("model", {})
 cb = common.get("baselines", {})
 lines += ["", "## Fair comparison on identical valid rows",
     f"- Shared rows: {cm.get('n','N/A')} / {metrics.get('test_rows','N/A')} ({fmt(cm.get('coverage_of_chronological_test'))} coverage)",
-    "| Model / baseline | MAE | RMSE | WAPE | n |", "|---|---:|---:|---:|---:|",
-    f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('rmse'))} | {fmt(cm.get('wape'))} | {cm.get('n','N/A')} |"]
+    "| Model / baseline | MAE | RMSE | WAPE | R² | n |", "|---|---:|---:|---:|---:|---:|",
+    f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('rmse'))} | {fmt(cm.get('wape'))} | {fmt(cm.get('r2'))} | {cm.get('n','N/A')} |"]
 for name, item in cb.items():
-    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {fmt(item.get('r2'))} | {item.get('n','N/A')} |")
 lines += ["", "## Building-group holdout",
     f"- Status: {unseen.get('status', 'ok' if 'r2' in unseen else 'not_run')}",
-    f"- R² / MAE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('wape'))}",
+    f"- R² / MAE / RMSE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('rmse'))} / {fmt(unseen.get('wape'))}",
     f"- Test rows / buildings: {unseen.get('test_rows','N/A')} / {len(unseen.get('test_buildings', []))}",
     f"- Note: {unseen.get('history_note', unseen.get('reason',''))}", "",
     "## Limits",
