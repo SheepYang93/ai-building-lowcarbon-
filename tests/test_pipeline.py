@@ -139,3 +139,18 @@ def test_baseline_predictions_are_past_only_when_future_values_change():
     pd.testing.assert_series_equal(first["naive_1d"], second["naive_1d"])
     pd.testing.assert_series_equal(first["seasonal_7d"], second["seasonal_7d"])
     pd.testing.assert_series_equal(first["median_28"], second["median_28"])
+
+
+def test_features_are_invariant_to_future_meter_readings():
+    raw = toy()
+    cutoff = pd.Timestamp("2017-02-15")
+    original, columns = features(raw)
+    changed_raw = raw.copy()
+    changed_raw.loc[changed_raw["date"] > cutoff, "meter_reading"] = 987654.0
+    changed, changed_columns = features(changed_raw)
+    assert columns == changed_columns
+    mask = original["date"] <= cutoff
+    pd.testing.assert_frame_equal(
+        original.loc[mask, columns].reset_index(drop=True),
+        changed.loc[mask, columns].reset_index(drop=True),
+    )
