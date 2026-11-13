@@ -146,13 +146,8 @@ def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
     )
     model.fit(train_fit[f], train_fit["meter_reading"])
     pred = model.predict(test[f])
-    y = test["meter_reading"].to_numpy()
-    denom = float(np.abs(y).sum())
-    metrics = {
-        "r2": float(r2_score(y, pred)) if len(y) >= 2 else float("nan"),
-        "mae": float(mean_absolute_error(y, pred)),
-        "rmse": float(np.sqrt(mean_squared_error(y, pred))),
-        "wape": float(np.abs(y - pred).sum() / denom) if denom > 0 else float("nan"),
+    metrics = _regression_metrics(test["meter_reading"].to_numpy(), pred)
+    metrics.update({
         "train_rows": int(len(train_fit)),
         "test_rows": int(len(test)),
         "train_buildings": sorted(map(str, train_ids)),
@@ -161,7 +156,7 @@ def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
         "test_size": float(test_size),
         "seed": int(seed),
         "history_note": "Test buildings may use their own past-only lag features; their rows are excluded from model fitting.",
-    }
+    })
     return model, train_fit, test, pred, metrics
 
 def anomaly_table(df):
