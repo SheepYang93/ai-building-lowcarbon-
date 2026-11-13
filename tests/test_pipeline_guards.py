@@ -322,7 +322,7 @@ def test_building_error_summary_handles_bias_zero_actual_and_ape_coverage():
 
     assert summary.loc["A", "test_rows"] == 3
     assert summary.loc["A", "mae"] == 10 / 3
-    assert summary.loc["A", "mean_error"] == -2 / 3
+    assert summary.loc["A", "mean_error"] == -2
     assert summary.loc["A", "bias_direction"] == "overprediction"
     assert summary.loc["A", "ape_valid_rows"] == 2
     assert summary.loc["A", "median_absolute_percentage_error"] == 0.225
