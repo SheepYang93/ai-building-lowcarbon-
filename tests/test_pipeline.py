@@ -172,3 +172,40 @@ def test_chronological_split_has_strict_date_boundary_and_no_overlap():
     assert metrics["train_rows"] == len(train)
     assert metrics["test_rows"] == len(test)
     assert metrics["cutoff"] == cutoff.date().isoformat()
+
+
+
+def test_anomaly_diagnostics_for_past_rows_are_invariant_to_future_readings():
+    from src.pipeline import anomaly_table
+
+    dates = pd.date_range("2026-01-01", periods=100)
+    history = pd.DataFrame({
+        "building_id": ["B1"] * 100,
+        "date": dates,
+        "meter_reading": [100.0 + (day % 5) for day in range(100)],
+        "sub_primaryspaceusage": ["Education"] * 100,
+        "sqm": [800.0] * 100,
+    })
+    original = anomaly_table(history)
+    changed = history.copy()
+    changed.loc[changed["date"] > dates[75], "meter_reading"] += 50000
+    perturbed = anomaly_table(changed)
+
+    pd.testing.assert_frame_equal(original, perturbed)
+
+
+def test_anomaly_diagnostics_handle_zero_baseline_without_infinite_scores():
+    from src.pipeline import anomaly_table
+
+    data = pd.DataFrame({
+        "building_id": ["B1"] * 80,
+        "date": pd.date_range("2026-01-01", periods=80),
+        "meter_reading": [0.0] * 79 + [10.0],
+        "sub_primaryspaceusage": ["Education"] * 80,
+        "sqm": [300.0] * 80,
+    })
+    result = anomaly_table(data)
+
+    assert len(result) == 1
+    assert result["priority_score"].notna().all()
+    assert result["anomaly_days"].ge(0).all()
