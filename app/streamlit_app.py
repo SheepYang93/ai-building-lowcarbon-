@@ -571,7 +571,7 @@ with tabs[0]:
     left, right = st.columns([1.25, 1])
     with left:
         st.markdown(
-            '''
+            f'''
 <div class="insight-card">
 <b>{tr("从能源数据到运营决策", "From energy data to operational decisions")}</b><br>
 {tr("系统不是只做“能耗预测”，而是把预测、异常识别、反事实筛选、干预建议和碳情景连接起来。", "The system links prediction, anomaly detection, counterfactual screening, intervention suggestions and carbon scenarios—not just energy forecasting.")}
@@ -580,7 +580,7 @@ with tabs[0]:
             unsafe_allow_html=True,
         )
         st.markdown(
-            '''
+            f'''
 <span class="chip">01 · {tr("预测", "Predict")}</span>
 <span class="chip">02 · {tr("异常识别", "Anomaly detection")}</span>
 <span class="chip">03 · {tr("能耗特征", "Energy fingerprint")}</span>
@@ -593,7 +593,7 @@ with tabs[0]:
     with right:
         st.markdown("**" + tr("决策流程", "Decision chain") + "**")
         st.markdown(
-            '''
+            f'''
 **{tr("能源数据", "Energy data")}**  
 ↓  
 **{tr("AI / 稳健统计诊断", "AI / robust statistical diagnosis")}**  
