@@ -36,7 +36,9 @@ A separate `GroupShuffleSplit` partitions by `building_id`. The model is fit onl
 
 ## 5. Metrics and diagnostics
 
-The pipeline reports R², MAE, RMSE and WAPE with explicit undefined states: WAPE is undefined when the sum of absolute actual values is zero; R² is undefined for a one-row cohort. Empty fair-comparison cohorts are represented as `no_shared_valid_rows` instead of crashing. Non-finite metric values are serialized as JSON `null` and displayed as `N/A` in the Markdown report and CSV exports.\n\nBuilding-level diagnostics include test-row count, MAE, RMSE, WAPE, mean residual (actual minus predicted), bias direction (positive = underprediction; negative = overprediction), median APE and the number of valid APE rows. APE excludes zero actual readings rather than dividing by an artificial epsilon. The pipeline exports chronological row-level predictions/residuals, a full building error table and a top-10 high-MAE table. Metrics depend on dataset filtering, period, building composition and split settings; they are not universal performance guarantees.
+The pipeline reports R², MAE, RMSE and WAPE with explicit undefined states: WAPE is undefined when the sum of absolute actual values is zero; R² is undefined for a one-row cohort. Empty fair-comparison cohorts are represented as `no_shared_valid_rows` instead of crashing. Non-finite metric values are serialized as JSON `null` and displayed as `N/A` in the Markdown report and CSV exports.
+
+Building-level diagnostics include test-row count, MAE, RMSE, WAPE, mean residual (actual minus predicted), bias direction (positive = underprediction; negative = overprediction), median APE and the number of valid APE rows. APE excludes zero actual readings rather than dividing by an artificial epsilon. The pipeline exports chronological row-level predictions/residuals, a full building error table and a top-10 high-MAE table. Metrics depend on dataset filtering, period, building composition and split settings; they are not universal performance guarantees.
 
 ## 6. Leakage checks
 
