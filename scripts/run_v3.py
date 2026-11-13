@@ -68,7 +68,7 @@ error_by_building = building_error_summary(
     chronological_predictions.rename(columns={"meter_reading": "actual"})[["building_id", "actual", "predicted"]]
 )
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False, na_rep="N/A")
-error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A").to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A")
+error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A")
 
 (out/"metrics.json").write_text(json.dumps(json_safe(metrics),ensure_ascii=False,indent=2,allow_nan=False))
 
