@@ -887,9 +887,8 @@ with tabs[3]:
         k2.metric(tr("实际与预期中位差", "Median actual-vs-expected gap"), f"{median_gap:+.1f}%")
         k3.metric(tr("平均异常评分", "Mean anomaly score"), f'{d["anomaly_confidence"].mean() * 100:.0f}%')
         st.markdown(
-            '<div class="insight-card"><b>Decision meaning</b><br>'
-            'This view identifies periods where observed use is unusually above the model expected-use level. '
-            'It is a prioritization signal, not a causal counterfactual or verified savings estimate.</div>',
+            f'<div class="insight-card"><b>{tr("结果含义", "Decision meaning")}</b><br>'
+            f'{tr("该视图识别实际能耗显著高于模型预期的时段，可用于确定排查优先级；它不是因果反事实，也不是经验证的节能量估计。", "This view identifies periods where observed use is unusually above model expected-use. It is a prioritization signal, not a causal counterfactual or verified savings estimate.")}</div>',
             unsafe_allow_html=True,
         )
         if len(candidate_days):
@@ -905,10 +904,10 @@ with tabs[3]:
         st.caption(tr("候选时段可进入干预措施评估；采取行动前请核实运行时段、天气和设备状态。", "Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action."))
     else:
         cf = ADV / "ai_exp45_robust_candidates.csv"
-        source = "pipeline output"
+        source = tr("流程产出", "Pipeline output")
         if not cf.exists():
             cf = EXAMPLES / "counterfactual_candidates_demo.csv"
-            source = "curated public-data example"
+            source = tr("整理后的公开数据示例", "Curated public-data example")
         if cf.exists():
             data = pd.read_csv(cf)
             st.markdown(
@@ -970,9 +969,9 @@ with tabs[4]:
         k2.metric(tr("措施置信度", "Action confidence"), f"{confidence * 100:.0f}%")
         k3.metric(tr("能耗特征", "Fingerprint"), fp)
         st.markdown(
-            f'<div class="insight-card"><b>Recommended first action</b><br>'
-            f'<b>Possible cause:</b> {cause}<br>'
-            f'<b>Check first:</b> {measure}<br>'
+            f'<div class="insight-card"><b>{tr("建议优先行动", "Recommended first action")}</b><br>'
+            f'<b>{tr("可能原因", "Possible cause")}:</b> {cause}<br>'
+            f'<b>{tr("优先检查", "Check first")}:</b> {measure}<br>'
             ff'<span class="muted">{tr("证据来源：上传建筑诊断。这是运营假设，不是已确认故障。", "Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.")}</span></div>',
             unsafe_allow_html=True,
         )
@@ -1129,7 +1128,7 @@ with tabs[7]:
             missing = required - set(v.columns)
             if missing:
                 raise ValueError(
-                    "Missing required columns: " + ", ".join(sorted(missing))
+                    tr("缺少必需字段：", "Missing required columns: ") + ", ".join(sorted(missing))
                 )
 
             v["date"] = pd.to_datetime(v["date"], errors="coerce")
@@ -1144,7 +1143,7 @@ with tabs[7]:
             v = v[v["group"].isin(["treated", "control"])].copy()
 
             if v.empty:
-                raise ValueError("No valid treated/control rows remain.")
+                raise ValueError(tr("清洗后没有剩余有效的干预组/对照组记录。", "No valid treated/control rows remain."))
 
             intervention_dates = v["intervention_date"].dropna().unique()
             if len(intervention_dates) != 1:
