@@ -62,6 +62,12 @@ Across repeated rolling-window experiments on the public dataset:
 
 See [EXPERIMENTS.md](EXPERIMENTS.md) for historical experiment records and limitations. The current reproducible evaluation protocol—including chronological holdout, common-row baseline comparison, building-group holdout, metrics and leakage tests—is documented in [MODEL_VALIDATION.md](MODEL_VALIDATION.md).
 
+### Evidence status (current)
+
+- **Automated regression checks:** CI covers feature leakage guards, chronological/baseline fairness, building-group separation, metric edge cases, building-level error analysis, report exports and demo/script syntax.
+- **Implemented evaluation workflow:** chronological holdout, three past-only baselines, common valid-row comparison and unseen-building holdout are available in the training script.
+- **Not claimed as completed:** a new full-dataset run from the current HEAD, campus deployment, verified energy savings or measured carbon reductions. Synthetic CI validates code behavior, not model performance.
+
 
 
 **Technical review & interview notes:** [deployment checklist, evidence requirements and interview preparation](docs/TECHNICAL_REVIEW_INTERVIEW_NOTES.md)
