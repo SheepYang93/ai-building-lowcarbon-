@@ -98,11 +98,17 @@ def train_model(d,f,cap=100000,seed=42):
     baseline_matrix=baseline_frame[baseline_names].to_numpy(dtype=float)
     common=np.isfinite(y)&np.isfinite(pred)&np.isfinite(baseline_matrix).all(axis=1)
     common_y=y[common]; common_pred=pred[common]
-    common_metrics=_regression_metrics(common_y,common_pred)
-    common_metrics["coverage_of_chronological_test"]=float(common.sum()/len(te)) if len(te) else 0.0
-    common_baselines={}
-    for j,name in enumerate(baseline_names):
-        common_baselines[name]=_regression_metrics(common_y,baseline_matrix[common,j])
+    common_coverage=float(common.sum()/len(te)) if len(te) else 0.0
+    if len(common_y):
+        common_metrics=_regression_metrics(common_y,common_pred)
+        common_baselines={name:_regression_metrics(common_y,baseline_matrix[common,j])
+                          for j,name in enumerate(baseline_names)}
+    else:
+        common_metrics={"mae":np.nan,"rmse":np.nan,"wape":np.nan,"r2":np.nan,"n":0,
+                        "status":"no_shared_valid_rows","wape_status":"not_evaluated",
+                        "r2_status":"not_evaluated"}
+        common_baselines={name:{**common_metrics} for name in baseline_names}
+    common_metrics["coverage_of_chronological_test"]=common_coverage
     return model,tr_fit,te,pred,cutoff,{
         **model_metrics,"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),
         "baseline_benchmarks":baseline_metrics(d,evaluation_frame=te),"baseline_comparison_rows":int(len(te)),
