@@ -608,18 +608,9 @@ with tabs[0]:
 ''')
     st.markdown("### " + tr("核心证据一览", "Evidence at a glance"))
     e1, e2, e3 = st.columns(3)
-    e1.markdown(
-        f'<div class="insight-card"><b>{tr("模型证据", "Model evidence")}</b><br>{tr("公开数据预测与严格时间序列验证。", "Public-data prediction and strict time-series validation.")}</div>',
-        unsafe_allow_html=True,
-    )
-    e2.markdown(
-        f'<div class="insight-card"><b>{tr("决策证据", "Decision evidence")}</b><br>{tr("稳健异常检测、能耗特征与干预映射。", "Robust anomaly detection, energy fingerprints and intervention mapping.")}</div>',
-        unsafe_allow_html=True,
-    )
-    e3.markdown(
-        f'<div class="insight-card"><b>{tr("验证设计", "Validation design")}</b><br>{tr("处理组/对照组、双重差分与安慰剂检验流程。", "Treatment / control, DID and placebo testing workflow.")}</div>',
-        unsafe_allow_html=True,
-    )
+    e1.info("**" + tr("模型证据", "Model evidence") + "\\n\\n" + tr("公开数据预测与严格时间序列验证。", "Public-data prediction and strict time-series validation."))
+    e2.info("**" + tr("决策证据", "Decision evidence") + "\\n\\n" + tr("稳健异常检测、能耗特征与干预映射。", "Robust anomaly detection, energy fingerprints and intervention mapping."))
+    e3.info("**" + tr("验证设计", "Validation design") + "\\n\\n" + tr("处理组/对照组、双重差分与安慰剂检验流程。", "Treatment / control, DID and placebo testing workflow."))
 
     st.info(
         tr("演示边界：公开数据模型结果与上传数据筛查结果分开展示。情景 CO₂ 为条件估算，不代表实测减排。", "Demo boundary: public-data model results and uploaded-data screening are shown separately. Scenario CO₂ is conditional, not measured emissions reduction.")
