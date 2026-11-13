@@ -187,3 +187,20 @@ def test_regression_metrics_reject_nonfinite_inputs():
 
     with pytest.raises(ValueError, match="finite"):
         _regression_metrics([1.0, float("nan")], [1.0, 2.0])
+
+
+def test_regression_metrics_zero_actual_and_single_row_are_explicit():
+    import numpy as np
+    from src.pipeline import _regression_metrics
+    result = _regression_metrics([0.0], [1.5])
+    assert result["mae"] == 1.5
+    assert result["rmse"] == 1.5
+    assert np.isnan(result["wape"]) and result["wape_status"] == "undefined_zero_actual_sum"
+    assert np.isnan(result["r2"]) and result["r2_status"] == "undefined_single_sample"
+
+
+def test_json_safe_converts_nonfinite_metrics_to_null():
+    import numpy as np
+    from scripts.run_v3 import json_safe
+    safe = json_safe({"wape": float("nan"), "r2": np.float64("inf"), "n": np.int64(2)})
+    assert safe == {"wape": None, "r2": None, "n": 2}
