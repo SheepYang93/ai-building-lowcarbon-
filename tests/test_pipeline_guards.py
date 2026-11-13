@@ -398,3 +398,17 @@ def test_streamlit_demo_and_training_script_compile():
     for path in ["app/streamlit_app.py", "scripts/run_v3.py", "src/reporting.py"]:
         source = Path(path).read_text(encoding="utf-8")
         compile(source, path, "exec")
+
+
+def test_word_export_handles_empty_report_and_blank_lines(tmp_path):
+    from docx import Document
+    from src.reporting import markdown_to_docx
+
+    markdown = tmp_path / "empty.md"
+    output = tmp_path / "empty.docx"
+    markdown.write_text("\n\n", encoding="utf-8")
+    markdown_to_docx(markdown, output)
+    document = Document(output)
+    assert output.exists()
+    assert len(document.tables) == 0
+    assert len(document.paragraphs) == 0
