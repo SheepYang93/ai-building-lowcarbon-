@@ -691,7 +691,7 @@ with tabs[1]:
                 st.metric(tr("平均异常评分", "Mean anomaly score"), f"{anomaly_score * 100:.0f}%")
                 st.caption(tr("异常评分基于仅使用历史数据的 14 天残差中位数/MAD。它仅用于筛查，不代表故障概率或已验证节能量。", "Anomaly score uses a past-only 14-day residual median/MAD. It is a screening score, not a probability of fault or verified savings."))
                 ai_plot = ai_result["data"].set_index("date")[["meter_reading", "predicted_energy"]].rename(
-                    columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
+                    columns={"meter_reading": tr("实际能耗", "Actual"), "predicted_energy": tr("预期能耗", "Expected")}
                 )
                 st.markdown("**" + tr("实际能耗与预期能耗", "Actual vs expected energy") + "**")
                 st.line_chart(ai_plot)
@@ -1254,13 +1254,10 @@ with tabs[7]:
                 except ValueError as exc:
                     st.error(tr(f"Bootstrap 计算失败：{exc}", f"Bootstrap failed: {exc}"))
 
-            st.warning(
-                "Interpretation boundary: DID compares the treated group's change with "
-                "the control group's change. A negative DID means treated energy fell "
-                "more than control energy. Pre-trend, placebo and bootstrap outputs are "
-                "diagnostics, not proof of causality; weather confounding, seasonality, "
-                "autocorrelation and intervention compliance still need study-specific review."
-            )
+            st.warning(tr(
+                "解释边界：DID 比较干预组与对照组的变化。负 DID 表示干预组能耗降幅大于对照组。前趋势、安慰剂和 Bootstrap 输出均为诊断，不是因果证明；仍需结合天气混杂、季节性、自相关及干预执行情况进行具体审查。",
+                "Interpretation boundary: DID compares the treated group's change with the control group's change. A negative DID means treated energy fell more than control energy. Pre-trend, placebo and bootstrap outputs are diagnostics, not proof of causality; weather confounding, seasonality, autocorrelation and intervention compliance still need study-specific review."
+            ))
 
             st.download_button(
                 tr("下载验证结果摘要", "Download validation summary"),
