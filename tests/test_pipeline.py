@@ -97,3 +97,45 @@ def test_calendar_baselines_do_not_treat_previous_row_as_previous_day():
     assert metrics["seasonal_7d"]["mae"] == 50.0
     assert metrics["naive_1d"]["n"] == 1
     assert metrics["naive_1d"]["mae"] == 10.0
+
+
+def test_model_and_baselines_report_fair_common_row_cohort():
+    # Missing calendar dates intentionally reduce baseline coverage. The model
+    # and all three baselines must also be scored on their shared intersection.
+    dates = pd.date_range("2026-01-01", periods=100).delete([35, 42, 57])
+    data = pd.DataFrame({
+        "building_id": ["A"] * len(dates),
+        "date": dates,
+        "meter_reading": [100.0 + (i % 7) * 3 + i * 0.1 for i in range(len(dates))],
+        "sqm": [500.0] * len(dates),
+    })
+    engineered, feature_columns = features(data)
+    _, _, test_frame, _, _, metrics = train_model(engineered, feature_columns)
+    comparison = metrics["common_baseline_comparison"]
+    model = comparison["model"]
+    baselines = comparison["baselines"]
+    assert comparison["evaluation_cohort"].startswith("intersection")
+    assert model["n"] > 0
+    assert model["n"] <= len(test_frame)
+    assert all(item["n"] == model["n"] for item in baselines.values())
+    assert 0 < model["coverage_of_chronological_test"] <= 1
+    assert set(baselines) == {"naive_1d", "seasonal_7d", "median_28"}
+
+
+def test_baseline_predictions_are_past_only_when_future_values_change():
+    dates = pd.date_range("2026-01-01", periods=45)
+    data = pd.DataFrame({
+        "building_id": ["A"] * len(dates),
+        "date": dates,
+        "meter_reading": [float(i + 10) for i in range(len(dates))],
+    })
+    evaluation = data.iloc[[30, 31, 32]].copy()
+    from src.pipeline import baseline_predictions
+    first = baseline_predictions(data, evaluation)
+    changed = data.copy()
+    changed.loc[changed["date"] > pd.Timestamp("2026-02-01"), "meter_reading"] = 99999.0
+    second = baseline_predictions(changed, evaluation)
+    # Predictions for Feb 1 and earlier must not use observations after target date.
+    pd.testing.assert_series_equal(first["naive_1d"], second["naive_1d"])
+    pd.testing.assert_series_equal(first["seasonal_7d"], second["seasonal_7d"])
+    pd.testing.assert_series_equal(first["median_28"], second["median_28"])
