@@ -60,7 +60,7 @@ Across repeated rolling-window experiments on the public dataset:
 - The repository also records rolling-window robustness checks and subgroup sensitivity analysis
 - Exact results vary by time window, seed, subgroup and data filtering; the included metric is an example artifact rather than a universal benchmark
 
-See [EXPERIMENTS.md](EXPERIMENTS.md) for the evidence boundary and limitations.
+See [EXPERIMENTS.md](EXPERIMENTS.md) for historical experiment records and limitations. The current reproducible evaluation protocol—including chronological holdout, common-row baseline comparison, building-group holdout, metrics and leakage tests—is documented in [MODEL_VALIDATION.md](MODEL_VALIDATION.md).
 
 
 
