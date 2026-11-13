@@ -16,7 +16,15 @@ except ImportError:
     from validation import bootstrap_did, did_effect, placebo_effect, pretrend_check
     from prediction_range import add_range
 
-st.set_page_config(page_title="AI Building Low-carbon Intelligence", page_icon="🏢", layout="wide")
+_saved_language = st.session_state.get("ui_language_selector", "中文")
+st.set_page_config(
+    page_title=(
+        "建筑低碳智能诊断" if _saved_language == "中文"
+        else "AI Building Low-carbon Intelligence"
+    ),
+    page_icon="🏢",
+    layout="wide",
+)
 # UI language selector, placed at the top-right and persisted across reruns.
 LANGUAGE_OPTIONS = {"中文": "zh", "English": "en"}
 _lang_spacer, _lang_control = st.columns([8, 1.5])
