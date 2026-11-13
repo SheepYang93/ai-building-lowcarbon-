@@ -249,3 +249,20 @@ def test_train_model_survives_empty_fair_comparison_cohort(monkeypatch):
     assert fair["model"]["status"] == "no_shared_valid_rows"
     assert fair["model"]["coverage_of_chronological_test"] == 0
     assert all(item["status"] == "no_shared_valid_rows" for item in fair["baselines"].values())
+
+
+def test_baseline_metrics_returns_explicit_status_when_no_prediction_is_valid():
+    import numpy as np
+    import pandas as pd
+    from src.pipeline import baseline_metrics
+
+    one = pd.DataFrame({
+        "building_id": ["B1"], "date": pd.to_datetime(["2024-01-01"]),
+        "meter_reading": [10.0],
+    })
+    scores = baseline_metrics(one, evaluation_frame=one)
+    for score in scores.values():
+        assert score["n"] == 0
+        assert score["coverage"] == 0.0
+        assert score["status"] == "no_valid_predictions"
+        assert np.isnan(score["mae"]) and np.isnan(score["wape"])
