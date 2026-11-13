@@ -171,14 +171,20 @@ def score_upload_quality(daily, raw=None):
     checks["temperature_available"] = float(
         daily["outdoor_temperature"].notna().mean()
     ) if "outdoor_temperature" in daily.columns else 0.0
-    score = round(100 * (
-        0.20 * checks["timestamp_valid"]
-        + 0.25 * checks["energy_valid"]
-        + 0.15 * checks["energy_nonnegative"]
-        + 0.15 * checks["no_duplicate_timestamps"]
-        + 0.15 * checks["temporal_coverage"]
-        + 0.10 * checks["temperature_available"]
-    ), 1)
+    # Weather is an optional model-enrichment field, not a prerequisite for
+    # a valid energy-only series. Keep it visible as a separate readiness check
+    # instead of silently capping the core data-quality score at 90.
+    core_weights = {
+        "timestamp_valid": 0.20,
+        "energy_valid": 0.25,
+        "energy_nonnegative": 0.15,
+        "no_duplicate_timestamps": 0.15,
+        "temporal_coverage": 0.15,
+    }
+    weighted_core = sum(weight * checks[key] for key, weight in core_weights.items())
+    core_weight_total = sum(core_weights.values())
+    score = round(100 * weighted_core / core_weight_total, 1)
+    checks["weather_optional"] = True
     return score, checks
 
 
