@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.metrics import r2_score, mean_absolute_error
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from sklearn.model_selection import GroupShuffleSplit
 
 from app.config import CONFIG
@@ -80,6 +80,7 @@ def train_model(d,f,cap=100000,seed=42):
     common_metrics = {
         "r2": float(r2_score(common_y, common_model_pred)) if len(common_y) >= 2 else float("nan"),
         "mae": float(mean_absolute_error(common_y, common_model_pred)),
+        "rmse": float(np.sqrt(mean_squared_error(common_y, common_model_pred))),
         "wape": float(np.abs(common_y-common_model_pred).sum()/common_denominator) if common_denominator>0 else float("nan"),
         "n": int(common.sum()),
         "coverage_of_chronological_test": float(common.sum()/len(te)) if len(te) else 0.0,
@@ -89,10 +90,11 @@ def train_model(d,f,cap=100000,seed=42):
         bp = baseline_matrix[common, j]
         common_baselines[name] = {
             "mae": float(mean_absolute_error(common_y, bp)) if len(common_y) else float("nan"),
+            "rmse": float(np.sqrt(mean_squared_error(common_y, bp))) if len(common_y) else float("nan"),
             "wape": float(np.abs(common_y-bp).sum()/common_denominator) if common_denominator>0 else float("nan"),
             "n": int(common.sum()),
         }
-    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d, evaluation_frame=te), "baseline_comparison_rows":int(len(te)), "common_baseline_comparison":{"evaluation_cohort":"intersection of rows with valid ExtraTrees and all three baseline predictions","model":common_metrics,"baselines":common_baselines}, "meter_unit_status":"UNVERIFIED: meter_reading unit lineage must be confirmed before kWh or CO2 interpretation"}
+    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"rmse":float(np.sqrt(mean_squared_error(y,pred))),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d, evaluation_frame=te), "baseline_comparison_rows":int(len(te)), "common_baseline_comparison":{"evaluation_cohort":"intersection of rows with valid ExtraTrees and all three baseline predictions","model":common_metrics,"baselines":common_baselines}, "meter_unit_status":"UNVERIFIED: meter_reading unit lineage must be confirmed before kWh or CO2 interpretation"}
 
 
 def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
@@ -136,6 +138,7 @@ def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
     metrics = {
         "r2": float(r2_score(y, pred)) if len(y) >= 2 else float("nan"),
         "mae": float(mean_absolute_error(y, pred)),
+        "rmse": float(np.sqrt(mean_squared_error(y, pred))),
         "wape": float(np.abs(y - pred).sum() / denom) if denom > 0 else float("nan"),
         "train_rows": int(len(train_fit)),
         "test_rows": int(len(test)),
