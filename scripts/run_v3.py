@@ -90,20 +90,21 @@ lines = [
     "| Metric | Value |", "|---|---:|",
     f"| R² | {fmt(metrics.get('r2'))} |",
     f"| MAE | {fmt(metrics.get('mae'))} |",
+    f"| RMSE | {fmt(metrics.get('rmse'))} |",
     f"| WAPE | {fmt(metrics.get('wape'))} |",
     f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
     "## Baselines on the same test rows (baseline n can be smaller if history is unavailable)",
     "| Baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
 ]
 for name, item in bm.items():
-    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('rmse'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
 common = metrics.get("common_baseline_comparison", {})
 cm = common.get("model", {})
 cb = common.get("baselines", {})
 lines += ["", "## Fair comparison on identical valid rows",
     f"- Shared rows: {cm.get('n','N/A')} / {metrics.get('test_rows','N/A')} ({fmt(cm.get('coverage_of_chronological_test'))} coverage)",
-    "| Model / baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
-    f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('wape'))} | {cm.get('n','N/A')} |"]
+    "| Model / baseline | MAE | RMSE | WAPE | n |", "|---|---:|---:|---:|---:|",
+    f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('rmse'))} | {fmt(cm.get('wape'))} | {cm.get('n','N/A')} |"]
 for name, item in cb.items():
     lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
 lines += ["", "## Building-group holdout",
