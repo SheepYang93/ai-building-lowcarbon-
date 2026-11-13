@@ -7,7 +7,7 @@ sys.path.insert(0, str(ROOT))
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from src.pipeline import load_filter, features, train_model, evaluate_unseen_buildings, anomaly_table, carbon_scenario
+from src.pipeline import load_filter, features, train_model, evaluate_unseen_buildings, anomaly_table, carbon_scenario, json_safe
 
 p=argparse.ArgumentParser()
 p.add_argument("--input",required=True)
@@ -73,17 +73,6 @@ error_by_building = chronological_predictions.groupby("building_id").agg(
 error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] > 0, "underprediction", np.where(error_by_building["mean_error"] < 0, "overprediction", "balanced"))
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
 error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False)
-
-def json_safe(value):
-    if isinstance(value, dict):
-        return {key: json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [json_safe(item) for item in value]
-    if isinstance(value, (float, np.floating)) and not np.isfinite(value):
-        return None
-    if isinstance(value, np.integer):
-        return int(value)
-    return value
 
 (out/"metrics.json").write_text(json.dumps(json_safe(metrics),ensure_ascii=False,indent=2,allow_nan=False))
 
