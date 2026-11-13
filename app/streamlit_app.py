@@ -718,31 +718,24 @@ with tabs[1]:
             )
             st.markdown(
                 f"""
-**Building:** {metadata["building_id"]}
+**{tr("建筑编号", "Building")}:** {metadata["building_id"]}
 
-**Type:** {metadata["building_type"]} · **Area:** {metadata["area_m2"]} m²
+**{tr("类型", "Type")}:** {metadata["building_type"]} · **{tr("面积", "Area")}:** {metadata["area_m2"]} m²
 
-**Main evidence**
-- {summary["anomaly_days"]} robust anomaly days detected
-- Weekend/weekday median ratio: {weekend_ratio_label}
-- Screening signal: {summary["potential_pct"]:.1f}%
+**{tr("主要证据", "Main evidence")}**
+- {summary["anomaly_days"]} {tr("个稳健异常日", "robust anomaly days detected")}
+- {tr("周末/工作日中位数比值", "Weekend/weekday median ratio")}: {weekend_ratio_label}
+- {tr("筛查信号", "Screening signal")}: {summary["potential_pct"]:.1f}%
 
-**Suggested first checks**
+**{tr("建议优先检查", "Suggested first checks")}**
 - {summary["intervention"]}
-- Verify HVAC operating schedule and setpoints
-- Check non-occupancy equipment operation
-- Compare the anomaly dates with occupancy/calendar records
+- {tr("核查 HVAC 运行时段与设定值", "Verify HVAC operating schedule and setpoints")}
+- {tr("检查非占用时段设备运行情况", "Check non-occupancy equipment operation")}
+- {tr("将异常日期与 occupancy / 日历记录对照", "Compare anomaly dates with occupancy/calendar records")}
 
-> **Evidence boundary:** this card is a screening result. The potential signal is not measured savings and should be validated with treatment/control, Difference-in-Differences and placebo analysis.
+> **{tr("证据边界", "Evidence boundary")}:** {tr("该卡片为筛查结果。潜在信号不是实测节能量，应通过干预组/对照组、双重差分和安慰剂分析验证。", "This card is a screening result. The potential signal is not measured savings and should be validated with treatment/control, Difference-in-Differences and placebo analysis.")}
 """
             )
-
-            st.write({
-                "columns_received": original_columns,
-                "period": f"{summary['start']} → {summary['end']}",
-                "fingerprint": summary["fingerprint"],
-                "suggested_intervention": summary["intervention"],
-            })
 
             st.markdown(f'<div class="section-title">{tr("能耗特征", "Energy fingerprint")}</div>', unsafe_allow_html=True)
             fp1, fp2 = st.columns(2)
@@ -791,11 +784,11 @@ with tabs[2]:
             gap = float(ai_data["relative_gap"].mean() * 100)
             ai_anoms = int(ai_data["ai_anomaly"].sum())
             st.markdown(
-                f'<div class="insight-card"><b>AI diagnosis</b><br>'
-                f'Expected-use screening is available for this upload. '
-                f'{ai_anoms} holdout observations are flagged by the residual MAD screen; '
-                f'the mean actual-vs-expected gap is {gap:+.1f}%. '
-                f'This is screening evidence, not a verified fault or savings estimate.</div>',
+                f'<div class="insight-card"><b>{tr("AI 诊断", "AI diagnosis")}</b><br>'
+                f'{tr("当前上传数据已启用预期能耗筛查。", "Expected-use screening is available for this upload.")} '
+                f'{ai_anoms} {tr("个留出观测被残差 MAD 筛查标记；", "holdout observations are flagged by the residual MAD screen;")} '
+                f'{tr("实际与预期能耗平均差值为", "the mean actual-vs-expected gap is")} {gap:+.1f}%. '
+                f'{tr("这是筛查证据，不是已确认故障或节能量。", "This is screening evidence, not a verified fault or savings estimate.")}</div>',
                 unsafe_allow_html=True,
             )
             plot = ai_data.set_index("date")[["meter_reading", "predicted_energy"]].rename(
