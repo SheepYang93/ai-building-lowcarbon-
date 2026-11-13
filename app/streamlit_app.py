@@ -714,7 +714,7 @@ with tabs[1]:
             weekend_ratio_label = (
                 f"{summary['weekend_ratio']:.2f}"
                 if not pd.isna(summary["weekend_ratio"])
-                else "unavailable"
+                else tr("不可用", "unavailable")
             )
             st.markdown(
                 f"""
@@ -803,12 +803,12 @@ with tabs[2]:
                 unsafe_allow_html=True,
             )
             plot = ai_data.set_index("date")[["meter_reading", "predicted_energy"]].rename(
-                columns={"meter_reading": "Actual", "predicted_energy": "Expected"}
+                columns={"meter_reading": tr("实际能耗", "Actual"), "predicted_energy": tr("预期能耗", "Expected")}
             )
             st.markdown("**" + tr("实际能耗与预期能耗", "Actual vs expected") + "**")
             st.line_chart(plot)
             residual_plot = ai_data.set_index("date")[["residual_robust_z"]].rename(
-                columns={"residual_robust_z": "Residual robust Z"}
+                columns={"residual_robust_z": tr("残差稳健 Z", "Residual robust Z")}
             )
             st.markdown("**" + tr("残差异常证据", "Residual anomaly evidence") + "**")
             st.line_chart(residual_plot)
