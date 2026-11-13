@@ -351,7 +351,7 @@ def test_word_report_table_header_is_bold_and_ragged_rows_are_padded(tmp_path):
     markdown = tmp_path / "table.md"
     output = tmp_path / "table.docx"
     markdown.write_text(
-        "| Metric | Value | Notes |\\n|---|---:|---|\\n| MAE | 2.1 |\\n",
+        "| Metric | Value | Notes |\n|---|---:|---|\n| MAE | 2.1 |\n",
         encoding="utf-8",
     )
     markdown_to_docx(markdown, output)
@@ -369,7 +369,7 @@ def test_word_report_ignores_markdown_table_separator_without_header(tmp_path):
 
     markdown = tmp_path / "separator.md"
     output = tmp_path / "separator.docx"
-    markdown.write_text("|---|---:|\\n", encoding="utf-8")
+    markdown.write_text("|---|---:|\n", encoding="utf-8")
     markdown_to_docx(markdown, output)
 
     assert Document(output).tables == []
