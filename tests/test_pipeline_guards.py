@@ -420,3 +420,12 @@ def test_metrics_report_formatter_uses_na_for_nonfinite_values():
 
     safe = json_safe({"mae": np.nan, "rmse": np.inf, "wape": -np.inf})
     assert safe == {"mae": None, "rmse": None, "wape": None}
+
+
+def test_dashboard_multiline_translations_are_interpolated():
+    from pathlib import Path
+
+    source = Path("app/streamlit_app.py").read_text(encoding="utf-8")
+    assert '            f\'\'\'\n<div class="insight-card">' in source
+    assert '            f\'\'\'\n<span class="chip">' in source
+    assert '            f\'\'\'\n**{tr("能源数据"' in source
