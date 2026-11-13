@@ -373,3 +373,20 @@ def test_word_report_ignores_markdown_table_separator_without_header(tmp_path):
     markdown_to_docx(markdown, output)
 
     assert Document(output).tables == []
+
+
+def test_building_error_summary_sorts_highest_mae_and_filters_nonfinite():
+    import pandas as pd
+    from src.reporting import building_error_summary
+
+    frame = pd.DataFrame({
+        "building_id": ["low", "high", "high", "invalid"],
+        "actual": [10.0, 10.0, 20.0, float("inf")],
+        "predicted": [9.0, 0.0, 0.0, 1.0],
+    })
+    result = building_error_summary(frame)
+
+    assert result["building_id"].tolist() == ["high", "low"]
+    assert result.iloc[0]["mae"] == 15.0
+    assert result.iloc[0]["test_rows"] == 2
+    assert "invalid" not in result["building_id"].tolist()
