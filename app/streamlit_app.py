@@ -836,19 +836,18 @@ with tabs[2]:
 
         st.markdown("**" + tr("建筑档案", "Building profile") + "**")
         st.dataframe(pd.DataFrame([{
-            "Building ID": upload_meta.get("building_id", "not provided"),
-            "Type": upload_meta.get("building_type", "not provided"),
-            "Area (m²)": upload_meta.get("area_m2", "not provided"),
-            "Period": f'{s["start"]} → {s["end"]}',
-            "Daily records": s["records"],
+            tr("建筑编号", "Building ID"): upload_meta.get("building_id", tr("未提供", "not provided")),
+            tr("类型", "Type"): upload_meta.get("building_type", tr("未提供", "not provided")),
+            tr("面积（m²）", "Area (m²)"): upload_meta.get("area_m2", tr("未提供", "not provided")),
+            tr("分析时段", "Period"): f'{s["start"]} → {s["end"]}',
+            tr("日记录数", "Daily records"): s["records"],
         }]), width="stretch", hide_index=True)
 
-        with st.expander("Evidence boundary"):
-            st.write(
-                "AI expected-use is retrained on the uploaded history when sufficient fields exist. "
-                "Residual MAD and robust-baseline flags are screening signals. "
-                "Neither establishes causal savings; field validation is required for realized impact."
-            )
+        with st.expander(tr("证据边界", "Evidence boundary")):
+            st.write(tr(
+                "字段充分时，AI 预期能耗模型会基于上传历史重新训练。残差 MAD 和稳健基线标记均为筛查信号，不能证明因果节能；实际影响需要现场验证。",
+                "AI expected-use is retrained on uploaded history when sufficient fields exist. Residual MAD and robust-baseline flags are screening signals. Neither establishes causal savings; field validation is required for realized impact."
+            ))
     elif len(an):
         q = an.copy()
         q["label"] = q.building_id.astype(str) + " · " + q.sub_primaryspaceusage.astype(str)
@@ -860,14 +859,14 @@ with tabs[2]:
         c1.metric(tr("异常占比", "Anomaly share"), f"{r.anomaly_share * 100:.1f}%")
         d1.metric(tr("面积", "Area"), f"{float(r.sqm):,.0f} m²")
         st.markdown(
-            f'<div class="insight-card"><b>Portfolio screening</b><br>{r.sub_primaryspaceusage} building · priority {float(r.priority_score):.1f}. This public-data view is a screening artifact; use Upload & Diagnose for building-level AI evidence.</div>',
+            f'<div class="insight-card"><b>{tr("建筑群筛查", "Portfolio screening")}</b><br>{r.sub_primaryspaceusage} {tr("建筑 · 优先级", "building · priority")} {float(r.priority_score):.1f}. {tr("此处为公开数据筛查结果；建筑级 AI 证据请使用上传与诊断模块。", "This public-data view is a screening artifact; use Upload & Diagnose for building-level AI evidence.")}</div>',
             unsafe_allow_html=True,
         )
         st.dataframe(pd.DataFrame([{
-            "Building ID": r.building_id,
-            "Type": r.sub_primaryspaceusage,
-            "Area (m²)": round(float(r.sqm), 1),
-            "Site": r.site_id,
+            tr("建筑编号", "Building ID"): r.building_id,
+            tr("类型", "Type"): r.sub_primaryspaceusage,
+            tr("面积（m²）", "Area (m²)"): round(float(r.sqm), 1),
+            tr("站点", "Site"): r.site_id,
         }]), width="stretch", hide_index=True)
     else:
         st.info(tr("请上传单栋建筑的 CSV 文件以生成实时诊断。", "Upload a single-building CSV to generate a live building diagnosis."))
@@ -896,7 +895,13 @@ with tabs[3]:
         if len(candidate_days):
             show = candidate_days[["date", "meter_reading", "predicted_energy", "expected_low", "expected_high", "relative_gap", "residual_robust_z", "anomaly_confidence"]].copy()
             show["relative_gap"] *= 100
-            st.dataframe(show.sort_values("anomaly_confidence", ascending=False).head(20), width="stretch", hide_index=True)
+            show = show.rename(columns={
+                "date": tr("日期", "Date"), "meter_reading": tr("实际能耗", "Actual energy"),
+                "predicted_energy": tr("预期能耗", "Expected energy"), "expected_low": tr("预期下界", "Expected lower"),
+                "expected_high": tr("预期上界", "Expected upper"), "relative_gap": tr("实际-预期差（%）", "Actual-expected gap (%)"),
+                "residual_robust_z": tr("残差稳健 Z", "Residual robust Z"), "anomaly_confidence": tr("异常评分", "Anomaly score"),
+            })
+            st.dataframe(show.sort_values(tr("异常评分", "Anomaly score"), ascending=False).head(20), width="stretch", hide_index=True)
         st.caption(tr("候选时段可进入干预措施评估；采取行动前请核实运行时段、天气和设备状态。", "Candidate periods can be passed to intervention review; confirm operating schedules, weather and equipment status before action."))
     else:
         cf = ADV / "ai_exp45_robust_candidates.csv"
@@ -924,7 +929,14 @@ with tabs[3]:
                     k3.metric(tr("候选类别", "Candidate class"), str(data["robust_class"].iloc[0]))
             st.markdown(f'<div class="insight-card"><b>{tr("公开数据筛查", "Public-data screening")}</b><br>{tr("该结果用于项目优先级排序；实际节能量仍需现场验证。", "Use this artifact for portfolio prioritization; realized savings require field validation.")}</div>', unsafe_allow_html=True)
             if cols:
-                st.dataframe(data[cols].head(30), width="stretch", hide_index=True)
+                display_cols = {
+                    "building_id": tr("建筑编号", "Building ID"), "building_type": tr("建筑类型", "Building type"),
+                    "energy_archetype": tr("能耗特征", "Energy archetype"), "cause_candidate": tr("原因候选", "Cause candidate"),
+                    "best_measure_family": tr("优先措施", "Priority measure"), "action_confidence": tr("措施置信度", "Action confidence"),
+                    "annual_meter_reading": tr("年能耗", "Annual energy"), "energy_saving_20%": tr("20%情景节能", "Saving @20%"),
+                    "action_priority": tr("措施优先级", "Action priority"),
+                }
+                st.dataframe(data[cols].head(30).rename(columns={k: v for k, v in display_cols.items() if k in cols}), width="stretch", hide_index=True)
             st.caption(tr("候选效果仅为筛查信号，并非实测节能量。", "Candidate effects are screening signals, not measured savings."))
         else:
             st.info(tr("当前没有可用的反事实筛查结果文件。", "No counterfactual artifact is available."))
