@@ -5,6 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from src.pipeline import load_filter, features, train_model, evaluate_unseen_buildings, anomaly_table, carbon_scenario
 
@@ -64,11 +65,14 @@ chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index
 error_by_building = chronological_predictions.groupby("building_id").agg(
     test_rows=("residual", "size"),
     mae=("absolute_error", "mean"),
+    rmse=("residual", lambda s: float((s.pow(2).mean()) ** 0.5),
     mean_error=("residual", "mean"),
     wape=("absolute_error", lambda s: float(s.sum() / max(chronological_predictions.loc[s.index, "meter_reading"].abs().sum(), 1e-9))),
     median_absolute_percentage_error=("absolute_percentage_error", "median"),
 ).reset_index().sort_values("mae", ascending=False)
+error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] > 0, "underprediction", np.where(error_by_building["mean_error"] < 0, "overprediction", "balanced"))
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
+error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False)
 
 (out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
 
@@ -76,7 +80,7 @@ error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
 report_path = out/"evaluation_report.md"
 bm = metrics.get("baseline_benchmarks", {})
 unseen = metrics.get("unseen_building_evaluation", {})
-fmt = lambda x: f"{float(x):.4f}" if x is not None else "N/A"
+fmt = lambda x: "N/A" if x is None or not np.isfinite(float(x)) else f"{float(x):.4f}"
 lines = [
     "# Building Energy Model Evaluation", "",
     "> Auto-generated; results apply only to this dataset and split.", "",
