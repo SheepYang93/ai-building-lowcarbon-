@@ -30,10 +30,14 @@ def markdown_to_docx(markdown_path, output_path):
             width = max(map(len, rows))
             table = document.add_table(rows=0, cols=width)
             table.style = "Light Shading Accent 1"
-            for values in rows:
+            for row_index, values in enumerate(rows):
                 cells = table.add_row().cells
                 for index, value in enumerate(values):
                     cells[index].text = value
+                    if row_index == 0:
+                        for paragraph in cells[index].paragraphs:
+                            for run in paragraph.runs:
+                                run.bold = True
         table_lines = []
 
     for line in markdown_path.read_text(encoding="utf-8").splitlines():
