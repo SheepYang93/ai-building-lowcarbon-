@@ -138,3 +138,32 @@ def test_baselines_are_invariant_to_future_meter_reading_changes():
 
     for column in ["naive_1d", "seasonal_7d", "median_28"]:
         pd.testing.assert_series_equal(original[column], perturbed[column])
+
+
+def test_building_group_holdout_keeps_buildings_disjoint_and_reports_history_boundary():
+    from src.pipeline import evaluate_unseen_buildings
+
+    rows = []
+    for building_idx in range(4):
+        building_id = f"b{building_idx}"
+        for day, date in enumerate(pd.date_range("2026-01-01", periods=40)):
+            rows.append({
+                "building_id": building_id,
+                "date": date,
+                "meter_reading": 100.0 + building_idx * 10 + day % 7,
+                "sqm": 500.0 + building_idx,
+                "feature": float(day % 7),
+            })
+    data = pd.DataFrame(rows)
+
+    _, train, test, pred, metrics = evaluate_unseen_buildings(
+        data, ["feature", "sqm"], test_size=0.5, seed=17
+    )
+
+    train_buildings = set(train["building_id"])
+    test_buildings = set(test["building_id"])
+    assert train_buildings.isdisjoint(test_buildings)
+    assert set(metrics["train_buildings"]).isdisjoint(metrics["test_buildings"])
+    assert len(pred) == len(test)
+    assert metrics["split"] == "unseen_building_group_holdout"
+    assert "past-only lag features" in metrics["history_note"]
