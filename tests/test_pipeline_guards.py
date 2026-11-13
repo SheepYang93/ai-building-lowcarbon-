@@ -272,7 +272,7 @@ def test_training_report_script_compiles_without_execution():
     from pathlib import Path
     source = Path("scripts/run_v3.py").read_text(encoding="utf-8")
     compile(source, "scripts/run_v3.py", "exec")
-    assert 'evaluation_doc.save(out/"evaluation_report.docx")' in source
+    assert 'markdown_to_docx(report_path, out/"evaluation_report.docx")' in source
 
 
 def test_markdown_report_exports_valid_word_with_headings_tables_and_bullets(tmp_path):
@@ -282,7 +282,7 @@ def test_markdown_report_exports_valid_word_with_headings_tables_and_bullets(tmp
     markdown = tmp_path / "report.md"
     output = tmp_path / "nested" / "report.docx"
     markdown.write_text(
-        "# Evaluation\\n\\n## Metrics\\n- Rows: 12\\n\\n"
+        "# Evaluation\n\\n## Metrics\\n- Rows: 12\\n\\n"
         "| Metric | Value |\\n|---|---:|\\n| MAE | 2.5 |\\n| RMSE | 3.1 |",
         encoding="utf-8",
     )
