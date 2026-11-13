@@ -65,7 +65,7 @@ chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index
 error_by_building = chronological_predictions.groupby("building_id").agg(
     test_rows=("residual", "size"),
     mae=("absolute_error", "mean"),
-    rmse=("residual", lambda s: float((s.pow(2).mean()) ** 0.5),
+    rmse=("residual", lambda s: float((s.pow(2).mean()) ** 0.5)),
     mean_error=("residual", "mean"),
     wape=("absolute_error", lambda s: float(s.sum() / max(chronological_predictions.loc[s.index, "meter_reading"].abs().sum(), 1e-9))),
     median_absolute_percentage_error=("absolute_percentage_error", "median"),
@@ -74,7 +74,18 @@ error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] >
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
 error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False)
 
-(out/"metrics.json").write_text(json.dumps(metrics,ensure_ascii=False,indent=2))
+def json_safe(value):
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    if isinstance(value, (float, np.floating)) and not np.isfinite(value):
+        return None
+    if isinstance(value, np.integer):
+        return int(value)
+    return value
+
+(out/"metrics.json").write_text(json.dumps(json_safe(metrics),ensure_ascii=False,indent=2,allow_nan=False))
 
 # Machine-readable metrics above are paired with a recruiter-friendly Markdown summary.
 report_path = out/"evaluation_report.md"
