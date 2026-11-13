@@ -41,7 +41,7 @@ try:
         "date": building_te["date"].to_numpy(),
         "actual": building_te["meter_reading"].to_numpy(),
         "predicted": building_pred,
-    }).to_csv(out/"unseen_building_predictions.csv", index=False)
+    }).to_csv(out/"unseen_building_predictions.csv", index=False, na_rep="N/A")
 except ValueError as exc:
     metrics["unseen_building_evaluation"] = {"status": "not_run", "reason": str(exc)}
 
@@ -62,7 +62,7 @@ actual_abs = chronological_predictions["meter_reading"].abs()
 chronological_predictions["absolute_percentage_error"] = np.where(
     actual_abs > 0, chronological_predictions["absolute_error"] / actual_abs, np.nan
 )
-chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False)
+chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False, na_rep="N/A")
 error_by_building = chronological_predictions.groupby("building_id").agg(
     test_rows=("residual", "size"),
     mae=("absolute_error", "mean"),
@@ -73,8 +73,8 @@ error_by_building = chronological_predictions.groupby("building_id").agg(
     ape_valid_rows=("absolute_percentage_error", "count"),
 ).reset_index().sort_values("mae", ascending=False)
 error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] > 0, "underprediction", np.where(error_by_building["mean_error"] < 0, "overprediction", "balanced"))
-error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
-error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False)
+error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False, na_rep="N/A")
+error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A")
 
 (out/"metrics.json").write_text(json.dumps(json_safe(metrics),ensure_ascii=False,indent=2,allow_nan=False))
 
@@ -129,11 +129,11 @@ lines += ["", "## Building-group holdout",
     "- Predictive accuracy does not establish energy savings or causal intervention effects.", ""]
 report_path.write_text("\n".join(lines), encoding="utf-8")
 print(f"Evaluation report written to: {report_path}")
-pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False)
+pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False,na_rep="N/A")
 
 an=anomaly_table(df)
-an.to_csv(out/"anomaly_buildings.csv",index=False)
-carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location-based electricity factor").to_csv(out/"carbon_scenarios.csv",index=False)
+an.to_csv(out/"anomaly_buildings.csv",index=False,na_rep="N/A")
+carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location-based electricity factor").to_csv(out/"carbon_scenarios.csv",index=False,na_rep="N/A")
 
 if len(te):
     sample=te.sample(min(5000,len(te)),random_state=42)
