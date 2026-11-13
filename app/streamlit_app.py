@@ -403,6 +403,12 @@ def report_to_docx(report_text):
     doc.save(buffer)
     return buffer.getvalue()
 def build_report(summary, d, metadata):
+    not_provided = tr("未提供", "not provided")
+    building_id = metadata.get("building_id") or not_provided
+    building_type = metadata.get("building_type") or not_provided
+    area_m2 = metadata.get("area_m2") or not_provided
+    fingerprint = localize_fingerprint(summary.get("fingerprint", "unknown"))
+    generated_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
     expected_days = (pd.Timestamp(d["date"].max()) - pd.Timestamp(d["date"].min())).days + 1
     temporal_coverage = min(len(d) / max(expected_days, 1), 1.0) * 100
     missing_days = max(expected_days - len(d), 0)
@@ -411,11 +417,12 @@ def build_report(summary, d, metadata):
 
     lines = [
         f"# {tr('建筑能源诊断报告', 'AI Building Energy Diagnosis Report')}",
+        f"> {tr('生成时间', 'Generated at')}: {generated_at}",
         "",
         f"## 1. {tr('建筑信息', 'Building')}",
-        f"- {tr('建筑编号', 'Building ID')}: {metadata.get('building_id', tr('未提供', 'not provided'))}",
-        f"- {tr('建筑类型', 'Building type')}: {metadata.get('building_type', tr('未提供', 'not provided'))}",
-        f"- {tr('建筑面积（m²）', 'Area (m²)')}: {metadata.get('area_m2', tr('未提供', 'not provided'))}",
+        f"- {tr('建筑编号', 'Building ID')}: {building_id}",
+        f"- {tr('建筑类型', 'Building type')}: {building_type}",
+        f"- {tr('建筑面积（m²）', 'Area (m²)')}: {area_m2}",
         f"- {tr('分析时段', 'Analysis period')}: {summary['start']} {tr('至', 'to')} {summary['end']}",
         "",
         f"## 2. {tr('数据质量', 'Data quality')}",
@@ -429,7 +436,7 @@ def build_report(summary, d, metadata):
         f"## 3. {tr('诊断结果', 'Diagnostic result')}",
         f"- {tr('稳健异常天数', 'Robust anomaly days')}: {summary['anomaly_days']}",
         f"- {tr('异常占比', 'Anomaly share')}: {summary['anomaly_share'] * 100:.1f}%",
-        f"- {tr('能耗特征', 'Energy fingerprint')}: {summary['fingerprint']}",
+        f"- {tr('能耗特征', 'Energy fingerprint')}: {fingerprint}",
         f"- {tr('近期与早期能耗中位数变化', 'Recent-vs-early median trend')}: {summary['trend_pct']:.1f}%",
         (
             f"- {tr('周末/工作日中位数比值', 'Weekend/weekday median ratio')}: {summary['weekend_ratio']:.2f}"
