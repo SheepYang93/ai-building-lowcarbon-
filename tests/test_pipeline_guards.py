@@ -273,3 +273,28 @@ def test_training_report_script_compiles_without_execution():
     source = Path("scripts/run_v3.py").read_text(encoding="utf-8")
     compile(source, "scripts/run_v3.py", "exec")
     assert 'evaluation_doc.save(out/"evaluation_report.docx")' in source
+
+
+def test_markdown_report_exports_valid_word_with_headings_tables_and_bullets(tmp_path):
+    from docx import Document
+    from src.reporting import markdown_to_docx
+
+    markdown = tmp_path / "report.md"
+    output = tmp_path / "nested" / "report.docx"
+    markdown.write_text(
+        "# Evaluation\\n\\n## Metrics\\n- Rows: 12\\n\\n"
+        "| Metric | Value |\\n|---|---:|\\n| MAE | 2.5 |\\n| RMSE | 3.1 |",
+        encoding="utf-8",
+    )
+
+    result = markdown_to_docx(markdown, output)
+    document = Document(result)
+
+    assert output.exists()
+    assert document.core_properties.title == "Building Energy Model Evaluation"
+    assert any(p.text == "Evaluation" for p in document.paragraphs)
+    assert any(p.text == "Metrics" for p in document.paragraphs)
+    assert any(p.text == "Rows: 12" for p in document.paragraphs)
+    assert len(document.tables) == 1
+    assert [cell.text for cell in document.tables[0].rows[0].cells] == ["Metric", "Value"]
+    assert [cell.text for cell in document.tables[0].rows[1].cells] == ["MAE", "2.5"]
