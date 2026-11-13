@@ -53,6 +53,29 @@ def deterministic_sample(train,cap=100000):
     s=pd.concat(parts)
     return s if len(s)<=cap else s.iloc[np.linspace(0,len(s)-1,cap).astype(int)]
 
+def _regression_metrics(y, pred):
+    """Return stable regression metrics with explicit undefined-value behavior."""
+    y = np.asarray(y, dtype=float)
+    pred = np.asarray(pred, dtype=float)
+    if y.ndim != 1 or pred.ndim != 1 or len(y) != len(pred):
+        raise ValueError("y and predictions must be one-dimensional arrays of equal length.")
+    if len(y) == 0:
+        raise ValueError("Cannot evaluate metrics on an empty cohort.")
+    if not np.isfinite(y).all() or not np.isfinite(pred).all():
+        raise ValueError("Metric inputs must contain only finite values.")
+    error = y - pred
+    denominator = float(np.abs(y).sum())
+    return {
+        "mae": float(mean_absolute_error(y, pred)),
+        "rmse": float(np.sqrt(mean_squared_error(y, pred))),
+        "wape": float(np.abs(error).sum() / denominator) if denominator > 0 else float("nan"),
+        "r2": float(r2_score(y, pred)) if len(y) >= 2 else float("nan"),
+        "n": int(len(y)),
+        "wape_status": "ok" if denominator > 0 else "undefined_zero_actual_sum",
+        "r2_status": "ok" if len(y) >= 2 else "undefined_single_sample",
+    }
+
+
 def train_model(d,f,cap=100000,seed=42):
     d=d.dropna(subset=f+["meter_reading"]).copy()
     if d.empty:
