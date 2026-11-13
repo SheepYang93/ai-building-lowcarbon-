@@ -68,11 +68,13 @@ See [EXPERIMENTS.md](EXPERIMENTS.md) for historical experiment records and limit
 
 ## For a recruiter: what to look at first
 
-If you only have one minute, run the **local demo** (or deploy it using the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) and then inspect these three files:
+If you only have one minute, run the **local demo** (or deploy it using the [Streamlit Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md)) and then inspect these resources:
 
 1. `app/streamlit_app.py` — the productized decision workflow and UI.
 2. `src/` — feature engineering, modeling and diagnostic logic.
-3. `MODEL_VALIDATION.md` — reproducible evaluation protocol, metric edge cases and evidence boundaries.\n4. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.\n5. After running `scripts/run_v3.py` on a verified dataset, inspect `outputs/evaluation_report.docx` and `outputs/metrics.json` for the generated model-evaluation evidence.
+3. `MODEL_VALIDATION.md` — reproducible evaluation protocol, metric edge cases and evidence boundaries.
+4. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.
+5. After running `scripts/run_v3.py` on a verified dataset, inspect `outputs/evaluation_report.docx` and `outputs/metrics.json` for the generated model-evaluation evidence.
 
 The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings. The UI separates model evidence, screening signals and field-validation evidence.
 
