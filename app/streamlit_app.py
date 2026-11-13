@@ -295,6 +295,11 @@ def report_to_docx(report_text):
     from datetime import datetime
 
     doc = Document()
+    properties = doc.core_properties
+    properties.title = ("建筑能源诊断报告" if UI_LANGUAGE == "zh" else "Building Energy Diagnosis Report")
+    properties.subject = ("建筑能耗数据筛查与低碳决策支持" if UI_LANGUAGE == "zh" else "Building energy screening and low-carbon decision support")
+    properties.keywords = "building energy, anomaly screening, low-carbon, evidence boundary"
+    properties.author = "AI Building Low-carbon Intelligence"
     section = doc.sections[0]
     section.top_margin = Pt(48)
     section.bottom_margin = Pt(48)
@@ -313,6 +318,7 @@ def report_to_docx(report_text):
     for style_name in ("Heading 1", "Heading 2"):
         doc.styles[style_name].font.name = "Microsoft YaHei"
         doc.styles[style_name].font.color.rgb = RGBColor(21, 94, 117)
+        doc.styles[style_name].paragraph_format.keep_with_next = True
     header = section.header.paragraphs[0]
     header.text = (
         "AI 建筑低碳决策系统  |  建筑能源诊断报告"
