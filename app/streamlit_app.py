@@ -314,14 +314,28 @@ def report_to_docx(report_text):
         doc.styles[style_name].font.name = "Microsoft YaHei"
         doc.styles[style_name].font.color.rgb = RGBColor(21, 94, 117)
     header = section.header.paragraphs[0]
-    header.text = "AI Building Low-carbon Intelligence  |  Building Energy Diagnosis"
+    header.text = (
+        "AI 建筑低碳决策系统  |  建筑能源诊断报告"
+        if UI_LANGUAGE == "zh"
+        else "AI Building Low-carbon Intelligence  |  Building Energy Diagnosis"
+    )
     header.style = "Caption"
     footer = section.footer.paragraphs[0]
     footer.text = (
-        "生成日期 / Generated: " + datetime.now().strftime("%Y-%m-%d")
+        "生成日期：" + datetime.now().strftime("%Y-%m-%d")
+        + "  ·  筛查结果，非实测节能量"
+        if UI_LANGUAGE == "zh"
+        else "Generated: " + datetime.now().strftime("%Y-%m-%d")
         + "  ·  Screening output — not measured savings"
     )
     footer.style = "Caption"
+    footer.alignment = 2
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    footer.add_run("  |  " if UI_LANGUAGE == "zh" else "  |  Page ")
+    page_field = OxmlElement("w:fldSimple")
+    page_field.set(qn("w:instr"), "PAGE")
+    footer._p.append(page_field)
 
     lines = report_text.splitlines()
     i = 0
