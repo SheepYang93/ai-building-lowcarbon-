@@ -1008,7 +1008,7 @@ with tabs[4]:
             f'<div class="insight-card"><b>{tr("建议优先行动", "Recommended first action")}</b><br>'
             f'<b>{tr("可能原因", "Possible cause")}:</b> {cause}<br>'
             f'<b>{tr("优先检查", "Check first")}:</b> {measure}<br>'
-            ff'<span class="muted">{tr("证据来源：上传建筑诊断。这是运营假设，不是已确认故障。", "Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.")}</span></div>',
+            f'<span class="muted">{tr("证据来源：上传建筑诊断。这是运营假设，不是已确认故障。", "Evidence source: uploaded building diagnosis. This is an operational hypothesis, not a confirmed fault.")}</span></div>',
             unsafe_allow_html=True,
         )
         if upload_ai is not None:
