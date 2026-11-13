@@ -128,6 +128,53 @@ lines += ["", "## Building-group holdout",
     "- Metrics depend on filtering, time window, building mix and meter-unit lineage.",
     "- Predictive accuracy does not establish energy savings or causal intervention effects.", ""]
 report_path.write_text("\n".join(lines), encoding="utf-8")
+
+# Export the same evaluation summary as a portable Word document.
+from docx import Document
+from docx.shared import Pt
+
+evaluation_doc = Document()
+evaluation_doc.core_properties.title = "Building Energy Model Evaluation"
+evaluation_doc.core_properties.subject = "Chronological and building-group model validation"
+table_buffer = []
+def flush_report_table():
+    global table_buffer
+    if not table_buffer:
+        return
+    parsed = [[cell.strip() for cell in row.strip().strip("|").split("|")] for row in table_buffer]
+    parsed = [row for row in parsed if not all(set(cell) <= set("-: ") for cell in row)]
+    if parsed:
+        table = evaluation_doc.add_table(rows=1, cols=len(parsed[0]))
+        table.style = "Light Shading Accent 1"
+        for cell, value in zip(table.rows[0].cells, parsed[0]):
+            cell.text = value
+        for values in parsed[1:]:
+            cells = table.add_row().cells
+            for cell, value in zip(cells, values):
+                cell.text = value
+    table_buffer = []
+for line in lines:
+    if line.strip().startswith("|") and line.strip().endswith("|"):
+        table_buffer.append(line)
+        continue
+    flush_report_table()
+    if line.startswith("# "):
+        evaluation_doc.add_heading(line[2:], level=0)
+    elif line.startswith("## "):
+        evaluation_doc.add_heading(line[3:], level=1)
+    elif line.startswith("- "):
+        evaluation_doc.add_paragraph(line[2:], style="List Bullet")
+    elif line.startswith("> "):
+        p = evaluation_doc.add_paragraph(line[2:])
+        p.style = "Quote"
+    elif line.strip():
+        evaluation_doc.add_paragraph(line)
+flush_report_table()
+for paragraph in evaluation_doc.paragraphs:
+    for run in paragraph.runs:
+        run.font.size = Pt(10)
+evaluation_doc.save(out/"evaluation_report.docx")
+
 print(f"Evaluation report written to: {report_path}")
 pd.DataFrame({"feature":f,"importance":model.feature_importances_}).sort_values("importance",ascending=False).to_csv(out/"feature_importance.csv",index=False,na_rep="N/A")
 
