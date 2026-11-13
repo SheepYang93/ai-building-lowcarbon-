@@ -266,3 +266,10 @@ def test_baseline_metrics_returns_explicit_status_when_no_prediction_is_valid():
         assert score["coverage"] == 0.0
         assert score["status"] == "no_valid_predictions"
         assert np.isnan(score["mae"]) and np.isnan(score["wape"])
+
+
+def test_training_report_script_compiles_without_execution():
+    from pathlib import Path
+    source = Path("scripts/run_v3.py").read_text(encoding="utf-8")
+    compile(source, "scripts/run_v3.py", "exec")
+    assert 'evaluation_doc.save(out/"evaluation_report.docx")' in source
