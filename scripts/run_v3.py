@@ -63,18 +63,12 @@ chronological_predictions["absolute_percentage_error"] = np.where(
     actual_abs > 0, chronological_predictions["absolute_error"] / actual_abs, np.nan
 )
 chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False, na_rep="N/A")
-error_by_building = chronological_predictions.groupby("building_id").agg(
-    test_rows=("residual", "size"),
-    mae=("absolute_error", "mean"),
-    rmse=("residual", lambda s: float((s.pow(2).mean()) ** 0.5)),
-    mean_error=("residual", "mean"),
-    wape=("absolute_error", lambda s: float(s.sum() / chronological_predictions.loc[s.index, "meter_reading"].abs().sum()) if chronological_predictions.loc[s.index, "meter_reading"].abs().sum() > 0 else np.nan),
-    median_absolute_percentage_error=("absolute_percentage_error", "median"),
-    ape_valid_rows=("absolute_percentage_error", "count"),
-).reset_index().sort_values("mae", ascending=False)
-error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] > 0, "underprediction", np.where(error_by_building["mean_error"] < 0, "overprediction", "balanced"))
+from src.reporting import building_error_summary
+error_by_building = building_error_summary(
+    chronological_predictions.rename(columns={"meter_reading": "actual"})[["building_id", "actual", "predicted"]]
+)
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False, na_rep="N/A")
-error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A")
+error_by_building.head(10).to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A").to_csv(out/"top10_high_error_buildings.csv", index=False, na_rep="N/A")
 
 (out/"metrics.json").write_text(json.dumps(json_safe(metrics),ensure_ascii=False,indent=2,allow_nan=False))
 
