@@ -70,7 +70,29 @@ def train_model(d,f,cap=100000,seed=42):
     model=ExtraTreesRegressor(n_estimators=160,random_state=seed,n_jobs=-1,min_samples_leaf=2,max_features=.9)
     model.fit(tr_fit[f],tr_fit.meter_reading); pred=model.predict(te[f]); y=te.meter_reading.to_numpy()
     denominator=float(np.abs(y).sum())
-    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d, evaluation_frame=te), "baseline_comparison_rows":int(len(te)), "meter_unit_status":"UNVERIFIED: meter_reading unit lineage must be confirmed before kWh or CO2 interpretation"}
+    baseline_frame = baseline_predictions(d, te)
+    baseline_names = ["naive_1d", "seasonal_7d", "median_28"]
+    baseline_matrix = baseline_frame[baseline_names].to_numpy(dtype=float)
+    common = np.isfinite(y) & np.isfinite(pred) & np.isfinite(baseline_matrix).all(axis=1)
+    common_y = y[common]
+    common_model_pred = pred[common]
+    common_denominator = float(np.abs(common_y).sum())
+    common_metrics = {
+        "r2": float(r2_score(common_y, common_model_pred)) if len(common_y) >= 2 else float("nan"),
+        "mae": float(mean_absolute_error(common_y, common_model_pred)),
+        "wape": float(np.abs(common_y-common_model_pred).sum()/common_denominator) if common_denominator>0 else float("nan"),
+        "n": int(common.sum()),
+        "coverage_of_chronological_test": float(common.sum()/len(te)) if len(te) else 0.0,
+    }
+    common_baselines = {}
+    for j, name in enumerate(baseline_names):
+        bp = baseline_matrix[common, j]
+        common_baselines[name] = {
+            "mae": float(mean_absolute_error(common_y, bp)) if len(common_y) else float("nan"),
+            "wape": float(np.abs(common_y-bp).sum()/common_denominator) if common_denominator>0 else float("nan"),
+            "n": int(common.sum()),
+        }
+    return model,tr_fit,te,pred,cutoff,{"r2":float(r2_score(y,pred)) if len(y)>=2 else float("nan"),"mae":float(mean_absolute_error(y,pred)),"wape":float(np.abs(y-pred).sum()/denominator) if denominator>0 else float("nan"),"train_rows":int(len(tr_fit)),"test_rows":int(len(te)),"cutoff":str(cutoff.date()),"baseline_benchmarks":baseline_metrics(d, evaluation_frame=te), "baseline_comparison_rows":int(len(te)), "common_baseline_comparison":{"evaluation_cohort":"intersection of rows with valid ExtraTrees and all three baseline predictions","model":common_metrics,"baselines":common_baselines}, "meter_unit_status":"UNVERIFIED: meter_reading unit lineage must be confirmed before kWh or CO2 interpretation"}
 
 
 def evaluate_unseen_buildings(d, f, test_size=0.2, seed=42, cap=100000):
@@ -168,35 +190,21 @@ def carbon_scenario(df, reduction=0.20, ef=0.5306, ef_label="China 2023 location
     return a
 
 
-def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
-    """Score calendar-aligned, past-only baselines on model evaluation rows.
-
-    naive_1d and seasonal_7d require an exact prior calendar date for the
-    same building. rolling_median_28d uses observations in the preceding
-    28 calendar days (excluding the target date), with at least 7 readings.
-    """
+def baseline_predictions(d, evaluation_frame):
+    """Return row-aligned, past-only baseline predictions for an explicit evaluation cohort."""
     history = d.copy()
     history["date"] = pd.to_datetime(history["date"], errors="coerce").dt.normalize()
-    history[target] = pd.to_numeric(history[target], errors="coerce")
-    history = history.dropna(subset=["building_id", "date", target]).sort_values(
+    history["meter_reading"] = pd.to_numeric(history["meter_reading"], errors="coerce")
+    history = history.dropna(subset=["building_id", "date", "meter_reading"]).sort_values(
         ["building_id", "date"], kind="mergesort"
     )
     if history.duplicated(["building_id", "date"]).any():
         raise ValueError("Baseline history must contain at most one reading per building/date.")
-
-    if evaluation_frame is None:
-        dates = np.sort(history.date.unique())
-        if len(dates) < 10:
-            return {}
-        cutoff = pd.Timestamp(dates[int(len(dates) * 0.8)])
-        evaluation = history[history.date >= cutoff].copy()
-    else:
-        evaluation = evaluation_frame.copy()
-        evaluation["date"] = pd.to_datetime(evaluation["date"], errors="coerce").dt.normalize()
-        if not evaluation.index.is_unique:
-            raise ValueError("Evaluation frame must have unique row indices.")
-
-    lookup = history.set_index(["building_id", "date"])[target]
+    evaluation = evaluation_frame[["building_id", "date", "meter_reading"]].copy()
+    evaluation["date"] = pd.to_datetime(evaluation["date"], errors="coerce").dt.normalize()
+    if not evaluation.index.is_unique:
+        raise ValueError("Evaluation frame must have unique row indices.")
+    lookup = history.set_index(["building_id", "date"])["meter_reading"]
     evaluation["naive_1d"] = [
         lookup.get((bid, date - pd.Timedelta(days=1)), np.nan)
         for bid, date in zip(evaluation["building_id"], evaluation["date"])
@@ -205,31 +213,46 @@ def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
         lookup.get((bid, date - pd.Timedelta(days=7)), np.nan)
         for bid, date in zip(evaluation["building_id"], evaluation["date"])
     ]
-
-    # Explicit calendar windows prevent "28 observations" from being mislabeled
-    # as 28 days when the source has missing dates.
-    median_values = []
+    medians = []
     grouped = {bid: group for bid, group in history.groupby("building_id", sort=False)}
     for bid, date in zip(evaluation["building_id"], evaluation["date"]):
         group = grouped.get(bid)
         if group is None or pd.isna(date):
-            median_values.append(np.nan)
+            medians.append(np.nan)
             continue
-        past = group.loc[(group["date"] >= date - pd.Timedelta(days=28)) & (group["date"] < date), target]
-        median_values.append(float(past.median()) if len(past) >= 7 else np.nan)
-    evaluation["median_28"] = median_values
+        past = group.loc[(group["date"] >= date-pd.Timedelta(days=28)) & (group["date"] < date), "meter_reading"]
+        medians.append(float(past.median()) if len(past) >= 7 else np.nan)
+    evaluation["median_28"] = medians
+    return evaluation
 
+
+def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
+    """Score past-only baselines; each metric reports its own valid-row coverage."""
+    history = d.copy()
+    history[target] = pd.to_numeric(history[target], errors="coerce")
+    if target != "meter_reading":
+        history = history.rename(columns={target: "meter_reading"})
+    if evaluation_frame is None:
+        history["date"] = pd.to_datetime(history["date"], errors="coerce").dt.normalize()
+        dates = np.sort(history["date"].dropna().unique())
+        if len(dates) < 10:
+            return {}
+        cutoff = pd.Timestamp(dates[int(len(dates)*0.8)])
+        evaluation_frame = history.loc[history["date"] >= cutoff].copy()
+    else:
+        evaluation_frame = evaluation_frame.copy()
+    preds = baseline_predictions(history, evaluation_frame)
+    y = pd.to_numeric(preds["meter_reading"], errors="coerce").to_numpy(dtype=float)
     out = {}
-    y = pd.to_numeric(evaluation[target], errors="coerce").to_numpy(dtype=float)
     for name in ["naive_1d", "seasonal_7d", "median_28"]:
-        p = pd.to_numeric(evaluation[name], errors="coerce").to_numpy(dtype=float)
+        p = preds[name].to_numpy(dtype=float)
         ok = np.isfinite(p) & np.isfinite(y)
         n = int(ok.sum())
         if n:
             out[name] = {
                 "mae": float(mean_absolute_error(y[ok], p[ok])),
-                "wape": float(np.abs(y[ok] - p[ok]).sum() / max(np.abs(y[ok]).sum(), 1e-9)),
+                "wape": float(np.abs(y[ok]-p[ok]).sum()/max(np.abs(y[ok]).sum(),1e-9)),
                 "n": n,
-                "coverage": float(n / len(evaluation)) if len(evaluation) else 0.0,
+                "coverage": float(n/len(preds)) if len(preds) else 0.0,
             }
     return out
