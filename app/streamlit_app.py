@@ -33,6 +33,18 @@ def tr(zh, en):
     """Return a UI string in the selected language."""
     return zh if UI_LANGUAGE == "zh" else en
 
+def localize_fingerprint(value):
+    """Translate common diagnostic labels without changing stored model values."""
+    labels = {
+        "gradual operational drift": "运行漂移" if UI_LANGUAGE == "zh" else "gradual operational drift",
+        "persistent high-use": "持续高负荷" if UI_LANGUAGE == "zh" else "persistent high-use",
+        "recurrent / schedule-related": "重复/时段相关" if UI_LANGUAGE == "zh" else "recurrent / schedule-related",
+        "intermittent operational anomaly": "间歇性运行异常" if UI_LANGUAGE == "zh" else "intermittent operational anomaly",
+        "stable / no robust anomaly": "稳定/无稳健异常" if UI_LANGUAGE == "zh" else "stable / no robust anomaly",
+        "unknown": "未知" if UI_LANGUAGE == "zh" else "unknown",
+    }
+    return labels.get(str(value), value)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
@@ -707,7 +719,7 @@ with tabs[1]:
 
             st.markdown(f'<div class="section-title">{tr("建筑运行状态", "Building health")}</div>', unsafe_allow_html=True)
             card1, card2, card3 = st.columns(3)
-            card1.metric(tr("状态", "Status"), summary["fingerprint"])
+            card1.metric(tr("状态", "Status"), localize_fingerprint(summary["fingerprint"]))
             card2.metric(tr("异常水平", "Anomaly level"), f'{summary["anomaly_share"] * 100:.1f}% {tr("有效天数", "of valid days")}')
             card3.metric(tr("趋势", "Trend"), f'{summary["trend_pct"]:+.1f}%')
 
@@ -825,7 +837,7 @@ with tabs[2]:
                 else tr("不可用（缺少有效周末数据）", "unavailable (insufficient weekend data)")
             )
             st.markdown(
-                f'**{s["fingerprint"]}**  \\n'
+                f'**{localize_fingerprint(s["fingerprint"])}**  \\n'
                 f'{tr("周末/工作日中位数比值", "Weekend / weekday median ratio")}: {weekend_label}  ·  '
                 f'{tr("近期与早期能耗中位数变化", "Recent-vs-early median trend")}: {s["trend_pct"]:+.1f}%'
             )
@@ -949,7 +961,7 @@ with tabs[4]:
 
     if upload_summary is not None:
         s = upload_summary
-        fp = str(s.get("fingerprint", "unknown"))
+        fp = localize_fingerprint(s.get("fingerprint", "unknown"))
         action = str(s.get("intervention", "further investigation"))
         mapping = {
             "gradual operational drift": ("运行时段 / HVAC 控制漂移", "检查 HVAC 设定、运行时段、控制策略与设备状态", "medium"),
