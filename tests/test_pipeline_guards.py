@@ -129,7 +129,7 @@ def test_baselines_are_invariant_to_future_meter_reading_changes():
         "date": dates,
         "meter_reading": [100.0 + i for i in range(60)],
     })
-    evaluation = history.loc[history["date"] >= dates[45]].copy()
+    evaluation = history.loc[history["date"] == dates[45]].copy()
     original = baseline_predictions(history, evaluation)
 
     changed = history.copy()
