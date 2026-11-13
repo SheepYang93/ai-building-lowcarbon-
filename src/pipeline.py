@@ -254,6 +254,7 @@ def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
         if n:
             out[name] = {
                 "mae": float(mean_absolute_error(y[ok], p[ok])),
+                "rmse": float(np.sqrt(mean_squared_error(y[ok], p[ok]))),
                 "wape": float(np.abs(y[ok]-p[ok]).sum()/max(np.abs(y[ok]).sum(),1e-9)),
                 "n": n,
                 "coverage": float(n/len(preds)) if len(preds) else 0.0,
