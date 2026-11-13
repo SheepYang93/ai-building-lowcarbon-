@@ -58,8 +58,9 @@ chronological_predictions = te[["building_id", "date", "meter_reading"]].copy()
 chronological_predictions["predicted"] = pred
 chronological_predictions["residual"] = chronological_predictions["meter_reading"] - chronological_predictions["predicted"]
 chronological_predictions["absolute_error"] = chronological_predictions["residual"].abs()
-chronological_predictions["absolute_percentage_error"] = (
-    chronological_predictions["absolute_error"] / chronological_predictions["meter_reading"].abs().clip(lower=1e-9)
+actual_abs = chronological_predictions["meter_reading"].abs()
+chronological_predictions["absolute_percentage_error"] = np.where(
+    actual_abs > 0, chronological_predictions["absolute_error"] / actual_abs, np.nan
 )
 chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False)
 error_by_building = chronological_predictions.groupby("building_id").agg(
@@ -67,8 +68,9 @@ error_by_building = chronological_predictions.groupby("building_id").agg(
     mae=("absolute_error", "mean"),
     rmse=("residual", lambda s: float((s.pow(2).mean()) ** 0.5)),
     mean_error=("residual", "mean"),
-    wape=("absolute_error", lambda s: float(s.sum() / max(chronological_predictions.loc[s.index, "meter_reading"].abs().sum(), 1e-9))),
+    wape=("absolute_error", lambda s: float(s.sum() / chronological_predictions.loc[s.index, "meter_reading"].abs().sum()) if chronological_predictions.loc[s.index, "meter_reading"].abs().sum() > 0 else np.nan),
     median_absolute_percentage_error=("absolute_percentage_error", "median"),
+    ape_valid_rows=("absolute_percentage_error", "count"),
 ).reset_index().sort_values("mae", ascending=False)
 error_by_building["bias_direction"] = np.where(error_by_building["mean_error"] > 0, "underprediction", np.where(error_by_building["mean_error"] < 0, "overprediction", "balanced"))
 error_by_building.to_csv(out/"error_analysis_by_building.csv", index=False)
