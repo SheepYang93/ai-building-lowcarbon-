@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.pipeline import REQUIRED, anomaly_table, baseline_metrics, carbon_scenario, features, load_filter, train_model
+from src.pipeline import REQUIRED, anomaly_table, baseline_metrics, baseline_predictions, carbon_scenario, features, load_filter, train_model
 
 
 def test_load_filter_reports_missing_required_columns(tmp_path):
@@ -120,3 +120,21 @@ def test_carbon_scenario_labels_observed_period_not_annual():
     assert result.loc[0, "period_meter_reading"] == 3000.0
     assert "annual_meter_reading" not in result.columns
     assert result.loc[0, "scenario_reduction"] == 600.0
+
+
+def test_baselines_are_invariant_to_future_meter_reading_changes():
+    dates = pd.date_range("2026-01-01", periods=60)
+    history = pd.DataFrame({
+        "building_id": ["b1"] * 60,
+        "date": dates,
+        "meter_reading": [100.0 + i for i in range(60)],
+    })
+    evaluation = history.loc[history["date"] >= dates[45]].copy()
+    original = baseline_predictions(history, evaluation)
+
+    changed = history.copy()
+    changed.loc[changed["date"] > dates[45], "meter_reading"] += 10000
+    perturbed = baseline_predictions(changed, evaluation)
+
+    for column in ["naive_1d", "seasonal_7d", "median_28"]:
+        pd.testing.assert_series_equal(original[column], perturbed[column])
