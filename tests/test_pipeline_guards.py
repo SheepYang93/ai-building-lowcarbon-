@@ -341,3 +341,35 @@ def test_building_error_summary_rejects_missing_columns_and_empty_rows():
         "building_id": ["A"], "actual": [float("nan")], "predicted": [1.0]
     }))
     assert result.empty
+
+
+
+def test_word_report_table_header_is_bold_and_ragged_rows_are_padded(tmp_path):
+    from docx import Document
+    from src.reporting import markdown_to_docx
+
+    markdown = tmp_path / "table.md"
+    output = tmp_path / "table.docx"
+    markdown.write_text(
+        "| Metric | Value | Notes |\\n|---|---:|---|\\n| MAE | 2.1 |\\n",
+        encoding="utf-8",
+    )
+    markdown_to_docx(markdown, output)
+    table = Document(output).tables[0]
+
+    assert len(table.columns) == 3
+    assert [cell.text for cell in table.rows[0].cells] == ["Metric", "Value", "Notes"]
+    assert all(run.bold for cell in table.rows[0].cells for paragraph in cell.paragraphs for run in paragraph.runs)
+    assert [cell.text for cell in table.rows[1].cells] == ["MAE", "2.1", ""]
+
+
+def test_word_report_ignores_markdown_table_separator_without_header(tmp_path):
+    from docx import Document
+    from src.reporting import markdown_to_docx
+
+    markdown = tmp_path / "separator.md"
+    output = tmp_path / "separator.docx"
+    markdown.write_text("|---|---:|\\n", encoding="utf-8")
+    markdown_to_docx(markdown, output)
+
+    assert Document(output).tables == []
