@@ -224,3 +224,28 @@ def test_baseline_metrics_use_undefined_wape_and_report_coverage():
         assert score["total_rows"] == 3 and score["coverage"] == 1.0
         assert np.isnan(score["wape"])
         assert score["wape_status"] == "undefined_zero_actual_sum"
+
+
+def test_train_model_survives_empty_fair_comparison_cohort(monkeypatch):
+    import numpy as np
+    import pandas as pd
+    import src.pipeline as pipeline
+
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * 20,
+        "date": pd.date_range("2024-01-01", periods=20, freq="D"),
+        "meter_reading": np.arange(20, dtype=float) + 10,
+        "feature": np.arange(20, dtype=float),
+    })
+    def no_baseline_rows(history, evaluation):
+        result = evaluation[["building_id", "date", "meter_reading"]].copy()
+        for name in ["naive_1d", "seasonal_7d", "median_28"]:
+            result[name] = np.nan
+        return result
+    monkeypatch.setattr(pipeline, "baseline_predictions", no_baseline_rows)
+    _, _, _, _, _, metrics = pipeline.train_model(frame, ["feature"], cap=100)
+    fair = metrics["common_baseline_comparison"]
+    assert fair["model"]["n"] == 0
+    assert fair["model"]["status"] == "no_shared_valid_rows"
+    assert fair["model"]["coverage_of_chronological_test"] == 0
+    assert all(item["status"] == "no_shared_valid_rows" for item in fair["baselines"].values())
