@@ -282,8 +282,16 @@ def test_markdown_report_exports_valid_word_with_headings_tables_and_bullets(tmp
     markdown = tmp_path / "report.md"
     output = tmp_path / "nested" / "report.docx"
     markdown.write_text(
-        "# Evaluation\n\\n## Metrics\\n- Rows: 12\\n\\n"
-        "| Metric | Value |\\n|---|---:|\\n| MAE | 2.5 |\\n| RMSE | 3.1 |",
+        """# Evaluation
+
+## Metrics
+- Rows: 12
+
+| Metric | Value |
+|---|---:|
+| MAE | 2.5 |
+| RMSE | 3.1 |
+""",
         encoding="utf-8",
     )
 
