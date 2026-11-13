@@ -154,3 +154,21 @@ def test_features_are_invariant_to_future_meter_readings():
         original.loc[mask, columns].reset_index(drop=True),
         changed.loc[mask, columns].reset_index(drop=True),
     )
+
+
+def test_chronological_split_has_strict_date_boundary_and_no_overlap():
+    frames = []
+    for building, offset in [("A", 0.0), ("B", 50.0)]:
+        frame = toy()
+        frame["building_id"] = building
+        frame["meter_reading"] = frame["meter_reading"] + offset
+        frames.append(frame)
+    engineered, columns = features(pd.concat(frames, ignore_index=True))
+    _, train, test, _, cutoff, metrics = train_model(engineered, columns, cap=500)
+
+    assert train["date"].max() < cutoff
+    assert test["date"].min() >= cutoff
+    assert set(train.index).isdisjoint(set(test.index))
+    assert metrics["train_rows"] == len(train)
+    assert metrics["test_rows"] == len(test)
+    assert metrics["cutoff"] == cutoff.date().isoformat()
