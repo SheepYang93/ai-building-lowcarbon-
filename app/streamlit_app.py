@@ -406,7 +406,7 @@ def build_report(summary, d, metadata):
         f"- {tr('能耗特征', 'Energy fingerprint')}: {summary['fingerprint']}",
         f"- {tr('近期与早期能耗中位数变化', 'Recent-vs-early median trend')}: {summary['trend_pct']:.1f}%",
         (
-            f"- Weekend/weekday median ratio: {summary['weekend_ratio']:.2f}"
+            f"- {tr('周末/工作日中位数比值', 'Weekend/weekday median ratio')}: {summary['weekend_ratio']:.2f}"
             if not pd.isna(summary["weekend_ratio"])
             else f"- {tr('周末/工作日中位数比值', 'Weekend/weekday median ratio')}: {tr('不可用', 'unavailable')}"
         ),
@@ -426,7 +426,7 @@ def build_report(summary, d, metadata):
     if len(peak):
         lines.extend([
             "",
-            f"| {tr('日期', 'Date')} | {tr('能耗', 'Energy')} | {tr('历史基线', 'Past baseline')} | Robust z |",
+            f"| {tr('日期', 'Date')} | {tr('能耗', 'Energy')} | {tr('历史基线', 'Past baseline')} | {tr('稳健 z 分数', 'Robust z-score')} |",
             "|---|---:|---:|---:|",
         ])
         for _, row in peak.iterrows():
