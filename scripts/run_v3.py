@@ -97,6 +97,15 @@ lines = [
 ]
 for name, item in bm.items():
     lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
+common = metrics.get("common_baseline_comparison", {})
+cm = common.get("model", {})
+cb = common.get("baselines", {})
+lines += ["", "## Fair comparison on identical valid rows",
+    f"- Shared rows: {cm.get('n','N/A')} / {metrics.get('test_rows','N/A')} ({fmt(cm.get('coverage_of_chronological_test'))} coverage)",
+    "| Model / baseline | MAE | WAPE | n |", "|---|---:|---:|---:|",
+    f"| ExtraTrees | {fmt(cm.get('mae'))} | {fmt(cm.get('wape'))} | {cm.get('n','N/A')} |"]
+for name, item in cb.items():
+    lines.append(f"| {name} | {fmt(item.get('mae'))} | {fmt(item.get('wape'))} | {item.get('n','N/A')} |")
 lines += ["", "## Building-group holdout",
     f"- Status: {unseen.get('status', 'ok' if 'r2' in unseen else 'not_run')}",
     f"- R² / MAE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('wape'))}",
