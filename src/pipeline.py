@@ -260,11 +260,26 @@ def baseline_metrics(d, target="meter_reading", evaluation_frame=None):
         ok = np.isfinite(p) & np.isfinite(y)
         n = int(ok.sum())
         if n:
-            out[name] = {
-                "mae": float(mean_absolute_error(y[ok], p[ok])),
-                "rmse": float(np.sqrt(mean_squared_error(y[ok], p[ok]))),
-                "wape": float(np.abs(y[ok]-p[ok]).sum()/max(np.abs(y[ok]).sum(),1e-9)),
-                "n": n,
-                "coverage": float(n/len(preds)) if len(preds) else 0.0,
-            }
+            score = _regression_metrics(y[ok], p[ok])
+            score["coverage"] = float(n / len(preds)) if len(preds) else 0.0
+            score["valid_rows"] = n
+            score["total_rows"] = int(len(preds))
+            out[name] = score
+        else:
+            out[name] = {"n": 0, "valid_rows": 0, "total_rows": int(len(preds)),
+                         "coverage": 0.0, "status": "no_valid_predictions",
+                         "mae": np.nan, "rmse": np.nan, "wape": np.nan, "r2": np.nan}
     return out
+
+
+def json_safe(value):
+    """Recursively convert non-finite metrics to JSON null and NumPy scalars to native types."""
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    if isinstance(value, (float, np.floating)) and not np.isfinite(value):
+        return None
+    if isinstance(value, np.integer):
+        return int(value)
+    return value
