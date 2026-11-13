@@ -204,3 +204,23 @@ def test_json_safe_converts_nonfinite_metrics_to_null():
     from src.pipeline import json_safe
     safe = json_safe({"wape": float("nan"), "r2": np.float64("inf"), "n": np.int64(2)})
     assert safe == {"wape": None, "r2": None, "n": 2}
+
+
+def test_baseline_metrics_use_undefined_wape_and_report_coverage():
+    import numpy as np
+    import pandas as pd
+    from src.pipeline import baseline_metrics
+
+    history = pd.DataFrame({
+        "building_id": ["B1"] * 12,
+        "date": pd.date_range("2024-01-01", periods=12, freq="D"),
+        "meter_reading": [0.0] * 12,
+    })
+    evaluation = history.iloc[-3:].copy()
+    scores = baseline_metrics(history, evaluation_frame=evaluation)
+    assert set(scores) == {"naive_1d", "seasonal_7d", "median_28"}
+    for score in scores.values():
+        assert score["n"] == score["valid_rows"] == 3
+        assert score["total_rows"] == 3 and score["coverage"] == 1.0
+        assert np.isnan(score["wape"])
+        assert score["wape_status"] == "undefined_zero_actual_sum"
