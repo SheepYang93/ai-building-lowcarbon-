@@ -54,7 +54,7 @@ streamlit run app/streamlit_app.py
 
 ## How to explore
 
-- **Demo deployment:** pending; see [Streamlit Community Cloud deployment guide](DEPLOY_STREAMLIT_CLOUD.md). Until deployment is smoke-tested, use the reproducible local demo below.
+- **Live demo:** [Open the deployed Streamlit app](https://cwtjwabswg9fdbpgvfyhul.streamlit.app/). The deployment URL is available; interactive smoke testing of every workflow remains a separate verification step.
 - **Code:** [Repository](https://github.com/SheepYang93/ai-building-lowcarbon-)
 - **Methods & experiments:** [EXPERIMENTS.md](../EXPERIMENTS.md)
 - **Evaluation output:** run `scripts/run_v3.py`; it exports `metrics.json` and `evaluation_report.md` alongside diagnostic artifacts.
