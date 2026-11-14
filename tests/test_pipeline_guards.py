@@ -515,3 +515,13 @@ def test_run_v3_rejects_invalid_experiment_parameters_before_data_access():
         assert result.returncode != 0
         assert expected in result.stderr
         assert "Input CSV not found" not in result.stderr
+
+
+def test_chronological_export_ape_uses_masked_division_for_zero_actuals():
+    from pathlib import Path
+
+    source = Path("scripts/run_v3.py").read_text(encoding="utf-8")
+    assert 'chronological_predictions["absolute_percentage_error"] = np.nan' in source
+    assert 'valid_ape = actual_abs > 0' in source
+    assert 'chronological_predictions.loc[valid_ape, "absolute_error"] / actual_abs.loc[valid_ape]' in source
+    assert 'np.where(\n    actual_abs > 0' not in source
