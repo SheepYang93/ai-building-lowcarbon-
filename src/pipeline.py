@@ -20,7 +20,15 @@ def load_filter(path):
     df=df[df["sub_primaryspaceusage"].fillna("").str.contains("Education|College|University|Classroom|Laboratory|School",case=False,regex=True)]
     df["meter_reading"]=pd.to_numeric(df["meter_reading"],errors="coerce")
     df["sqm"]=pd.to_numeric(df["sqm"],errors="coerce")
-    return df.dropna(subset=["building_id","date","meter_reading","sqm"]).loc[lambda x:x["sqm"]>0].sort_values(["building_id","date"])
+    df = df.dropna(subset=["building_id","date","meter_reading","sqm"]).loc[lambda x:x["sqm"]>0]
+duplicates = df.duplicated(["building_id", "date"], keep=False)
+if duplicates.any():
+    sample = df.loc[duplicates, ["building_id", "date"]].head(5).to_dict("records")
+    raise ValueError(
+        f"Input contains {int(duplicates.sum())} duplicate building/date readings; "
+        f"daily modeling requires one row per building per date. Examples: {sample}"
+    )
+return df.sort_values(["building_id","date"])
 
 def features(df):
     d=df.copy()
