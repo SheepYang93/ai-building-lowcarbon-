@@ -604,3 +604,26 @@ def test_load_filter_normalizes_dates_and_detects_same_day_duplicate(tmp_path):
     frame.to_csv(path, index=False)
     with pytest.raises(ValueError, match="duplicate building/date readings"):
         load_filter(path)
+
+
+def test_features_reject_duplicate_building_calendar_days():
+    data = pd.DataFrame({
+        "building_id": ["b1", "b1"],
+        "date": pd.to_datetime(["2026-01-01 08:00", "2026-01-01 18:00"]),
+        "meter_reading": [10.0, 12.0],
+        "sqm": [100.0, 100.0],
+    })
+    with pytest.raises(ValueError, match="one reading per building/date"):
+        features(data)
+
+
+def test_anomaly_table_rejects_duplicate_normalized_daily_rows():
+    data = pd.DataFrame({
+        "building_id": ["b1", "b1"],
+        "date": pd.to_datetime(["2026-01-01 08:00", "2026-01-01 18:00"]),
+        "meter_reading": [10.0, 12.0],
+        "sub_primaryspaceusage": ["Education", "Education"],
+        "sqm": [100.0, 100.0],
+    })
+    with pytest.raises(ValueError, match="one reading per building/date"):
+        anomaly_table(data)
