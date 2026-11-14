@@ -460,3 +460,20 @@ def test_upload_quality_score_does_not_penalize_optional_weather():
     assert checks_without_weather["temperature_available"] == 0.0
     assert checks_with_weather["temperature_available"] == 1.0
     assert checks_without_weather["weather_optional"] is True
+
+    # Missing calendar days lower the core score through temporal coverage.
+    gapped = energy_only.iloc[[0, 1, 2, 4, 5, 6, 7, 9]].copy()
+    gap_score, gap_checks = score_upload_quality(gapped)
+    assert gap_checks["temporal_coverage"] == 0.8
+    assert gap_score < 100.0
+
+    # Duplicate raw meter timestamps are visible in the core score.
+    raw_duplicate = pd.DataFrame({
+        "timestamp": pd.to_datetime([
+            "2026-01-01 00:00", "2026-01-01 00:00",
+            "2026-01-02 00:00", "2026-01-03 00:00",
+        ])
+    })
+    duplicate_score, duplicate_checks = score_upload_quality(energy_only, raw_duplicate)
+    assert duplicate_checks["no_duplicate_timestamps"] == 0.75
+    assert duplicate_score < 100.0
