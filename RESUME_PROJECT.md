@@ -7,7 +7,7 @@
 Built a Python/Streamlit prototype that converts building electricity time series into anomaly-screening results, behavioral fingerprints, intervention hypotheses and conditional Scope 2 CO₂ scenarios.
 
 ## Key contributions
-- **Time-series ML:** engineered lag and rolling features with past-only windows; evaluated ExtraTrees using chronological holdout and compared it with naive-1-day, seasonal-7-day and rolling-median baselines on the same test rows.
+- **Time-series ML:** engineered lag and rolling features with past-only windows; evaluated ExtraTrees using chronological holdout and compared it with naive-1-day, seasonal-7-day and rolling-median baselines; reported both per-baseline valid-row scores and a fair common-valid-row comparison.
 - **Anomaly diagnosis:** implemented building-level rolling-median and robust-MAD screening, then summarized persistence, recurrence and trend into interpretable energy fingerprints.
 - **Decision support:** connected diagnosis fingerprints to intervention families and scenario calculations; clearly separated screening signals from measured savings.
 - **Field validation:** built a treatment/control DID workflow with pre-intervention slope diagnostics, a placebo DID using only pre-intervention observations, and optional building-cluster bootstrap intervals.
@@ -17,7 +17,7 @@ Built a Python/Streamlit prototype that converts building electricity time serie
 Python · pandas · NumPy · scikit-learn · ExtraTrees · Streamlit Community Cloud · pytest · GitHub Actions
 
 ## Evidence and claim boundaries
-- Public-data model metrics are specific to the documented dataset and split; do not present them as universal performance guarantees.
+- Historical public-data metrics are specific to their dataset/splits and are not reproduced from current HEAD; do not present them as universal performance guarantees.
 - Counterfactual and intervention values are screening estimates, not verified energy savings.
 - Carbon outputs use configured electricity CO₂ factors and remain conditional until meter units, reporting boundary and factor applicability are verified.
 - DID, pre-trend, placebo and bootstrap outputs are preliminary diagnostics, not proof of causality.
