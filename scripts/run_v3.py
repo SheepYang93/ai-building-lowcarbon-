@@ -113,7 +113,7 @@ lines = [
     f"| RMSE | {fmt(metrics.get('rmse'))} |",
     f"| WAPE | {fmt(metrics.get('wape'))} |",
     f"| Test rows | {metrics.get('test_rows', 'N/A')} |", "",
-    "## Baselines on the same test rows (baseline n can be smaller if history is unavailable)",
+    "## Baseline benchmarks (each uses its valid predictions; n and coverage may differ)",
     "| Baseline | MAE | RMSE | WAPE | R² | n | Coverage |", "|---|---:|---:|---:|---:|---:|---:|",
 ]
 for name, item in bm.items():
@@ -237,7 +237,7 @@ manifest = {
     },
     "artifacts": [
         "metrics.json", "evaluation_report.md", "evaluation_report.docx",
-        "chronological_test_predictions.csv", "error_analysis_by_building.csv", "top10_high_error_buildings.csv",
+        "chronological_test_predictions.csv", "unseen_building_predictions.csv", "error_analysis_by_building.csv", "top10_high_error_buildings.csv",
         "feature_importance.csv", "anomaly_buildings.csv",
         "carbon_scenarios.csv", "figures/prediction_vs_actual.png",
     ],
