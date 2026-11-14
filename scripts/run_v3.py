@@ -17,6 +17,11 @@ p.add_argument("--building-test-size",type=float,default=0.2,help="Fraction of b
 p.add_argument("--building-seed",type=int,default=42)
 args=p.parse_args()
 
+if args.train_cap <= 0:
+    p.error("--train-cap must be a positive integer.")
+if not 0 < args.building_test_size < 1:
+    p.error("--building-test-size must be strictly between 0 and 1.")
+
 out=Path(args.output)
 (out/"figures").mkdir(parents=True,exist_ok=True)
 
@@ -28,6 +33,11 @@ if df.empty:
     p.error("No rows remain after filtering. Check meter type, building-use values, and required data columns.")
 d,f=features(df)
 model,tr,te,pred,cut,metrics=train_model(d,f,args.train_cap)
+if te.empty or len(pred) != len(te):
+    p.error(
+        f"Chronological evaluation is incomplete: test_rows={len(te)}, predictions={len(pred)}. "
+        "No evaluation report was exported."
+    )
 
 # Separate group holdout: test buildings are never used to fit this model.
 # Their own past-only lag features remain available, so this is not a cold-start test.
