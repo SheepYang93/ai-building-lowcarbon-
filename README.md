@@ -80,7 +80,7 @@ If you only have one minute, run the **local demo** (or deploy it using the [Str
 2. `src/` — feature engineering, modeling and diagnostic logic.
 3. `MODEL_VALIDATION.md` — reproducible evaluation protocol, metric edge cases and evidence boundaries.
 4. `EXPERIMENTS.md` — validation setup, repeated rolling-window results and limitations.
-5. After running `scripts/run_v3.py` on a verified dataset, inspect `outputs/evaluation_report.docx` and `outputs/metrics.json` for the generated model-evaluation evidence.
+5. After running `scripts/run_v3.py` on a verified dataset, inspect `outputs/evaluation_report.docx`, `outputs/metrics.json` and `outputs/run_manifest.json` for evaluation results and dataset/runtime provenance. The manifest fingerprints the input CSV with SHA-256 and records parameters and package versions.
 
 The project is intentionally presented as a **decision-support prototype**, not as a claim of measured energy or carbon savings. The UI separates model evidence, screening signals and field-validation evidence.
 
