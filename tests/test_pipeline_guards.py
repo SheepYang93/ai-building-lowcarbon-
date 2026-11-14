@@ -659,3 +659,18 @@ def test_anomaly_table_does_not_flag_zero_baseline_as_relative_anomaly():
     })
     result = anomaly_table(frame)
     assert result.loc[0, "anomaly_days"] == 0
+
+
+def test_anomaly_table_flags_large_positive_deviation_after_stable_history():
+    from src.pipeline import anomaly_table
+
+    dates = pd.date_range("2024-01-01", periods=80)
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * 80,
+        "date": dates,
+        "meter_reading": [100.0] * 79 + [150.0],
+        "sub_primaryspaceusage": ["Education"] * 80,
+        "sqm": [100.0] * 80,
+    })
+    result = anomaly_table(frame)
+    assert result.loc[0, "anomaly_days"] == 1
