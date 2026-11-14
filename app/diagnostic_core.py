@@ -21,15 +21,30 @@ def _robust_mad(values):
 
 def diagnose_uploaded_data(daily):
     d = daily.copy()
-    d["weekday"] = d["date"].dt.day_of_week < 5
-    d["baseline_28d"] = d["energy"].shift(1).rolling(
+    d["date"] = pd.to_datetime(d["date"], errors="coerce").dt.normalize()
+    d["energy"] = pd.to_numeric(d["energy"], errors="coerce")
+    d = d.dropna(subset=["date", "energy"]).sort_values("date").reset_index(drop=True)
+    if d["date"].duplicated().any():
+        raise ValueError("Diagnostic input must contain at most one row per date.")
+
+    # Use calendar days rather than row counts so missing dates do not compress
+    # the reference windows and accidentally pull older readings into baseline.
+    calendar = pd.date_range(d["date"].min(), d["date"].max(), freq="D")
+    energy = d.set_index("date")["energy"].reindex(calendar)
+    baseline = energy.shift(1).rolling(
         CONFIG.baseline_window,
         min_periods=CONFIG.baseline_min_periods,
     ).median()
-    d["mad_28d"] = d["energy"].shift(1).rolling(
+    residual = energy - baseline
+    mad = residual.shift(1).rolling(
         CONFIG.mad_window,
         min_periods=CONFIG.mad_min_periods,
     ).apply(_robust_mad, raw=True)
+    d = d.set_index("date")
+    d["baseline_28d"] = baseline.reindex(d.index).to_numpy()
+    d["mad_28d"] = mad.reindex(d.index).to_numpy()
+    d = d.reset_index()
+    d["weekday"] = d["date"].dt.day_of_week < 5
 
     # A zero MAD means the recent history is flat. In that case a sufficiently
     # large relative jump is itself strong evidence of an operational anomaly.
