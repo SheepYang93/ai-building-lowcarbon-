@@ -23,7 +23,10 @@ def diagnose_uploaded_data(daily):
     d = daily.copy()
     d["date"] = pd.to_datetime(d["date"], errors="coerce").dt.normalize()
     d["energy"] = pd.to_numeric(d["energy"], errors="coerce")
-    d = d.dropna(subset=["date", "energy"]).sort_values("date").reset_index(drop=True)
+    d = d.dropna(subset=["date", "energy"])
+    d = d[d["energy"] >= 0].sort_values("date").reset_index(drop=True)
+    if d.empty:
+        raise ValueError("Diagnostic input has no valid non-negative energy observations.")
     if d["date"].duplicated().any():
         raise ValueError("Diagnostic input must contain at most one row per date.")
 
@@ -41,7 +44,7 @@ def diagnose_uploaded_data(daily):
         min_periods=CONFIG.mad_min_periods,
     ).apply(_robust_mad, raw=True)
     d = d.set_index("date")
-    d["baseline_28d"] = baseline.reindex(d.index).to_numpy()
+    d["baseline_reference"] = baseline.reindex(d.index).to_numpy()
     d["mad_residual"] = mad.reindex(d.index).to_numpy()
     d = d.reset_index()
     d["weekday"] = d["date"].dt.day_of_week < 5
@@ -51,28 +54,28 @@ def diagnose_uploaded_data(daily):
     scale = 1.4826 * d["mad_residual"]
     d["robust_z"] = np.where(
         scale > 1e-9,
-        (d["energy"] - d["baseline_28d"]) / scale,
+        (d["energy"] - d["baseline_reference"]) / scale,
         np.where(
-            (d["baseline_28d"] > 0)
-            & (d["energy"] > d["baseline_28d"]),
+            (d["baseline_reference"] > 0)
+            & (d["energy"] > d["baseline_reference"]),
             np.inf,
             0.0,
         ),
     )
-    d["ratio_to_baseline"] = d["energy"] / d["baseline_28d"].replace(0, np.nan)
+    d["ratio_to_baseline"] = d["energy"] / d["baseline_reference"].replace(0, np.nan)
     d["anomaly"] = (
-        d["baseline_28d"].notna()
+        d["baseline_reference"].notna()
         & (
             (d["robust_z"] >= CONFIG.robust_z_threshold)
             & (d["ratio_to_baseline"] >= 1 + CONFIG.relative_gap_threshold)
         )
     )
 
-    valid = d[d["baseline_28d"].notna()].copy()
+    valid = d[d["baseline_reference"].notna()].copy()
     anomaly_days = int(valid["anomaly"].sum())
     anomaly_share = float(valid["anomaly"].mean()) if len(valid) else 0.0
     total_energy = float(d["energy"].sum())
-    baseline_energy = float(d["baseline_28d"].fillna(d["energy"]).sum())
+    baseline_energy = float(d["baseline_reference"].fillna(d["energy"]).sum())
     potential_pct = (
         max(0.0, (total_energy - baseline_energy) / total_energy * 100)
         if total_energy > 0
