@@ -10,8 +10,8 @@ def make_daily(values):
 
 def test_diagnostic_uses_past_only_baseline_and_flags_spike():
     diagnosed, summary = diagnose_uploaded_data(make_daily([100.0] * 28 + [130.0, 100.0, 100.0]))
-    assert pd.isna(diagnosed.loc[0, "baseline_28d"])
-    assert diagnosed.loc[28, "baseline_28d"] == 100.0
+    assert pd.isna(diagnosed.loc[0, "baseline_reference"])
+    assert diagnosed.loc[28, "baseline_reference"] == 100.0
     assert bool(diagnosed.loc[28, "anomaly"])
     assert summary["anomaly_days"] >= 1
 
@@ -35,7 +35,7 @@ def test_diagnostic_windows_use_calendar_days_when_dates_are_missing():
 
     # Only 13 observed readings fall in the 28 calendar days before Jan 30;
     # a row-count window would incorrectly treat the baseline as complete.
-    assert pd.isna(diagnosed.loc[diagnosed["date"] == pd.Timestamp("2026-01-30"), "baseline_28d"].iloc[0])
+    assert pd.isna(diagnosed.loc[diagnosed["date"] == pd.Timestamp("2026-01-30"), "baseline_reference"].iloc[0])
 
 
 def test_diagnostic_rejects_duplicate_daily_rows():
@@ -45,3 +45,15 @@ def test_diagnostic_rejects_duplicate_daily_rows():
     import pytest
     with pytest.raises(ValueError, match="at most one row per date"):
         diagnose_uploaded_data(frame)
+
+
+def test_diagnostic_discards_negative_energy_and_rejects_empty_valid_series():
+    import pytest
+
+    frame = make_daily([100.0, -5.0, 120.0])
+    diagnosed, summary = diagnose_uploaded_data(frame)
+    assert len(diagnosed) == 2
+    assert summary["records"] == 2
+
+    with pytest.raises(ValueError, match="no valid non-negative energy"):
+        diagnose_uploaded_data(make_daily([-1.0, -2.0]))
