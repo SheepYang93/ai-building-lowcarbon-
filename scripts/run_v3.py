@@ -173,3 +173,62 @@ if len(te):
     plt.close()
 else:
     print("Warning: chronological test set is empty; prediction plot was skipped.")
+
+# Record provenance for reproducibility without exposing local absolute paths.
+import hashlib
+import platform
+import subprocess
+from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    git_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, stderr=subprocess.DEVNULL, text=True
+    ).strip()
+except (subprocess.SubprocessError, FileNotFoundError):
+    git_commit = None
+
+def package_version(name):
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return None
+
+input_path = Path(args.input)
+input_sha256 = hashlib.sha256(input_path.read_bytes()).hexdigest()
+manifest = {
+    "manifest_version": 1,
+    "created_at_utc": datetime.now(timezone.utc).isoformat(),
+    "git_commit": git_commit,
+    "input": {
+        "filename": input_path.name,
+        "sha256": input_sha256,
+        "rows_after_filter": int(len(df)),
+        "buildings_after_filter": int(df["building_id"].nunique()),
+        "date_start": str(df["date"].min().date()),
+        "date_end": str(df["date"].max().date()),
+    },
+    "parameters": {
+        "train_cap": args.train_cap,
+        "building_test_size": args.building_test_size,
+        "building_seed": args.building_seed,
+        "model": "ExtraTreesRegressor",
+    },
+    "runtime": {
+        "python": platform.python_version(),
+        "pandas": package_version("pandas"),
+        "numpy": package_version("numpy"),
+        "scikit_learn": package_version("scikit-learn"),
+    },
+    "artifacts": [
+        "metrics.json", "evaluation_report.md", "evaluation_report.docx",
+        "chronological_test_predictions.csv", "unseen_building_predictions.csv",
+        "error_analysis_by_building.csv", "top10_high_error_buildings.csv",
+        "feature_importance.csv", "anomaly_buildings.csv",
+        "carbon_scenarios.csv", "figures/prediction_vs_actual.png",
+    ],
+}
+(out / "run_manifest.json").write_text(
+    json.dumps(manifest, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8"
+)
+print(f"Run manifest written to: {out / 'run_manifest.json'}")
