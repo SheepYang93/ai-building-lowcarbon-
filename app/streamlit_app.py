@@ -426,7 +426,7 @@ def build_report(summary, d, metadata):
     expected_days = (pd.Timestamp(d["date"].max()) - pd.Timestamp(d["date"].min())).days + 1
     temporal_coverage = min(len(d) / max(expected_days, 1), 1.0) * 100
     missing_days = max(expected_days - len(d), 0)
-    peak = d.loc[d["anomaly"], ["date", "energy", "baseline_28d", "robust_z"]].copy()
+    peak = d.loc[d["anomaly"], ["date", "energy", "baseline_reference", "robust_z"]].copy()
     peak = peak.sort_values("robust_z", ascending=False).head(10)
 
     lines = [
@@ -479,7 +479,7 @@ def build_report(summary, d, metadata):
         for _, row in peak.iterrows():
             lines.append(
                 f"| {row['date'].date()} | {row['energy']:.2f} | "
-                f"{row['baseline_28d']:.2f} | {row['robust_z']:.2f} |"
+                f"{row['baseline_reference']:.2f} | {row['robust_z']:.2f} |"
             )
     else:
         lines.append(f"- {tr('未检测到稳健异常日期。', 'No robust anomaly dates detected.')}")
@@ -802,8 +802,8 @@ with tabs[1]:
             st.markdown(f'<div class="section-title">{tr("能耗特征", "Energy fingerprint")}</div>', unsafe_allow_html=True)
             fp1, fp2 = st.columns(2)
             with fp1:
-                energy_chart = diagnosed.set_index("date")[["energy", "baseline_28d"]].rename(
-                    columns={"energy": tr("实际能耗", "Actual energy"), "baseline_28d": tr("28天历史基线", "28-day historical baseline")}
+                energy_chart = diagnosed.set_index("date")[["energy", "baseline_reference"]].rename(
+                    columns={"energy": tr("实际能耗", "Actual energy"), "baseline_reference": tr("28天历史基线", "28-day historical baseline")}
                 )
                 st.line_chart(energy_chart)
             with fp2:
@@ -817,11 +817,11 @@ with tabs[1]:
                 st.subheader(tr("检测到的异常日期", "Detected anomaly dates"))
                 st.dataframe(
                     anomaly_view[
-                        ["date", "energy", "baseline_28d", "ratio_to_baseline", "robust_z"]
+                        ["date", "energy", "baseline_reference", "ratio_to_baseline", "robust_z"]
                     ].tail(50).rename(columns={
                         "date": tr("日期", "Date"),
                         "energy": tr("能耗", "Energy"),
-                        "baseline_28d": tr("28天历史基线", "28-day baseline"),
+                        "baseline_reference": tr("历史参考基线", "Historical reference baseline"),
                         "ratio_to_baseline": tr("相对基线比值", "Ratio to baseline"),
                         "robust_z": tr("稳健 Z 分数", "Robust Z"),
                     }),
