@@ -1,7 +1,7 @@
 # Experiment Record
 
 ## Prediction
-Historical experiments compared tree-based models under rolling time validation. The strongest configurations achieved roughly R² ≈ 0.98 and WAPE ≈ 6–8% in the public dataset, depending on split and subgroup.
+Historical experiments compared tree-based models under rolling time validation. The strongest recorded configurations achieved roughly R² ≈ 0.98 and WAPE ≈ 6–8%, depending on split and subgroup. The exact dataset derivative and run manifest are not bundled in the current repository; these are historical results, not a reproducible run from current HEAD.
 
 ## Anomaly detection
 A rolling-median + robust-MAD method was developed after rejecting naive actual/predicted ratios that were unstable near zero baselines.
