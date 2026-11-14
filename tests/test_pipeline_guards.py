@@ -702,3 +702,12 @@ def test_anomaly_table_uses_configured_reference_windows(monkeypatch):
     result = anomaly_table(data)
 
     assert result.loc[0, "anomaly_days"] == 1
+
+
+def test_report_explains_baseline_cohorts_and_manifest_tracks_group_predictions():
+    from pathlib import Path
+
+    source = Path("scripts/run_v3.py").read_text(encoding="utf-8")
+    assert "each uses its valid predictions; n and coverage may differ" in source
+    manifest_section = source.split('"artifacts": [', 1)[1].split("]", 1)[0]
+    assert '"unseen_building_predictions.csv"' in manifest_section
