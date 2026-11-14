@@ -105,10 +105,11 @@ def building_error_summary(predictions):
         median_absolute_percentage_error=("ape", "median"),
         ape_valid_rows=("ape", "count"),
     ).reset_index()
-    summary["wape"] = np.where(
-        summary["actual_abs_sum"] > 0,
-        summary["absolute_error_sum"] / summary["actual_abs_sum"],
-        np.nan,
+    summary["wape"] = np.nan
+    valid_wape = summary["actual_abs_sum"] > 0
+    summary.loc[valid_wape, "wape"] = (
+        summary.loc[valid_wape, "absolute_error_sum"]
+        / summary.loc[valid_wape, "actual_abs_sum"]
     )
     summary["bias_direction"] = np.where(
         summary["mean_error"] > 0, "underprediction",
