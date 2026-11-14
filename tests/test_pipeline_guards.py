@@ -477,3 +477,24 @@ def test_upload_quality_score_does_not_penalize_optional_weather():
     duplicate_score, duplicate_checks = score_upload_quality(energy_only, raw_duplicate)
     assert duplicate_checks["no_duplicate_timestamps"] == 0.75
     assert duplicate_score < 100.0
+
+
+def test_building_error_summary_zero_actual_does_not_evaluate_ape_division():
+    import warnings
+    import pandas as pd
+    from src.reporting import building_error_summary
+
+    frame = pd.DataFrame({
+        "building_id": ["zero", "zero", "positive"],
+        "actual": [0.0, 0.0, 10.0],
+        "predicted": [2.0, -1.0, 8.0],
+    })
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        summary = building_error_summary(frame).set_index("building_id")
+
+    assert summary.loc["zero", "ape_valid_rows"] == 0
+    assert pd.isna(summary.loc["zero", "median_absolute_percentage_error"])
+    assert pd.isna(summary.loc["zero", "wape"])
+    assert summary.loc["positive", "ape_valid_rows"] == 1
+    assert not any("divide by zero" in str(item.message).lower() for item in caught)
