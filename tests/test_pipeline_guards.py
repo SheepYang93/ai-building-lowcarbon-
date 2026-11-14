@@ -674,3 +674,31 @@ def test_anomaly_table_flags_large_positive_deviation_after_stable_history():
     })
     result = anomaly_table(frame)
     assert result.loc[0, "anomaly_days"] == 1
+
+
+def test_anomaly_table_uses_configured_reference_windows(monkeypatch):
+    from dataclasses import replace
+    import app.config as config
+
+    monkeypatch.setattr(
+        config,
+        "CONFIG",
+        replace(
+            config.CONFIG,
+            baseline_window=5,
+            baseline_min_periods=5,
+            mad_window=5,
+            mad_min_periods=5,
+        ),
+    )
+    data = pd.DataFrame({
+        "building_id": ["b1"] * 20,
+        "date": pd.date_range("2026-01-01", periods=20),
+        "meter_reading": [100.0] * 19 + [150.0],
+        "sub_primaryspaceusage": ["Education"] * 20,
+        "sqm": [500.0] * 20,
+    })
+
+    result = anomaly_table(data)
+
+    assert result.loc[0, "anomaly_days"] == 1
