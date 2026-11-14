@@ -479,7 +479,7 @@ def test_upload_quality_score_does_not_penalize_optional_weather():
     assert duplicate_score < 100.0
 
 
-def test_building_error_summary_zero_actual_does_not_evaluate_ape_division():
+def test_building_error_summary_zero_denominators_do_not_warn_for_ape_or_wape():
     import warnings
     import pandas as pd
     from src.reporting import building_error_summary
