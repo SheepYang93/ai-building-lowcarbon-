@@ -627,3 +627,35 @@ def test_anomaly_table_rejects_duplicate_normalized_daily_rows():
     })
     with pytest.raises(ValueError, match="one reading per building/date"):
         anomaly_table(data)
+
+
+def test_anomaly_table_uses_configured_robust_z_threshold(monkeypatch):
+    from dataclasses import replace
+    import src.pipeline as pipeline
+
+    dates = pd.date_range("2024-01-01", periods=80)
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * 80,
+        "date": dates,
+        "meter_reading": [100.0] * 79 + [150.0],
+        "sub_primaryspaceusage": ["Education"] * 80,
+        "sqm": [100.0] * 80,
+    })
+    monkeypatch.setattr(pipeline, "CONFIG", replace(pipeline.CONFIG, robust_z_threshold=1e12))
+    result = pipeline.anomaly_table(frame)
+    assert result.loc[0, "anomaly_days"] == 0
+
+
+def test_anomaly_table_does_not_flag_zero_baseline_as_relative_anomaly():
+    from src.pipeline import anomaly_table
+
+    dates = pd.date_range("2024-01-01", periods=80)
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * 80,
+        "date": dates,
+        "meter_reading": [0.0] * 79 + [10.0],
+        "sub_primaryspaceusage": ["Education"] * 80,
+        "sqm": [100.0] * 80,
+    })
+    result = anomaly_table(frame)
+    assert result.loc[0, "anomaly_days"] == 0
