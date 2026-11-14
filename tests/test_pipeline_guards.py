@@ -525,3 +525,23 @@ def test_chronological_export_ape_uses_masked_division_for_zero_actuals():
     assert 'valid_ape = actual_abs > 0' in source
     assert 'chronological_predictions.loc[valid_ape, "absolute_error"] / actual_abs.loc[valid_ape]' in source
     assert 'np.where(\n    actual_abs > 0' not in source
+
+
+def test_load_filter_rejects_duplicate_building_date_daily_readings(tmp_path):
+    import pandas as pd
+    import pytest
+    from src.pipeline import load_filter
+
+    frame = pd.DataFrame({
+        "building_id": ["B1", "B1"],
+        "meter": ["electricity", "electricity"],
+        "date": ["2024-01-01", "2024-01-01"],
+        "meter_reading": [10.0, 11.0],
+        "sub_primaryspaceusage": ["Education", "Education"],
+        "sqm": [100.0, 100.0],
+    })
+    path = tmp_path / "duplicate.csv"
+    frame.to_csv(path, index=False)
+
+    with pytest.raises(ValueError, match="duplicate building/date readings"):
+        load_filter(path)
