@@ -4,7 +4,7 @@ This document describes the reproducible validation currently implemented in `sr
 
 ## 1. Chronological holdout
 
-- Rows are sorted by building and date; features use calendar fields and lag/rolling statistics shifted by one observation.
+- Rows are sorted by building and date; features use calendar fields, exact calendar-day lags, and prior-calendar-day rolling windows; missing dates remain missing rather than compressing time.
 - A date cutoff is selected at 80% of the distinct dates with complete features.
 - Training rows are strictly earlier than the cutoff; test rows are on or after it.
 - ExtraTrees is fit only on the training partition and evaluated on the later test partition.
@@ -20,7 +20,7 @@ Three past-only baselines are evaluated:
 | Seasonal-7-day | Same building's exact reading seven calendar days earlier |
 | Rolling median-28 | Median of available readings in the preceding 28 calendar days; at least 7 observations required |
 
-Missing history produces an unavailable prediction; it is not silently imputed.
+Missing history produces an unavailable prediction; it is not silently imputed. Duplicate building/date records are rejected after date normalization.
 
 ## 3. Fair comparison cohort
 
@@ -36,7 +36,7 @@ A separate `GroupShuffleSplit` partitions by `building_id`. The model is fit onl
 
 ## 5. Metrics and diagnostics
 
-The pipeline reports R², MAE, RMSE and WAPE with explicit undefined states: WAPE is undefined when the sum of absolute actual values is zero; R² is undefined for a one-row cohort. Empty fair-comparison cohorts are represented as `no_shared_valid_rows` instead of crashing. Non-finite metric values are serialized as JSON `null` and displayed as `N/A` in the Markdown report and CSV exports.
+Anomaly screening uses the configured relative-gap and robust-z thresholds; zero-baseline periods are excluded from relative anomaly classification. The pipeline reports R², MAE, RMSE and WAPE with explicit undefined states: WAPE is undefined when the sum of absolute actual values is zero; R² is undefined for a one-row cohort. Empty fair-comparison cohorts are represented as `no_shared_valid_rows` instead of crashing. Non-finite metric values are serialized as JSON `null` and displayed as `N/A` in the Markdown report and CSV exports.
 
 Building-level diagnostics include test-row count, MAE, RMSE, WAPE, mean residual (actual minus predicted), bias direction (positive = underprediction; negative = overprediction), median APE and the number of valid APE rows. APE excludes zero actual readings rather than dividing by an artificial epsilon. The pipeline exports chronological row-level predictions/residuals, a full building error table and a top-10 high-MAE table. Metrics depend on dataset filtering, period, building composition and split settings; they are not universal performance guarantees.
 
