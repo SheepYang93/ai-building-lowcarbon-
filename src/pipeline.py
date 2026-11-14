@@ -15,7 +15,8 @@ def load_filter(path):
     missing = sorted(set(REQUIRED) - set(header))
     if missing:
         raise ValueError("Input CSV is missing required columns: " + ", ".join(missing))
-    df=pd.read_csv(path,usecols=lambda c:c in cols,parse_dates=["date"])
+    df=pd.read_csv(path,usecols=lambda c:c in cols)
+    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.normalize()
     df=df[df["meter"].eq("electricity")].copy()
     df=df[df["sub_primaryspaceusage"].fillna("").str.contains("Education|College|University|Classroom|Laboratory|School",case=False,regex=True)]
     df["meter_reading"]=pd.to_numeric(df["meter_reading"],errors="coerce")
@@ -30,32 +31,31 @@ def load_filter(path):
         )
     return df.sort_values(["building_id","date"])
 
+
 def features(df):
     d=df.copy()
-    d["date"] = pd.to_datetime(d["date"], errors="coerce")
+    d["date"] = pd.to_datetime(d["date"], errors="coerce").dt.normalize()
     d=d.dropna(subset=["building_id","date","meter_reading","sqm"]).copy()
     d=d.sort_values(["building_id","date"],kind="mergesort").reset_index(drop=True)
     d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
-    # Calendar-exact lags: a missing date must not silently turn lag1 into lag4.
-    daily = d.set_index(["building_id", "date"])["meter_reading"]
-    for k in [1, 7, 14, 28]:
-        keys = pd.MultiIndex.from_arrays([
-            d["building_id"].to_numpy(),
-            (d["date"] - pd.Timedelta(days=k)).to_numpy(),
-        ])
-        d[f"lag{k}"] = daily.reindex(keys).to_numpy()
-    # Rolling statistics use only prior calendar days; missing readings remain missing.
-    for w in [7, 28]:
-        values=[]
-        for bid, date in zip(d["building_id"], d["date"]):
-            past = daily.loc[bid] if bid in daily.index.get_level_values(0) else pd.Series(dtype=float)
-            window = past.reindex(pd.date_range(date-pd.Timedelta(days=w), date-pd.Timedelta(days=1), freq="D"))
-            values.append((window.mean(), window.std()) if window.notna().sum()==w else (np.nan,np.nan))
-        d[f"rm{w}"]=[x[0] for x in values]
-        d[f"rv{w}"]=[x[1] for x in values]
-    # Weather fields are optional. Include a weather feature only when
-    # every retained row has a numeric value: median-imputing across the full
-    # timeline would leak information from the future into chronological tests.
+
+    # Build one continuous daily calendar per building. Missing dates stay NaN,
+    # so lags and rolling features represent calendar days rather than row counts.
+    for _, indices in d.groupby("building_id", sort=False).groups.items():
+        group=d.loc[indices]
+        observed=group.set_index("date")["meter_reading"].sort_index()
+        calendar=pd.date_range(observed.index.min(), observed.index.max(), freq="D")
+        daily=observed.reindex(calendar)
+        dates=group["date"]
+        for k in [1,7,14,28]:
+            d.loc[indices, f"lag{k}"]=dates.map(daily.shift(k)).to_numpy()
+        for w in [7,28]:
+            rolling=daily.shift(1).rolling(w, min_periods=w)
+            d.loc[indices, f"rm{w}"]=dates.map(rolling.mean()).to_numpy()
+            d.loc[indices, f"rv{w}"]=dates.map(rolling.std()).to_numpy()
+
+    # Weather fields are optional. Include only complete numeric fields to avoid
+    # full-timeline median imputation leaking future information into time splits.
     f=["sqm","month","dayofyear","dow","is_weekend","lag1","lag7","lag14","lag28","rm7","rm28","rv7","rv28"]
     for col in ["airTemperature","cloudCoverage","dewTemperature","windSpeed"]:
         if col in d.columns:
