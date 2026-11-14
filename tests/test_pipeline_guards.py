@@ -498,3 +498,20 @@ def test_building_error_summary_zero_denominators_do_not_warn_for_ape_or_wape():
     assert pd.isna(summary.loc["zero", "wape"])
     assert summary.loc["positive", "ape_valid_rows"] == 1
     assert not any("divide by zero" in str(item.message).lower() for item in caught)
+
+
+def test_run_v3_rejects_invalid_experiment_parameters_before_data_access():
+    import subprocess
+    import sys
+
+    script = "scripts/run_v3.py"
+    for args, expected in [
+        (["--input", "missing.csv", "--train-cap", "0"], "--train-cap must be a positive integer"),
+        (["--input", "missing.csv", "--building-test-size", "1"], "--building-test-size must be strictly between 0 and 1"),
+    ]:
+        result = subprocess.run(
+            [sys.executable, script, *args], capture_output=True, text=True, check=False
+        )
+        assert result.returncode != 0
+        assert expected in result.stderr
+        assert "Input CSV not found" not in result.stderr
