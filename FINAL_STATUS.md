@@ -25,9 +25,9 @@
 
 ## Next validation priorities
 1. Run the reproducible pipeline on the actual dataset and record current metrics plus same-holdout baseline comparisons.
-3. Run the held-out-building evaluation and document its performance separately from chronological holdout.
-4. Verify meter units and factor applicability before presenting physical kWh or CO₂ estimates.
-5. Validate a real intervention with treatment/control data and study-specific weather, seasonality and compliance controls.
+2. Run the held-out-building evaluation and document its performance separately from chronological holdout.
+3. Verify meter units and factor applicability before presenting physical kWh or CO₂ estimates.
+4. Validate a real intervention with treatment/control data and study-specific weather, seasonality and compliance controls.
 
 ## Evidence path
 Public data → quality control → chronological prediction → anomaly screening → intervention hypothesis → conditional carbon scenario → field validation.
