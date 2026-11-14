@@ -57,7 +57,7 @@ The project uses **strict chronological validation** rather than random splittin
 Across repeated rolling-window experiments on the public dataset:
 
 - **Historical example run (not reproduced from current HEAD):** R² ≈ 0.986, WAPE ≈ 5.9%. The exact dataset derivative and its run manifest are not bundled in this repository, so these values are historical context—not independently reproducible evidence from the current checkout.
-- The repository also records rolling-window robustness checks and subgroup sensitivity analysis
+- Historical experiment notes describe rolling-window robustness checks and subgroup sensitivity analysis; their original dataset/run artifacts are not included in this checkout
 - Exact results vary by time window, seed, subgroup and data filtering; the included metric is an example artifact rather than a universal benchmark
 
 See [EXPERIMENTS.md](EXPERIMENTS.md) for historical experiment records and limitations. The current reproducible evaluation protocol—including chronological holdout, common-row baseline comparison, building-group holdout, metrics and leakage tests—is documented in [MODEL_VALIDATION.md](MODEL_VALIDATION.md).
