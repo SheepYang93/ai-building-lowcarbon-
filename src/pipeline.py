@@ -213,10 +213,10 @@ def anomaly_table(df):
         observed=group.set_index("date")["meter_reading"].sort_index()
         calendar=pd.date_range(observed.index.min(), observed.index.max(), freq="D")
         daily=observed.reindex(calendar)
-        baseline=daily.shift(1).rolling(28, min_periods=14).median()
+        baseline=daily.shift(1).rolling(CONFIG.baseline_window, min_periods=CONFIG.baseline_min_periods).median()
         residual=daily-baseline
         mad=residual.shift(1).rolling(
-            56, min_periods=14
+            CONFIG.mad_window, min_periods=CONFIG.mad_min_periods
         ).apply(lambda values: np.median(np.abs(values-np.median(values))), raw=True)
         dates=group["date"]
         x.loc[indices,"baseline28"]=dates.map(baseline).to_numpy()
