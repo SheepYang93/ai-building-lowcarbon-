@@ -42,13 +42,13 @@ def diagnose_uploaded_data(daily):
     ).apply(_robust_mad, raw=True)
     d = d.set_index("date")
     d["baseline_28d"] = baseline.reindex(d.index).to_numpy()
-    d["mad_28d"] = mad.reindex(d.index).to_numpy()
+    d["mad_residual"] = mad.reindex(d.index).to_numpy()
     d = d.reset_index()
     d["weekday"] = d["date"].dt.day_of_week < 5
 
     # A zero MAD means the recent history is flat. In that case a sufficiently
     # large relative jump is itself strong evidence of an operational anomaly.
-    scale = 1.4826 * d["mad_28d"]
+    scale = 1.4826 * d["mad_residual"]
     d["robust_z"] = np.where(
         scale > 1e-9,
         (d["energy"] - d["baseline_28d"]) / scale,
