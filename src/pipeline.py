@@ -206,8 +206,8 @@ def anomaly_table(df):
     x = x.sort_values(["building_id", "date"]).reset_index(drop=True)
 
     # Rolling reference windows are calendar-exact; gaps do not compress time.
-    x["baseline28"] = np.nan
-    x["mad56"] = np.nan
+    x["baseline_reference"] = np.nan
+    x["residual_mad"] = np.nan
     for _, indices in x.groupby("building_id", sort=False).groups.items():
         group=x.loc[indices]
         observed=group.set_index("date")["meter_reading"].sort_index()
@@ -219,13 +219,13 @@ def anomaly_table(df):
             CONFIG.mad_window, min_periods=CONFIG.mad_min_periods
         ).apply(lambda values: np.median(np.abs(values-np.median(values))), raw=True)
         dates=group["date"]
-        x.loc[indices,"baseline28"]=dates.map(baseline).to_numpy()
-        x.loc[indices,"mad56"]=dates.map(mad).to_numpy()
+        x.loc[indices,"baseline_reference"]=dates.map(baseline).to_numpy()
+        x.loc[indices,"residual_mad"]=dates.map(mad).to_numpy()
 
-    x["residual"]=x.meter_reading-x.baseline28
-    x["scale"]=(1.4826*x.mad56).clip(lower=1e-9)
-    baseline_valid = x["baseline28"].abs() > 1e-9
-    x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9)
+    x["residual"]=x.meter_reading-x.baseline_reference
+    x["scale"]=(1.4826*x.residual_mad).clip(lower=1e-9)
+    baseline_valid = x["baseline_reference"].abs() > 1e-9
+    x["stable_dev"]=x.residual/x.baseline_reference.abs().clip(lower=1e-9)
     x["robust_z"]=x.residual/x.scale
     # Use the configured robust-z threshold; zero-baseline periods are not
     # assigned relative anomaly scores because the ratio is undefined in practice.
