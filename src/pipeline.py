@@ -39,7 +39,7 @@ def features(df):
     if d.duplicated(["building_id", "date"]).any():
         raise ValueError("Feature data must contain at most one reading per building/date.")
     d=d.sort_values(["building_id","date"],kind="mergesort").reset_index(drop=True)
-    d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
+    d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.day_of_year; d["dow"]=d.date.dt.day_of_week; d["is_weekend"]=(d.dow>=5).astype(int)
 
     # Build one continuous daily calendar per building. Missing dates stay NaN,
     # so lags and rolling features represent calendar days rather than row counts.
