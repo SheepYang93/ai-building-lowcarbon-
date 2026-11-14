@@ -678,13 +678,13 @@ def test_anomaly_table_flags_large_positive_deviation_after_stable_history():
 
 def test_anomaly_table_uses_configured_reference_windows(monkeypatch):
     from dataclasses import replace
-    import app.config as config
+    import src.pipeline as pipeline
 
     monkeypatch.setattr(
-        config,
+        pipeline,
         "CONFIG",
         replace(
-            config.CONFIG,
+            pipeline.CONFIG,
             baseline_window=5,
             baseline_min_periods=5,
             mad_window=5,
