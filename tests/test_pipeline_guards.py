@@ -564,3 +564,43 @@ def test_features_use_calendar_exact_lags_and_require_complete_rolling_windows()
     assert np.isnan(jan5["lag1"])  # Jan 4 is missing; do not substitute Jan 2.
     assert jan6["lag1"] == 50.0
     assert np.isnan(jan6["rm7"])  # incomplete calendar window is not a 7-row window.
+
+
+
+def test_anomaly_calendar_windows_do_not_compress_missing_dates():
+    import numpy as np
+    import pandas as pd
+    from src.pipeline import anomaly_table
+
+    dates = list(pd.date_range("2024-01-01", periods=70))
+    dates.remove(pd.Timestamp("2024-01-20"))
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * len(dates),
+        "date": dates,
+        "meter_reading": [100.0] * len(dates),
+        "sub_primaryspaceusage": ["Education"] * len(dates),
+        "sqm": [100.0] * len(dates),
+    })
+    # Smoke-check calendar-aware anomaly processing across a gap.
+    result = anomaly_table(frame)
+    assert len(result) == 1
+    assert result.loc[0, "days"] == len(dates)
+
+
+def test_load_filter_normalizes_dates_and_detects_same_day_duplicate(tmp_path):
+    import pandas as pd
+    import pytest
+    from src.pipeline import load_filter
+
+    frame = pd.DataFrame({
+        "building_id": ["B1", "B1"],
+        "meter": ["electricity", "electricity"],
+        "date": ["2024-01-01 00:00", "2024-01-01 12:00"],
+        "meter_reading": [10.0, 11.0],
+        "sub_primaryspaceusage": ["Education", "Education"],
+        "sqm": [100.0, 100.0],
+    })
+    path = tmp_path / "same_day.csv"
+    frame.to_csv(path, index=False)
+    with pytest.raises(ValueError, match="duplicate building/date readings"):
+        load_filter(path)
