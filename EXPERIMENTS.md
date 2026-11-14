@@ -19,7 +19,7 @@ Intervention families were mapped from temporal/behavioral fingerprints. Their e
 Carbon scenarios use an emission factor only conditionally. The public derivative's meter-unit lineage must be verified before treating readings as kWh.
 
 ## Field validation
-The validation UI supports treatment/control DID, a pre-intervention slope diagnostic, a placebo DID restricted to observations before the actual intervention, and an optional cluster bootstrap resampled separately within treated and control groups. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment.
+The validation UI supports treatment/control DID, a pre-intervention slope diagnostic, a placebo DID restricted to observations before the actual intervention, and an optional cluster bootstrap resampled separately within treated and control groups. These are evidence safeguards, not proof of causality; weather, seasonality, autocorrelation and intervention compliance still require study-specific treatment.
 
 ## Generalization to unseen buildings
 
@@ -33,6 +33,10 @@ python scripts/run_v3.py --input data/test.csv --output outputs --building-test-
 
 This is a transfer-to-new-buildings test **with historical meter data available for each test building**: past-only lag/rolling features are retained, but the held-out buildings are excluded from model fitting. It is not a zero-history cold-start evaluation. Compare the unseen-building R², MAE and WAPE against the chronological metrics before presenting the model as generalizable. Synthetic unit tests verify that building IDs do not overlap across partitions; they do not substitute for running the evaluation on the full dataset. No unseen-building performance number is claimed until that run has been completed and inspected.
 
+
+## Building-level error diagnostics
+
+Chronological test predictions are summarized per building with test-row count, MAE, RMSE, WAPE, mean residual (actual minus predicted), bias direction and median APE. APE excludes zero actual readings; WAPE and APE are marked undefined when their denominators are invalid. Reports list the highest-MAE building for the current split and link the full diagnostic CSV plus top-10 export. These are error diagnostics, not a ranking of operational waste or retrofit value.
 
 ## Fair baseline comparison
 
