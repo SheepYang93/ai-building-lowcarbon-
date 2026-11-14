@@ -72,8 +72,10 @@ chronological_predictions["predicted"] = pred
 chronological_predictions["residual"] = chronological_predictions["meter_reading"] - chronological_predictions["predicted"]
 chronological_predictions["absolute_error"] = chronological_predictions["residual"].abs()
 actual_abs = chronological_predictions["meter_reading"].abs()
-chronological_predictions["absolute_percentage_error"] = np.where(
-    actual_abs > 0, chronological_predictions["absolute_error"] / actual_abs, np.nan
+chronological_predictions["absolute_percentage_error"] = np.nan
+valid_ape = actual_abs > 0
+chronological_predictions.loc[valid_ape, "absolute_percentage_error"] = (
+    chronological_predictions.loc[valid_ape, "absolute_error"] / actual_abs.loc[valid_ape]
 )
 chronological_predictions.to_csv(out/"chronological_test_predictions.csv", index=False, na_rep="N/A")
 from src.reporting import building_error_summary
