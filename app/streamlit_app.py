@@ -708,8 +708,8 @@ with tabs[1]:
             if summary["records"] < 35:
                 st.warning(
                     tr(
-                        "上传时段不足 {CONFIG.baseline_window + 7} 天，{CONFIG.baseline_window} 天稳健基线的参考信息有限；建议使用 8–12 周数据进行更可靠的现场验证。",
-                        "The uploaded period is shorter than {CONFIG.baseline_window + 7} days, so the {CONFIG.baseline_window}-day robust baseline has limited context. Use 8–12 weeks for stronger field validation.",
+                        f"上传时段不足 {CONFIG.baseline_window + 7} 天，{CONFIG.baseline_window} 天稳健基线的参考信息有限；建议使用 8–12 周数据进行更可靠的现场验证。",
+                        f"The uploaded period is shorter than {CONFIG.baseline_window + 7} days, so the {CONFIG.baseline_window}-day robust baseline has limited context. Use 8–12 weeks for stronger field validation.",
                     )
                 )
 
