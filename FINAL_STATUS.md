@@ -7,10 +7,13 @@
 - Building-level robust anomaly screening and energy fingerprints
 - Counterfactual screening and intervention mapping
 - Conditional Scope 2 electricity CO₂ scenario calculations with versioned factors
-- Streamlit dashboard with CSV upload, quality checks, bilingual UI and report export
+- Streamlit dashboard deployed to Streamlit Community Cloud with CSV upload, quality checks, bilingual UI and report export (live demo: https://cwtjwabswg9fdbpgvfyhul.streamlit.app/)
+- Markdown + Word model evaluation reports with common-cohort baseline comparison, building-level error diagnostics, exported artifact index and explicit evidence boundaries
+- Core upload-quality score separates mandatory meter/time checks from optional weather readiness; temporal coverage and duplicate raw timestamps are tested
 - Field-validation UI for treatment/control DID, pre-trend slope diagnostics, pre-intervention placebo DID and optional clustered bootstrap intervals
 - Automated tests for pipeline guards, economics and validation helpers
-- GitHub Actions workflow and Railway deployment configuration
+- GitHub Actions CI with regression tests for zero-denominator APE handling and non-finite metric/report behavior
+- GitHub Actions workflow and Railway deployment configuration (legacy/optional)
 
 ## Not claimed
 - No measured campus energy savings
@@ -21,8 +24,7 @@
 - No unseen-building performance claim without a completed full-data evaluation
 
 ## Next validation priorities
-1. Confirm the latest GitHub Actions pytest run is green; inspect the full failure log if not.
-2. Run the reproducible pipeline on the actual dataset and record current metrics plus same-holdout baseline comparisons.
+1. Run the reproducible pipeline on the actual dataset and record current metrics plus same-holdout baseline comparisons.
 3. Run the held-out-building evaluation and document its performance separately from chronological holdout.
 4. Verify meter units and factor applicability before presenting physical kWh or CO₂ estimates.
 5. Validate a real intervention with treatment/control data and study-specific weather, seasonality and compliance controls.
