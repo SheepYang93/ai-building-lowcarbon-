@@ -725,7 +725,7 @@ with tabs[1]:
             q1, q2, q3 = st.columns(3)
             q1.metric(tr("数据质量", "Data quality"), f"{quality_score:.0f}/100")
             q2.metric(tr("证据等级", "Evidence level"), summary["evidence_level"])
-            q3.caption("Quality score covers timestamp/energy validity, non-negative readings, duplicate dates, temporal coverage and temperature availability. It is a screening score, not a certification.")
+            q3.caption(tr("核心数据质量评分仅覆盖时间戳/能耗有效性、非负读数、重复日期和时间覆盖率；天气完整度单独评估且为可选项。该评分用于筛查，不构成认证。", "Core data-quality score covers timestamp/energy validity, non-negative readings, duplicate dates and temporal coverage. Weather completeness is assessed separately and is optional. This is a screening score, not a certification."))
             
             ai_result, ai_message = run_uploaded_ai_screening(daily)
             if ai_result is not None:
