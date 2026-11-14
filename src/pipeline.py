@@ -195,11 +195,33 @@ def anomaly_table(df):
     missing = [column for column in required if column not in x.columns]
     if missing:
         raise ValueError("Anomaly diagnosis is missing required columns: " + ", ".join(missing))
-    x = x[required].sort_values(["building_id", "date"]).copy()
-    g=x.groupby("building_id")["meter_reading"]
-    x["baseline28"]=g.transform(lambda s:s.shift(1).rolling(28,min_periods=14).median()); x["residual"]=x.meter_reading-x.baseline28
-    x["mad56"]=x.groupby("building_id")["residual"].transform(lambda s:s.shift(1).rolling(56,min_periods=14).apply(lambda v:np.median(np.abs(v-np.median(v))),raw=True))
-    x["scale"]=(1.4826*x.mad56).clip(lower=1e-9); x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9); x["robust_z"]=x.residual/x.scale
+    x = x[required].copy()
+    x["date"] = pd.to_datetime(x["date"], errors="coerce").dt.normalize()
+    x["meter_reading"] = pd.to_numeric(x["meter_reading"], errors="coerce")
+    x = x.dropna(subset=["building_id", "date", "meter_reading"])
+    x = x.sort_values(["building_id", "date"]).reset_index(drop=True)
+
+    # Rolling reference windows are calendar-exact; gaps do not compress time.
+    x["baseline28"] = np.nan
+    x["mad56"] = np.nan
+    for _, indices in x.groupby("building_id", sort=False).groups.items():
+        group=x.loc[indices]
+        observed=group.set_index("date")["meter_reading"].sort_index()
+        calendar=pd.date_range(observed.index.min(), observed.index.max(), freq="D")
+        daily=observed.reindex(calendar)
+        baseline=daily.shift(1).rolling(28, min_periods=14).median()
+        residual=daily-baseline
+        mad=residual.shift(1).rolling(
+            56, min_periods=14
+        ).apply(lambda values: np.median(np.abs(values-np.median(values))), raw=True)
+        dates=group["date"]
+        x.loc[indices,"baseline28"]=dates.map(baseline).to_numpy()
+        x.loc[indices,"mad56"]=dates.map(mad).to_numpy()
+
+    x["residual"]=x.meter_reading-x.baseline28
+    x["scale"]=(1.4826*x.mad56).clip(lower=1e-9)
+    x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9)
+    x["robust_z"]=x.residual/x.scale
     x["is_anomaly"]=((x.stable_dev>=CONFIG.relative_gap_threshold)&(x.robust_z>=2)).astype(int)
     q=x.groupby("building_id").agg(sub_primaryspaceusage=("sub_primaryspaceusage","first"),sqm=("sqm","first"),site_id=("site_id","first"),days=("date","nunique"),anomaly_days=("is_anomaly","sum"),mean_stable_dev=("stable_dev",lambda s:float(s.replace([np.inf,-np.inf],np.nan).dropna().clip(lower=0).mean()))).reset_index()
     q["anomaly_share"]=q.anomaly_days/q.days.clip(lower=1); q["priority_score"]=(.55*q.mean_stable_dev.rank(pct=True)+.45*q.anomaly_share.rank(pct=True))*100
