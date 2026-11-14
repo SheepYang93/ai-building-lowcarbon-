@@ -145,10 +145,10 @@ def load_uploaded_building(uploaded_file):
 
 try:
     from app.diagnostic_core import diagnose_uploaded_data
-    from app.config import evidence_level
+    from app.config import CONFIG, evidence_level
 except ImportError:
     from diagnostic_core import diagnose_uploaded_data
-    from config import evidence_level
+    from config import CONFIG, evidence_level
 
 
 
@@ -459,7 +459,7 @@ def build_report(summary, d, metadata):
         ),
         "",
         f"## 4. {tr('反事实筛查信号', 'Counterfactual screening signal')}",
-        f"- {tr('基线：仅使用历史观测的滚动 28 天中位数', 'Baseline: trailing 28-day median using past observations only')}",
+        f"- {tr(f'基线：仅使用历史观测的滚动 {CONFIG.baseline_window} 天中位数', f'Baseline: trailing {CONFIG.baseline_window}-day median using past observations only')}",
         f"- {tr('潜在节能信号', 'Potential reduction signal')}: {summary['potential_pct']:.1f}%",
         f"- {tr('这是模型筛查信号，并非实测节能量。', 'This is a model-based screening signal, not measured savings.')}",
         "",
@@ -708,8 +708,8 @@ with tabs[1]:
             if summary["records"] < 35:
                 st.warning(
                     tr(
-                        "上传时段不足 35 天，28 天稳健基线的参考信息有限；建议使用 8–12 周数据进行更可靠的现场验证。",
-                        "The uploaded period is shorter than 35 days, so the 28-day robust baseline has limited context. Use 8–12 weeks for stronger field validation.",
+                        "上传时段不足 {CONFIG.baseline_window + 7} 天，{CONFIG.baseline_window} 天稳健基线的参考信息有限；建议使用 8–12 周数据进行更可靠的现场验证。",
+                        "The uploaded period is shorter than {CONFIG.baseline_window + 7} days, so the {CONFIG.baseline_window}-day robust baseline has limited context. Use 8–12 weeks for stronger field validation.",
                     )
                 )
 
@@ -803,7 +803,7 @@ with tabs[1]:
             fp1, fp2 = st.columns(2)
             with fp1:
                 energy_chart = diagnosed.set_index("date")[["energy", "baseline_reference"]].rename(
-                    columns={"energy": tr("实际能耗", "Actual energy"), "baseline_reference": tr("28天历史基线", "28-day historical baseline")}
+                    columns={"energy": tr("实际能耗", "Actual energy"), "baseline_reference": tr(f"{CONFIG.baseline_window}天历史基线", f"{CONFIG.baseline_window}-day historical baseline")}
                 )
                 st.line_chart(energy_chart)
             with fp2:
