@@ -36,6 +36,8 @@ def features(df):
     d=df.copy()
     d["date"] = pd.to_datetime(d["date"], errors="coerce").dt.normalize()
     d=d.dropna(subset=["building_id","date","meter_reading","sqm"]).copy()
+    if d.duplicated(["building_id", "date"]).any():
+        raise ValueError("Feature data must contain at most one reading per building/date.")
     d=d.sort_values(["building_id","date"],kind="mergesort").reset_index(drop=True)
     d["month"]=d.date.dt.month; d["dayofyear"]=d.date.dt.dayofyear; d["dow"]=d.date.dt.dayofweek; d["is_weekend"]=(d.dow>=5).astype(int)
 
@@ -199,6 +201,8 @@ def anomaly_table(df):
     x["date"] = pd.to_datetime(x["date"], errors="coerce").dt.normalize()
     x["meter_reading"] = pd.to_numeric(x["meter_reading"], errors="coerce")
     x = x.dropna(subset=["building_id", "date", "meter_reading"])
+    if x.duplicated(["building_id", "date"]).any():
+        raise ValueError("Anomaly data must contain at most one reading per building/date.")
     x = x.sort_values(["building_id", "date"]).reset_index(drop=True)
 
     # Rolling reference windows are calendar-exact; gaps do not compress time.
