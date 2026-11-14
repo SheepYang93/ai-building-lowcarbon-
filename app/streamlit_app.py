@@ -745,11 +745,23 @@ with tabs[1]:
                 )
                 st.markdown("**" + tr("实际能耗与预期能耗", "Actual vs expected energy") + "**")
                 st.line_chart(ai_plot)
-                weather_used = ai_result["metrics"].get("weather_features_used", [])
                 weather_cov = ai_result["metrics"].get("weather_completeness", {})
+                weather_labels = {
+                    "outdoor_temperature": tr("室外温度", "Outdoor temperature"),
+                    "airTemperature": tr("室外气温", "Air temperature"),
+                    "cloudCoverage": tr("云量", "Cloud coverage"),
+                    "dewTemperature": tr("露点温度", "Dew temperature"),
+                    "windSpeed": tr("风速", "Wind speed"),
+                }
+                weather_items = [
+                    f"{weather_labels.get(k, k)} {weather_cov.get(k, 0) * 100:.0f}%"
+                    for k in weather_cov
+                ]
                 st.caption(
-                    tr("天气数据完整度：", "Weather readiness: ") + ", ".join(f"{k} {weather_cov.get(k, 0) * 100:.0f}%" for k in weather_cov)
-                    + ". Features below 80% coverage are excluded rather than filled with synthetic zeros."
+                    tr("天气数据完整度：", "Weather readiness: ")
+                    + ", ".join(weather_items)
+                    + tr("。完整度低于 80% 的特征会被排除，不会用虚构零值填充。",
+                         ". Features below 80% coverage are excluded, not filled with synthetic zeros.")
                 )
                 st.caption(tr("上传数据的 AI 筛查会基于本次历史数据重新训练，不是公开数据基准模型。", "Uploaded-data AI screening is retrained on the uploaded history; it is not the public-data benchmark model."))
             else:
