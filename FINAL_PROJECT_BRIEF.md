@@ -20,9 +20,9 @@ Data quality
 → treatment/control field validation
 
 ## Key evidence
-- 537 buildings in the screened public-data subset.
-- 196,005 education electricity records; 365 days per building in the screened subset.
-- ExtraTrees repeated rolling validation: mean R² ≈ 0.985 and WAPE ≈ 6.2% across 3 rolling windows × 3 seeds.
+- Historical screened public-data record: 537 buildings; exact data derivative and run manifest are not bundled in current checkout.
+- Historical data record: 196,005 education-electricity records and 365-day coverage per building in the screened subset.
+- Historical ExtraTrees repeated rolling validation: mean R² ≈ 0.985 and WAPE ≈ 6.2% across 3 windows × 3 seeds; not a fresh current-HEAD result.
 - Historical energy features dominate short-term prediction in the tested setup; this is a modeling result, not a claim that weather is physically unimportant.
 - Anomaly experiments combine long-term peer-relative behavior with temporal morphology.
 - Counterfactual results are treated as potential signals, not measured savings.
