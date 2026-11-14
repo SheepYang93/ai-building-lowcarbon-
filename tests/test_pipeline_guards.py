@@ -108,6 +108,14 @@ def test_baselines_use_exact_model_holdout_rows():
     assert all(item["n"] == len(test_frame) for item in baselines.values())
     assert all(item["mae"] >= 0 and item["rmse"] >= 0 and item["wape"] >= 0 for item in baselines.values())
 
+    fair = metrics["common_baseline_comparison"]
+    assert fair["model"]["n"] == len(test_frame)
+    assert fair["model"]["coverage_of_chronological_test"] == 1.0
+    assert fair["model"]["mae"] == pytest.approx(metrics["mae"])
+    assert fair["model"]["rmse"] == pytest.approx(metrics["rmse"])
+    assert all(item["n"] == len(test_frame) for item in fair["baselines"].values())
+    assert all(item["mae"] >= 0 and item["rmse"] >= 0 for item in fair["baselines"].values())
+
 
 def test_carbon_scenario_labels_observed_period_not_annual():
     data = pd.DataFrame({
