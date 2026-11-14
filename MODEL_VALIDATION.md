@@ -58,7 +58,7 @@ These tests reduce known leakage risks; they do not prove the absence of every p
 python scripts/run_v3.py --input PATH_TO_DATA.csv --output outputs --building-test-size 0.2 --building-seed 42
 ```
 
-Inspect `outputs/metrics.json`, `outputs/evaluation_report.md` (Markdown), `outputs/evaluation_report.docx` (Word), `outputs/chronological_test_predictions.csv`, `outputs/unseen_building_predictions.csv`, `outputs/error_analysis_by_building.csv` and `outputs/top10_high_error_buildings.csv`.
+The run also writes `outputs/run_manifest.json` with UTC timestamp, input CSV SHA-256 (to identify the exact dataset file), filtered row/building/date coverage, run parameters, Python and core package versions, optional Git commit, and artifact index. The manifest records the input filename only—not its local absolute path. Inspect `outputs/metrics.json`, `outputs/evaluation_report.md` (Markdown), `outputs/evaluation_report.docx` (Word), `outputs/chronological_test_predictions.csv`, `outputs/unseen_building_predictions.csv`, `outputs/error_analysis_by_building.csv` and `outputs/top10_high_error_buildings.csv`.
 
 The repository's CI uses synthetic fixtures for fast regression tests. Synthetic test success is not a substitute for a fresh run on the full public dataset or for campus field validation.
 
