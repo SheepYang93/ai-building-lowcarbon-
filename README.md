@@ -236,9 +236,9 @@ This is an **AI + environmental engineering portfolio project** demonstrating Py
 
 See [RESUME_PROJECT.md](RESUME_PROJECT.md).
 
-## Current demo status
+## Live demo
 
-The hosted demo is currently unavailable; deployment is pending. Use the [Streamlit Community Cloud guide](docs/DEPLOY_STREAMLIT_CLOUD.md) or run the app locally. Do not present the old Railway URL as a live demo.
+[Open the Streamlit demo](https://cwtjwabswg9fdbpgvfyhul.streamlit.app/). The hosted app is a portfolio prototype; availability and behavior can vary with deployment/runtime limits. For reproducible evaluation, run the pipeline locally and inspect the exported artifacts.
 
 ## License
 
