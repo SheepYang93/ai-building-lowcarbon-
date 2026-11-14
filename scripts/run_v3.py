@@ -54,6 +54,9 @@ try:
     }).to_csv(out/"unseen_building_predictions.csv", index=False, na_rep="N/A")
 except ValueError as exc:
     metrics["unseen_building_evaluation"] = {"status": "not_run", "reason": str(exc)}
+    stale_unseen = out / "unseen_building_predictions.csv"
+    if stale_unseen.exists():
+        stale_unseen.unlink()
 
 metrics.update({
     "rows_after_filter":len(df),
@@ -232,12 +235,13 @@ manifest = {
     },
     "artifacts": [
         "metrics.json", "evaluation_report.md", "evaluation_report.docx",
-        "chronological_test_predictions.csv", "unseen_building_predictions.csv",
-        "error_analysis_by_building.csv", "top10_high_error_buildings.csv",
+        "chronological_test_predictions.csv", "error_analysis_by_building.csv", "top10_high_error_buildings.csv",
         "feature_importance.csv", "anomaly_buildings.csv",
         "carbon_scenarios.csv", "figures/prediction_vs_actual.png",
     ],
 }
+manifest["artifacts"] = [name for name in manifest["artifacts"] if (out / name).is_file()]
+manifest["unseen_building_evaluation_status"] = metrics["unseen_building_evaluation"].get("status", "ok")
 (out / "run_manifest.json").write_text(
     json.dumps(manifest, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8"
 )
