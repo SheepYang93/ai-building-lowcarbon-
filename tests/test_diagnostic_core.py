@@ -25,10 +25,10 @@ def test_diagnostic_returns_stable_fingerprint_for_flat_series():
 
 def test_diagnostic_windows_use_calendar_days_when_dates_are_missing():
     dates = list(pd.date_range("2026-01-01", periods=14))
-    dates += [pd.Timestamp("2026-01-29"), pd.Timestamp("2026-01-30")]
+    dates += [pd.Timestamp("2026-01-30")]
     frame = pd.DataFrame({
         "date": dates,
-        "energy": [100.0] * 14 + [100.0, 150.0],
+        "energy": [100.0] * 14 + [150.0],
     })
 
     diagnosed, _ = diagnose_uploaded_data(frame)
