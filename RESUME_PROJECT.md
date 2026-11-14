@@ -14,7 +14,7 @@ Built a Python/Streamlit prototype that converts building electricity time serie
 - **Productization:** deployed a bilingual Streamlit dashboard with CSV upload, data-quality checks, charts, report export and evidence-boundary messaging.
 
 ## Tech stack
-Python · pandas · NumPy · scikit-learn · ExtraTrees · Streamlit · pytest · GitHub Actions · Railway
+Python · pandas · NumPy · scikit-learn · ExtraTrees · Streamlit Community Cloud · pytest · GitHub Actions
 
 ## Evidence and claim boundaries
 - Public-data model metrics are specific to the documented dataset and split; do not present them as universal performance guarantees.
