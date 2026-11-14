@@ -117,8 +117,28 @@ lines += ["", "## Building-group holdout",
     f"- R² / MAE / RMSE / WAPE: {fmt(unseen.get('r2'))} / {fmt(unseen.get('mae'))} / {fmt(unseen.get('rmse'))} / {fmt(unseen.get('wape'))}",
     f"- Test rows / buildings: {unseen.get('test_rows','N/A')} / {len(unseen.get('test_buildings', []))}",
     f"- Note: {unseen.get('history_note', unseen.get('reason',''))}", "",
-    "## Limits",
+    "## Building-level error diagnostics",
+    f"- Buildings with valid chronological test predictions: {len(error_by_building)}",
+    "- Residual convention: actual minus predicted; positive means underprediction, negative means overprediction.",
+    "- Per-building MAE is sorted descending in error_analysis_by_building.csv; top 10 are in top10_high_error_buildings.csv.",
+]
+if not error_by_building.empty:
+    worst = error_by_building.iloc[0]
+    lines.append(
+        f"- Highest-MAE building in this split: {worst['building_id']} "
+        f"(MAE {fmt(worst['mae'])}; bias {worst['bias_direction']}; "
+        f"test rows {int(worst['test_rows'])})."
+    )
+lines += ["", "## Exported artifacts",
+    "- metrics.json: machine-readable metrics (undefined values are null).",
+    "- chronological_test_predictions.csv: row-level actual, predicted and residual values.",
+    "- unseen_building_predictions.csv: separate building-group holdout predictions, when available.",
+    "- error_analysis_by_building.csv / top10_high_error_buildings.csv: building-level diagnostics.",
+    "- feature_importance.csv, anomaly_buildings.csv and carbon_scenarios.csv: supporting analysis outputs.",
+    "", "## Limits",
     "- Building holdout is not cold-start: held-out buildings can use their own past meter history.",
+    "- Meter-reading units must be verified before interpreting predictions or scenario CO₂ as physical kWh / emissions.",
+    "- Carbon scenarios assume a stated reduction and emission factor; they are not measured savings.",
     "- Metrics depend on filtering, time window, building mix and meter-unit lineage.",
     "- Predictive accuracy does not establish energy savings or causal intervention effects.", ""]
 report_path.write_text("\n".join(lines), encoding="utf-8")
