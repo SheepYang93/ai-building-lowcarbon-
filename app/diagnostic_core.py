@@ -21,7 +21,7 @@ def _robust_mad(values):
 
 def diagnose_uploaded_data(daily):
     d = daily.copy()
-    d["weekday"] = d["date"].dt.dayofweek < 5
+    d["weekday"] = d["date"].dt.day_of_week < 5
     d["baseline_28d"] = d["energy"].shift(1).rolling(
         CONFIG.baseline_window,
         min_periods=CONFIG.baseline_min_periods,
