@@ -224,9 +224,12 @@ def anomaly_table(df):
 
     x["residual"]=x.meter_reading-x.baseline28
     x["scale"]=(1.4826*x.mad56).clip(lower=1e-9)
+    baseline_valid = x["baseline28"].abs() > 1e-9
     x["stable_dev"]=x.residual/x.baseline28.abs().clip(lower=1e-9)
     x["robust_z"]=x.residual/x.scale
-    x["is_anomaly"]=((x.stable_dev>=CONFIG.relative_gap_threshold)&(x.robust_z>=2)).astype(int)
+    # Use the configured robust-z threshold; zero-baseline periods are not
+    # assigned relative anomaly scores because the ratio is undefined in practice.
+    x["is_anomaly"]=((baseline_valid)&(x.stable_dev>=CONFIG.relative_gap_threshold)&(x.robust_z>=CONFIG.robust_z_threshold)).astype(int)
     q=x.groupby("building_id").agg(sub_primaryspaceusage=("sub_primaryspaceusage","first"),sqm=("sqm","first"),site_id=("site_id","first"),days=("date","nunique"),anomaly_days=("is_anomaly","sum"),mean_stable_dev=("stable_dev",lambda s:float(s.replace([np.inf,-np.inf],np.nan).dropna().clip(lower=0).mean()))).reset_index()
     q["anomaly_share"]=q.anomaly_days/q.days.clip(lower=1); q["priority_score"]=(.55*q.mean_stable_dev.rank(pct=True)+.45*q.anomaly_share.rank(pct=True))*100
     return q.sort_values("priority_score",ascending=False)
