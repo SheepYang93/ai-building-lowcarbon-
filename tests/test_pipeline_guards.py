@@ -545,3 +545,22 @@ def test_load_filter_rejects_duplicate_building_date_daily_readings(tmp_path):
 
     with pytest.raises(ValueError, match="duplicate building/date readings"):
         load_filter(path)
+
+
+def test_features_use_calendar_exact_lags_and_require_complete_rolling_windows():
+    import numpy as np
+    import pandas as pd
+    from src.pipeline import features
+
+    frame = pd.DataFrame({
+        "building_id": ["B1"] * 4,
+        "date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-05", "2024-01-06"]),
+        "meter_reading": [10.0, 20.0, 50.0, 60.0],
+        "sqm": [100.0] * 4,
+    })
+    data, _ = features(frame)
+    jan5 = data.loc[data.date.eq(pd.Timestamp("2024-01-05"))].iloc[0]
+    jan6 = data.loc[data.date.eq(pd.Timestamp("2024-01-06"))].iloc[0]
+    assert np.isnan(jan5["lag1"])  # Jan 4 is missing; do not substitute Jan 2.
+    assert jan6["lag1"] == 50.0
+    assert np.isnan(jan6["rm7"])  # incomplete calendar window is not a 7-row window.
