@@ -92,7 +92,9 @@ def building_error_summary(predictions):
     frame["residual"] = frame["actual"] - frame["predicted"]
     frame["absolute_error"] = frame["residual"].abs()
     denominator = frame["actual"].abs()
-    frame["ape"] = np.where(denominator > 0, frame["absolute_error"] / denominator, np.nan)
+    frame["ape"] = np.nan
+    valid_ape = denominator > 0
+    frame.loc[valid_ape, "ape"] = frame.loc[valid_ape, "absolute_error"] / denominator.loc[valid_ape]
     summary = frame.groupby("building_id").agg(
         test_rows=("residual", "size"),
         mae=("absolute_error", "mean"),
